@@ -1,75 +1,284 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
+import React from 'react';
+import { ScrollView, StyleSheet, View, TouchableOpacity } from 'react-native';
 
-import { HelloWave } from '@/components/HelloWave';
-import ParallaxScrollView from '@/components/ParallaxScrollView';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
+import { useThemeColor } from '@/hooks/useThemeColor';
+import { Spacing } from '@/constants/Design';
+import { withOpacity } from '@/utils/colorUtils';
 
 export default function HomeScreen() {
+  const primaryColor = useThemeColor({}, 'primary');
+  const donationColor = useThemeColor({}, 'donation');
+  const volunteerColor = useThemeColor({}, 'volunteer');
+  const childrenColor = useThemeColor({}, 'children');
+  const elderlyColor = useThemeColor({}, 'elderly');
+
+  const charityStats = [
+    { label: 'خانواده‌های کمک شده', value: '۲,۵۰۰+', icon: '🏠', color: primaryColor },
+    { label: 'کودکان تحت پوشش', value: '۱,۲۰۰+', icon: '👶', color: childrenColor },
+    { label: 'داوطلبان فعال', value: '۳۵۰+', icon: '🤝', color: volunteerColor },
+    { label: 'کمک‌های ارسالی', value: '۵,۰۰۰+', icon: '💝', color: donationColor },
+  ];
+
+  const recentActivities = [
+    {
+      title: 'توزیع بسته‌های غذایی',
+      subtitle: 'برای ۱۰۰ خانواده نیازمند',
+      time: 'امروز',
+      icon: '🍲',
+      color: donationColor
+    },
+    {
+      title: 'کلاس آموزشی کودکان',
+      subtitle: 'آموزش کامپیوتر و زبان انگلیسی',
+      time: 'دیروز',
+      icon: '📚',
+      color: childrenColor
+    },
+    {
+      title: 'ویزیت پزشکی رایگان',
+      subtitle: 'معاینه سالمندان محله',
+      time: '۲ روز پیش',
+      icon: '👨‍⚕️',
+      color: elderlyColor
+    }
+  ];
+
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12',
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
+    <ThemedView type="container" style={styles.container}>
+      <ScrollView showsVerticalScrollIndicator={false}>
+        {/* Header */}
+        <View style={styles.header}>
+          <ThemedText type="heading1" center style={styles.appTitle}>
+            آشیانه مهر 🏠
+          </ThemedText>
+          <ThemedText type="subtitle" center style={styles.tagline}>
+            جایی برای مهربانی و امید
+          </ThemedText>
+        </View>
+
+        {/* Mission Statement */}
+        <ThemedView type="card" style={[styles.missionCard, { backgroundColor: withOpacity(primaryColor, 10) }]}>
+          <ThemedText type="heading3" center style={[styles.missionTitle, { color: primaryColor }]}>
+            ماموریت ما
+          </ThemedText>
+          <ThemedText type="body" center style={styles.missionText}>
+            کمک به خانواده‌های نیازمند، حمایت از کودکان و سالمندان، و ایجاد جامعه‌ای پر از مهربانی و همدلی
+          </ThemedText>
+        </ThemedView>
+
+        {/* Statistics */}
+        <ThemedText type="heading3" style={styles.sectionTitle}>
+          تأثیر ما در جامعه
         </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
+        <View style={styles.statsContainer}>
+          {charityStats.map((stat, index) => (
+            <ThemedView key={index} type="card" style={styles.statCard}>
+              <View style={[styles.statIconContainer, { backgroundColor: withOpacity(stat.color, 20) }]}>
+                <ThemedText style={styles.statIcon}>{stat.icon}</ThemedText>
+              </View>
+              <ThemedText type="heading3" style={[styles.statValue, { color: stat.color }]}>
+                {stat.value}
+              </ThemedText>
+              <ThemedText type="caption" style={styles.statLabel}>
+                {stat.label}
+              </ThemedText>
+            </ThemedView>
+          ))}
+        </View>
+
+        {/* How to Help */}
+        <ThemedText type="heading3" style={styles.sectionTitle}>
+          چگونه کمک کنیم؟
         </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
+        <View style={styles.helpGrid}>
+          <TouchableOpacity style={styles.helpCard}>
+            <ThemedView type="card" style={styles.helpCardContent}>
+              <ThemedText style={styles.helpIcon}>💰</ThemedText>
+              <ThemedText type="body" weight="medium" center>کمک مالی</ThemedText>
+              <ThemedText type="caption" center style={styles.helpDescription}>
+                با کمک‌های نقدی به خانواده‌های نیازمند یاری برسانید
+              </ThemedText>
+            </ThemedView>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.helpCard}>
+            <ThemedView type="card" style={styles.helpCardContent}>
+              <ThemedText style={styles.helpIcon}>🤝</ThemedText>
+              <ThemedText type="body" weight="medium" center>داوطلبی</ThemedText>
+              <ThemedText type="caption" center style={styles.helpDescription}>
+                وقت خود را در راستای کمک به دیگران اختصاص دهید
+              </ThemedText>
+            </ThemedView>
+          </TouchableOpacity>
+        </View>
+
+        {/* Recent Activities */}
+        <ThemedText type="heading3" style={styles.sectionTitle}>
+          فعالیت‌های اخیر
         </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+        <View style={styles.activitiesContainer}>
+          {recentActivities.map((activity, index) => (
+            <View key={index} style={styles.activityItem}>
+              <View style={[styles.activityIconContainer, { backgroundColor: withOpacity(activity.color, 20) }]}>
+                <ThemedText style={styles.activityIcon}>{activity.icon}</ThemedText>
+              </View>
+              <View style={styles.activityContent}>
+                <ThemedText type="body" weight="medium">{activity.title}</ThemedText>
+                <ThemedText type="caption" style={styles.activitySubtitle}>
+                  {activity.subtitle}
+                </ThemedText>
+              </View>
+              <ThemedText type="caption" style={styles.activityTime}>
+                {activity.time}
+              </ThemedText>
+            </View>
+          ))}
+        </View>
+
+        {/* Contact */}
+        <ThemedView type="card" style={styles.contactCard}>
+          <ThemedText type="heading3" center style={styles.contactTitle}>
+            با ما در تماس باشید
+          </ThemedText>
+          <ThemedText type="body" center style={styles.contactInfo}>
+            📞 تلفن: ۰۲۱-۱۲۳۴۵۶۷۸
+          </ThemedText>
+          <ThemedText type="body" center style={styles.contactInfo}>
+            📧 ایمیل: info@ashyaneh-mehr.ir
+          </ThemedText>
+          <ThemedText type="body" center style={styles.contactInfo}>
+            📍 آدرس: تهران، خیابان آزادی، پلاک ۱۲۳
+          </ThemedText>
+        </ThemedView>
+      </ScrollView>
+    </ThemedView>
   );
 }
 
 const styles = StyleSheet.create({
-  titleContainer: {
+  container: {
+    flex: 1,
+  },
+  header: {
+    marginBottom: Spacing['3xl'],
+    paddingTop: Spacing.xl,
+  },
+  appTitle: {
+    marginBottom: Spacing.sm,
+  },
+  tagline: {
+    opacity: 0.7,
+  },
+  missionCard: {
+    marginBottom: Spacing['3xl'],
+    padding: Spacing.xl,
+  },
+  missionTitle: {
+    marginBottom: Spacing.md,
+  },
+  missionText: {
+    lineHeight: 24,
+  },
+  sectionTitle: {
+    marginBottom: Spacing.lg,
+    marginTop: Spacing.xl,
+  },
+  statsContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    marginBottom: Spacing.xl,
+  },
+  statCard: {
+    width: '48%',
+    alignItems: 'center',
+    marginBottom: Spacing.md,
+    paddingVertical: Spacing.xl,
+  },
+  statIconContainer: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: Spacing.md,
+  },
+  statIcon: {
+    fontSize: 28,
+  },
+  statValue: {
+    marginBottom: Spacing.xs,
+  },
+  statLabel: {
+    textAlign: 'center',
+    opacity: 0.7,
+  },
+  helpGrid: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: Spacing.xl,
+  },
+  helpCard: {
+    width: '48%',
+  },
+  helpCardContent: {
+    alignItems: 'center',
+    paddingVertical: Spacing.xl,
+  },
+  helpIcon: {
+    fontSize: 32,
+    marginBottom: Spacing.md,
+  },
+  helpDescription: {
+    marginTop: Spacing.sm,
+    opacity: 0.7,
+    textAlign: 'center',
+  },
+  activitiesContainer: {
+    marginBottom: Spacing.xl,
+  },
+  activityItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    marginBottom: Spacing.md,
   },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
+  activityIconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginLeft: Spacing.md,
   },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
+  activityIcon: {
+    fontSize: 20,
+  },
+  activityContent: {
+    flex: 1,
+    marginLeft: Spacing.md,
+  },
+  activitySubtitle: {
+    opacity: 0.7,
+    marginTop: Spacing.xs,
+  },
+  activityTime: {
+    opacity: 0.5,
+  },
+  contactCard: {
+    marginTop: Spacing.xl,
+    marginBottom: Spacing['4xl'],
+    backgroundColor: 'rgba(46, 125, 50, 0.05)',
+    borderWidth: 1,
+    borderColor: 'rgba(46, 125, 50, 0.2)',
+  },
+  contactTitle: {
+    marginBottom: Spacing.lg,
+    color: '#2E7D32',
+  },
+  contactInfo: {
+    marginBottom: Spacing.sm,
+    color: '#2E7D32',
   },
 });

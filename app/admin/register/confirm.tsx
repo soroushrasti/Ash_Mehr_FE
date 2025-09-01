@@ -8,6 +8,8 @@ import { Button } from '@/components/Button';
 import { useThemeColor } from '@/hooks/useThemeColor';
 import { Spacing } from '@/constants/Design';
 import { withOpacity } from '@/utils/colorUtils';
+import { apiService } from '@/services/apiService';
+import { NeedyCreateWithChildren } from '@/types/api';
 
 export default function AdminRegisterConfirm() {
   const router = useRouter();
@@ -75,42 +77,59 @@ export default function AdminRegisterConfirm() {
     setLoading(true);
 
     try {
-      // Prepare the complete registration data
-      const registrationData = {
-        ...parsedFormData,
-        location: parsedLocation,
-        role,
-        registeredBy: userType === 'Admin' ? userId : null,
-        registeredByGroupAdmin: userType === 'GroupAdmin' ? userId : null,
-        registrationDate: new Date().toISOString(),
+      // Map form data to RegisterCreateWithChildren schema
+      const registerData: NeedyCreateWithChildren = {
+        FirstName: parsedFormData.firstName || '',
+        LastName: parsedFormData.lastName || '',
+        Phone: parsedFormData.phone || undefined,
+        Email: parsedFormData.email || undefined,
+        City: parsedFormData.city || undefined,
+        Province: parsedFormData.province || undefined,
+        Street: parsedFormData.street || undefined,
+        NameFather: parsedFormData.nameFather || undefined,
+        NationalID: parsedFormData.nationalId || undefined,
+        CreatedBy: typeof userId === 'string' && !isNaN(Number(userId)) ? Number(userId) : undefined,
+        Age: parsedFormData.age ? Number(parsedFormData.age) : undefined,
+        Region: parsedFormData.region || undefined,
+        Gender: parsedFormData.gender || undefined,
+        HusbandFirstName: parsedFormData.housebandFirstName || undefined,
+        HusbandLastName: parsedFormData.housebandLastName || undefined,
+        ReasonMissingHusband: parsedFormData.reasonMissingHouseband || undefined,
+        UnderOrganizationName: parsedFormData.underOrganizationName || undefined,
+        EducationLevel: parsedFormData.educationLevel || undefined,
+        IncomeForm: parsedFormData.incomeAmount ? String(parsedFormData.incomeAmount) : undefined,
+        Latitude: parsedLocation.latitude?.toString() || undefined,
+        Longitude: parsedLocation.longitude?.toString() || undefined,
+        children_of_registre: null,
       };
 
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      const result = await apiService.createNeedyPerson(registerData);
 
-      console.log('Registration Data:', registrationData);
-
-      // Show success message
-      Alert.alert(
-        'ثبت‌نام موفق',
-        `${roleTitle} با موفقیت در سیستم ثبت شد.`,
-        [
-          {
-            text: 'تأیید',
-            onPress: () => {
-              // Navigate back to appropriate dashboard
-              if (userType === 'Admin') {
-                router.replace('/admin');
-              } else if (userType === 'GroupAdmin') {
-                router.replace('/group-admin');
+      if (result.success) {
+        Alert.alert(
+          'ثبت‌نام موفق',
+          `${roleTitle} با موفقیت در سیستم ثبت شد.`,
+          [
+            {
+              text: 'تأیید',
+              onPress: () => {
+                // Navigate back to appropriate dashboard
+                if (userType === 'Admin') {
+                  router.replace('/admin');
+                } else if (userType === 'GroupAdmin') {
+                  router.replace('/group-admin');
+                }
               }
             }
-          }
-        ]
-      );
+          ]
+        );
+      } else {
+        throw new Error(result.error || 'Registration failed');
+      }
 
     } catch (error) {
-      Alert.alert('خطا', 'در ثبت‌نام خطایی رخ داد. لطفاً دوباره تلاش کنید.');
+      console.error('Registration error:', error);
+      Alert.alert('خطا', error instanceof Error ? error.message : 'در ثبت‌نام خطایی رخ داد. لطفاً دوباره تلاش کنید.');
     } finally {
       setLoading(false);
     }

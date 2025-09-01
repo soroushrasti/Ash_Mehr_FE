@@ -4,10 +4,11 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import { ThemedView } from '@/components/ThemedView';
 import { ThemedText } from '@/components/ThemedText';
 import { Button } from '@/components/Button';
-import  UniversalMap  from '@/components/UniversalMap';
+import UniversalMap from '@/components/UniversalMap';
 import { useThemeColor } from '@/hooks/useThemeColor';
 import { Spacing } from '@/constants/Design';
 import { withOpacity } from '@/utils/colorUtils';
+import AppHeader from '@/components/AppHeader';
 
 export default function AdminRegisterMap() {
   const router = useRouter();
@@ -15,6 +16,18 @@ export default function AdminRegisterMap() {
   const [location, setLocation] = useState<{ latitude: number; longitude: number; address?: string } | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
+  // Extract city from serialized formData (supports both lower and upper case keys)
+  const formDataStr = Array.isArray(formData) ? formData[0] : (formData as string | undefined);
+  let city: string | undefined = undefined;
+  try {
+    if (formDataStr) {
+      const parsed = JSON.parse(formDataStr);
+      city = parsed.city || parsed.City || parsed?.address?.city;
+    }
+  } catch {
+    // ignore parse errors
+  }
 
   const primaryColor = useThemeColor({}, 'primary');
   const successColor = useThemeColor({}, 'success');
@@ -64,6 +77,8 @@ export default function AdminRegisterMap() {
 
   return (
     <ThemedView type="container" style={styles.container}>
+      <AppHeader title="انتخاب موقعیت جغرافیایی" subtitle={`برای ${roleTitle}`} />
+
       {/* Progress Bar */}
       <ProgressBar />
 
@@ -94,8 +109,9 @@ export default function AdminRegisterMap() {
               setError('');
             }}
             mapType="standard"
-            zoom={0.01}
+            zoom={13}
             showControls={true}
+            city={city}
           />
         </View>
 
@@ -123,7 +139,7 @@ export default function AdminRegisterMap() {
 
         {/* Error State */}
         {error && (
-          <ThemedView style={[styles.errorContainer, { backgroundColor: withOpacity(errorColor, 10) }]}>
+          <ThemedView style={[styles.errorContainer, { backgroundColor: withOpacity(errorColor, 10), borderColor: withOpacity(errorColor, 20) }]}>
             <ThemedText type="caption" style={[styles.errorText, { color: errorColor }]}>
               ⚠️ {error}
             </ThemedText>
@@ -132,7 +148,7 @@ export default function AdminRegisterMap() {
       </ThemedView>
 
       {/* Instructions */}
-      <ThemedView type="card" style={styles.instructionsCard}>
+      <ThemedView type="card" style={[styles.instructionsCard, { backgroundColor: withOpacity(primaryColor, 5), borderColor: withOpacity(primaryColor, 20) }]}>
         <ThemedText type="body" weight="medium" style={styles.instructionsTitle}>
           راهنمای استفاده از نقشه:
         </ThemedText>
@@ -169,9 +185,7 @@ export default function AdminRegisterMap() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
+  container: { flex: 1 },
   progressContainer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -191,14 +205,8 @@ const styles = StyleSheet.create({
     height: 2,
     marginHorizontal: Spacing.sm,
   },
-  progressText: {
-    color: 'white',
-    fontWeight: 'bold',
-  },
-  header: {
-    alignItems: 'center',
-    marginBottom: Spacing['3xl'],
-  },
+  progressText: { color: 'white', fontWeight: 'bold' },
+  header: { alignItems: 'center', marginBottom: Spacing['3xl'] },
   roleIconContainer: {
     width: 80,
     height: 80,
@@ -207,85 +215,24 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: Spacing.lg,
   },
-  roleIcon: {
-    fontSize: 36,
-  },
-  title: {
-    marginBottom: Spacing.sm,
-  },
-  subtitle: {
-    opacity: 0.7,
-    textAlign: 'center',
-  },
-  mapCard: {
-    marginBottom: Spacing.xl,
-  },
-  mapTitle: {
-    marginBottom: Spacing.lg,
-    color: '#2E7D32',
-  },
-  mapContainer: {
-    height: 300,
-    borderRadius: 12,
-    overflow: 'hidden',
-    marginBottom: Spacing.md,
-  },
-  locationInfo: {
-    padding: Spacing.md,
-    borderRadius: 8,
-    marginBottom: Spacing.md,
-  },
-  locationHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: Spacing.sm,
-  },
-  locationIcon: {
-    fontSize: 20,
-    marginLeft: Spacing.sm,
-  },
-  locationTitle: {
-    flex: 1,
-  },
-  coordinates: {
-    opacity: 0.7,
-    marginBottom: Spacing.xs,
-  },
-  address: {
-    marginTop: Spacing.sm,
-  },
-  errorContainer: {
-    padding: Spacing.md,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: 'rgba(239, 83, 80, 0.2)',
-  },
-  errorText: {
-    textAlign: 'center',
-  },
-  instructionsCard: {
-    backgroundColor: 'rgba(46, 125, 50, 0.05)',
-    borderWidth: 1,
-    borderColor: 'rgba(46, 125, 50, 0.2)',
-    marginBottom: Spacing.xl,
-  },
-  instructionsTitle: {
-    marginBottom: Spacing.md,
-    color: '#2E7D32',
-  },
-  instructionText: {
-    marginBottom: Spacing.xs,
-    opacity: 0.8,
-  },
-  buttonContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: Spacing['4xl'],
-  },
-  backButton: {
-    flex: 0.45,
-  },
-  continueButton: {
-    flex: 0.45,
-  },
+  roleIcon: { fontSize: 36 },
+  title: { marginBottom: Spacing.sm },
+  subtitle: { opacity: 0.7, textAlign: 'center' },
+  mapCard: { marginBottom: Spacing.xl },
+  mapTitle: { marginBottom: Spacing.lg },
+  mapContainer: { height: 300, borderRadius: 12, overflow: 'hidden', marginBottom: Spacing.md },
+  locationInfo: { padding: Spacing.md, borderRadius: 8, marginBottom: Spacing.md },
+  locationHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: Spacing.sm },
+  locationIcon: { fontSize: 20, marginLeft: Spacing.sm },
+  locationTitle: { flex: 1 },
+  coordinates: { opacity: 0.7, marginBottom: Spacing.xs },
+  address: { marginTop: Spacing.sm },
+  errorContainer: { padding: Spacing.md, borderRadius: 8, borderWidth: 1 },
+  errorText: { textAlign: 'center' },
+  instructionsCard: { marginBottom: Spacing.xl, borderWidth: 1 },
+  instructionsTitle: { marginBottom: Spacing.md },
+  instructionText: { marginBottom: Spacing.xs, opacity: 0.8 },
+  buttonContainer: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: Spacing['4xl'] },
+  backButton: { flex: 0.45 },
+  continueButton: { flex: 0.45 },
 });

@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import * as SecureStore from 'expo-secure-store';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Platform } from 'react-native';
 
 export type UserType = 'Admin' | 'GroupAdmin' | null;
 
@@ -23,44 +24,49 @@ const STORAGE_KEYS = {
 };
 
 // Platform-specific storage functions
-const isWeb = typeof window !== 'undefined';
+const isWeb = Platform.OS === 'web';
 
 const setStorageItem = async (key: string, value: string): Promise<void> => {
   if (isWeb) {
-    localStorage.setItem(key, value);
-  } else {
     try {
-      await SecureStore.setItemAsync(key, value);
-    } catch (error) {
-      // Fallback to AsyncStorage if SecureStore fails
-      await AsyncStorage.setItem(key, value);
-    }
+      localStorage.setItem(key, value);
+      return;
+    } catch {}
+  }
+  try {
+    await SecureStore.setItemAsync(key, value);
+  } catch (error) {
+    // Fallback to AsyncStorage if SecureStore fails
+    await AsyncStorage.setItem(key, value);
   }
 };
 
 const getStorageItem = async (key: string): Promise<string | null> => {
   if (isWeb) {
-    return localStorage.getItem(key);
-  } else {
     try {
-      return await SecureStore.getItemAsync(key);
-    } catch (error) {
-      // Fallback to AsyncStorage if SecureStore fails
-      return await AsyncStorage.getItem(key);
-    }
+      return localStorage.getItem(key);
+    } catch {}
+  }
+  try {
+    return await SecureStore.getItemAsync(key);
+  } catch (error) {
+    // Fallback to AsyncStorage if SecureStore fails
+    return await AsyncStorage.getItem(key);
   }
 };
 
 const deleteStorageItem = async (key: string): Promise<void> => {
   if (isWeb) {
-    localStorage.removeItem(key);
-  } else {
     try {
-      await SecureStore.deleteItemAsync(key);
-    } catch (error) {
-      // Fallback to AsyncStorage if SecureStore fails
-      await AsyncStorage.removeItem(key);
-    }
+      localStorage.removeItem(key);
+      return;
+    } catch {}
+  }
+  try {
+    await SecureStore.deleteItemAsync(key);
+  } catch (error) {
+    // Fallback to AsyncStorage if SecureStore fails
+    await AsyncStorage.removeItem(key);
   }
 };
 

@@ -33,24 +33,6 @@ export default function GroupAdminSelectRole() {
       color: childrenColor,
       description: 'برای کودکانی که نیاز به حمایت تحصیلی، غذایی یا درمانی دارند و در منطقه تحت پوشش شما زندگی می‌کنند',
       route: '/group-admin/register/form?role=Child'
-    },
-    {
-      id: 'elderly',
-      title: 'سالمند نیازمند',
-      subtitle: 'ثبت سالمند تحت پوشش گروه',
-      icon: '👴',
-      color: elderlyColor,
-      description: 'برای سالمندانی که نیاز به مراقبت، دارو یا کمک‌های درمانی دارند و در حوزه مسئولیت شما هستند',
-      route: '/group-admin/register/form?role=Elderly'
-    },
-    {
-      id: 'volunteer',
-      title: 'داوطلب محلی',
-      subtitle: 'ثبت داوطلب برای کمک در منطقه',
-      icon: '🤝',
-      color: volunteerColor,
-      description: 'برای افرادی که می‌خواهند در فعالیت‌های خیریه منطقه شما مشارکت کنند',
-      route: '/group-admin/register/form?role=Volunteer'
     }
   ];
 

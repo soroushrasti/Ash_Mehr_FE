@@ -1,94 +1,111 @@
-/**
- * Charity App Colors - Beautiful color palette for a Persian charity application
- * Colors inspired by hope, warmth, and community spirit
- */
-
-const tintColorLight = '#2E7D32'; // Rich green for hope and growth
-const tintColorDark = '#66BB6A'; // Lighter green for dark mode
+const tintColorLight = '#4f46e5';
+const tintColorDark = '#a5b4fc';
 
 export const Colors = {
   light: {
-    text: '#1A1A1A',
-    background: '#FAFAFA',
+    text: '#020617',
+    textSecondary: '#334155',
+    textTertiary: '#64748b',
+    background: '#f1f5f9',
     tint: tintColorLight,
-    icon: '#757575',
-    tabIconDefault: '#9E9E9E',
+    icon: '#475569',
+    tabIconDefault: '#94a3b8',
     tabIconSelected: tintColorLight,
 
-    // Charity-specific colors
-    primary: '#2E7D32', // Deep green - hope and growth
-    secondary: '#FF7043', // Warm orange - warmth and energy
-    accent: '#5C6BC0', // Soft purple - trust and wisdom
-    success: '#4CAF50', // Success green
-    warning: '#FFA726', // Warning orange
-    error: '#EF5350', // Error red
-    info: '#42A5F5', // Info blue
+    // Brand colors
+    primary: '#4f46e5',
+    primaryLight: '#6366f1',
+    primaryDark: '#4338ca',
+    primaryMuted: '#e0e7ff',
+    secondary: '#14b8a6',
+    secondaryLight: '#2dd4bf',
+    secondaryDark: '#0f766e',
+    secondaryMuted: '#ccfbf1',
 
-    // Background variations
-    surface: '#FFFFFF',
-    surfaceVariant: '#F5F5F5',
-    background2: '#F8F9FA',
+    // Status colors
+    success: '#16a34a',
+    warning: '#f97316',
+    error: '#dc2626',
+    info: '#0ea5e9',
 
-    // Text variations
-    textPrimary: '#1A1A1A',
-    textSecondary: '#616161',
-    textTertiary: '#9E9E9E',
-    textOnPrimary: '#FFFFFF',
+    // Semantic colors for user groups/categories
+    donation: '#16a34a', // Same as success
+    volunteer: '#f97316', // Same as warning
+    emergency: '#dc2626', // Same as error
+    children: '#8b5cf6', // A pleasant purple
+    elderly: '#d946ef', // A friendly magenta
+    health: '#0ea5e9', // Same as info
+    education: '#f43f5e', // A vibrant rose
 
-    // Borders and dividers
-    border: '#E0E0E0',
-    divider: '#EEEEEE',
+    // Surface colors
+    surface: '#ffffff',
+    surfaceSecondary: '#f8fafc',
+    surfaceTertiary: '#f1f5f9',
+    surfaceMuted: '#e2e8f0',
 
-    // Charity specific
-    donation: '#4CAF50',
-    volunteer: '#FF7043',
-    emergency: '#F44336',
-    children: '#E91E63',
-    elderly: '#9C27B0',
-    education: '#3F51B5',
-    health: '#00BCD4',
-    food: '#FF9800',
+    // Border colors
+    border: '#cbd5e1',
+    borderLight: '#e2e8f0',
+    borderMuted: '#d1d5db',
+
+    // Gradient colors
+    gradientStart: '#6366f1',
+    gradientEnd: '#8b5cf6',
+
+    // Text colors
+    textPrimary: '#020617',
   },
   dark: {
-    text: '#E8E8E8',
-    background: '#121212',
+    text: '#f8fafc',
+    textSecondary: '#cbd5e1',
+    textTertiary: '#94a3b8',
+    background: '#020617',
     tint: tintColorDark,
-    icon: '#B0B0B0',
-    tabIconDefault: '#757575',
+    icon: '#94a3b8',
+    tabIconDefault: '#64748b',
     tabIconSelected: tintColorDark,
 
-    // Charity-specific colors (darker variants)
-    primary: '#66BB6A',
-    secondary: '#FF8A65',
-    accent: '#7986CB',
-    success: '#66BB6A',
-    warning: '#FFB74D',
-    error: '#EF5350',
-    info: '#64B5F6',
+    // Brand colors
+    primary: '#6366f1',
+    primaryLight: '#818cf8',
+    primaryDark: '#4f46e5',
+    primaryMuted: '#312e81',
+    secondary: '#2dd4bf',
+    secondaryLight: '#99f6e4',
+    secondaryDark: '#14b8a6',
+    secondaryMuted: '#134e4a',
 
-    // Background variations
-    surface: '#1E1E1E',
-    surfaceVariant: '#2C2C2C',
-    background2: '#1A1A1A',
+    // Status colors
+    success: '#22c55e',
+    warning: '#fb923c',
+    error: '#f87171',
+    info: '#38bdf8',
 
-    // Text variations
-    textPrimary: '#E8E8E8',
-    textSecondary: '#B0B0B0',
-    textTertiary: '#757575',
-    textOnPrimary: '#000000',
+    // Semantic colors for user groups/categories
+    donation: '#22c55e',
+    volunteer: '#fb923c',
+    emergency: '#f87171',
+    children: '#a78bfa',
+    elderly: '#f0abfc',
+    health: '#38bdf8',
+    education: '#fb7185',
 
-    // Borders and dividers
-    border: '#333333',
-    divider: '#2C2C2C',
+    // Surface colors
+    surface: '#1e293b',
+    surfaceSecondary: '#0f172a',
+    surfaceTertiary: '#334155',
+    surfaceMuted: '#475569',
 
-    // Charity specific (darker variants)
-    donation: '#66BB6A',
-    volunteer: '#FF8A65',
-    emergency: '#EF5350',
-    children: '#F06292',
-    elderly: '#BA68C8',
-    education: '#7986CB',
-    health: '#4DD0E1',
-    food: '#FFB74D',
+    // Border colors
+    border: '#334155',
+    borderLight: '#475569',
+    borderMuted: '#64748b',
+
+    // Gradient colors
+    gradientStart: '#4f46e5',
+    gradientEnd: '#a78bfa',
+
+    // Text colors
+    textPrimary: '#f8fafc',
   },
 };

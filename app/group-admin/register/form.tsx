@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ScrollView, StyleSheet, View, Alert, Platform } from 'react-native';
+import { ScrollView, StyleSheet, View, Platform } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { ThemedView } from '@/components/ThemedView';
 import { ThemedText } from '@/components/ThemedText';
@@ -8,6 +8,7 @@ import { InputField } from '@/components/InputField';
 import { useThemeColor } from '@/hooks/useThemeColor';
 import { Spacing, BorderRadius } from '@/constants/Design';
 import { withOpacity } from '@/utils/colorUtils';
+import AppHeader from '@/components/AppHeader';
 
 // Same field definitions as admin form but with Group Admin context
 const baseFields = [
@@ -75,6 +76,8 @@ export default function GroupAdminRegisterForm() {
 
   const primaryColor = useThemeColor({}, 'primary');
   const successColor = useThemeColor({}, 'success');
+  const textColor = useThemeColor({}, 'textPrimary');
+  const errorColor = useThemeColor({}, 'error');
 
   // Group Admin always registers needy families with full details
   const fields = [...baseFields, ...needyFamilyFields];
@@ -160,7 +163,6 @@ export default function GroupAdminRegisterForm() {
 
   const renderSelectField = (field) => {
     if (Platform.OS === 'web') {
-      const textColor = useThemeColor({}, 'textPrimary');
       return (
         <View style={styles.selectContainer}>
           <ThemedText type="caption" weight="medium" style={styles.selectLabel}>
@@ -187,7 +189,7 @@ export default function GroupAdminRegisterForm() {
             ))}
           </select>
           {errors[field.key] && (
-            <ThemedText type="caption" style={[styles.errorText, { color: useThemeColor({}, 'error') }]}>
+            <ThemedText type="caption" style={[styles.errorText, { color: errorColor }]}>
               {errors[field.key]}
             </ThemedText>
           )}
@@ -208,6 +210,7 @@ export default function GroupAdminRegisterForm() {
 
   return (
     <ThemedView type="container" style={styles.container}>
+      <AppHeader title={`ثبت‌نام ${roleTitle}`} subtitle="توسط مدیر گروه" />
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* Progress Bar */}
         <ProgressBar />
@@ -368,7 +371,7 @@ const styles = StyleSheet.create({
   badgeCard: {
     marginBottom: Spacing.xl,
     borderWidth: 1,
-    borderColor: 'rgba(46, 125, 50, 0.2)',
+    borderColor: 'transparent', // replaced dynamically with themed color
   },
   badgeContent: {
     flexDirection: 'row',
@@ -389,7 +392,6 @@ const styles = StyleSheet.create({
   },
   formTitle: {
     marginBottom: Spacing.lg,
-    color: '#2E7D32',
   },
   selectContainer: {
     marginBottom: Spacing.md,

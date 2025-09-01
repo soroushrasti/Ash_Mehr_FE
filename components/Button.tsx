@@ -1,5 +1,5 @@
 import React from 'react';
-import { TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
+import { TouchableOpacity, StyleSheet, ActivityIndicator, StyleProp, ViewStyle } from 'react-native';
 import { ThemedText } from './ThemedText';
 import { useThemeColor } from '@/hooks/useThemeColor';
 import { BorderRadius, Spacing, Layout } from '@/constants/Design';
@@ -13,6 +13,7 @@ interface ButtonProps {
   loading?: boolean;
   fullWidth?: boolean;
   icon?: React.ReactNode;
+  style?: StyleProp<ViewStyle>;
 }
 
 export function Button({
@@ -24,6 +25,7 @@ export function Button({
   loading = false,
   fullWidth = false,
   icon,
+  style,
 }: ButtonProps) {
   const primaryColor = useThemeColor({}, 'primary');
   const secondaryColor = useThemeColor({}, 'secondary');
@@ -66,7 +68,7 @@ export function Button({
 
   return (
     <TouchableOpacity
-      style={getButtonStyle().filter(Boolean)} // <-- Filter out undefined, false, null
+      style={[...getButtonStyle().filter(Boolean), style].filter(Boolean)}
       onPress={onPress}
       disabled={disabled || loading}
       activeOpacity={0.8}
@@ -78,7 +80,7 @@ export function Button({
           {icon && icon}
           <ThemedText
             type="button"
-            style={[{ color: getTextColor() }, icon && styles.textWithIcon].filter(Boolean)} // <-- Filter out undefined, false, null
+            style={[{ color: getTextColor() }, icon && styles.textWithIcon].filter(Boolean)}
             center
           >
             {title}

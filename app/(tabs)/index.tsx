@@ -3,9 +3,12 @@ import { ScrollView, StyleSheet, View, TouchableOpacity } from 'react-native';
 
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
+import { SignOutButton } from '@/components/SignOutButton';
 import { useThemeColor } from '@/hooks/useThemeColor';
 import { Spacing } from '@/constants/Design';
 import { withOpacity } from '@/utils/colorUtils';
+import AppHeader from '@/components/AppHeader';
+import SectionHeader from '@/components/SectionHeader';
 
 export default function HomeScreen() {
   const primaryColor = useThemeColor({}, 'primary');
@@ -13,6 +16,7 @@ export default function HomeScreen() {
   const volunteerColor = useThemeColor({}, 'volunteer');
   const childrenColor = useThemeColor({}, 'children');
   const elderlyColor = useThemeColor({}, 'elderly');
+  const borderColor = useThemeColor({}, 'border');
 
   const charityStats = [
     { label: 'خانواده‌های کمک شده', value: '۲,۵۰۰+', icon: '🏠', color: primaryColor },
@@ -47,17 +51,13 @@ export default function HomeScreen() {
 
   return (
     <ThemedView type="container" style={styles.container}>
-      <ScrollView showsVerticalScrollIndicator={false}>
-        {/* Header */}
-        <View style={styles.header}>
-          <ThemedText type="heading1" center style={styles.appTitle}>
-            آشیانه مهر 🏠
-          </ThemedText>
-          <ThemedText type="subtitle" center style={styles.tagline}>
-            جایی برای مهربانی و امید
-          </ThemedText>
-        </View>
+      <AppHeader
+        title="آشیانه مهر 🏠"
+        subtitle="جایی برای مهربانی و امید"
+        rightAction={<SignOutButton />}
+      />
 
+      <ScrollView showsVerticalScrollIndicator={false}>
         {/* Mission Statement */}
         <ThemedView type="card" style={[styles.missionCard, { backgroundColor: withOpacity(primaryColor, 10) }]}>
           <ThemedText type="heading3" center style={[styles.missionTitle, { color: primaryColor }]}>
@@ -69,9 +69,7 @@ export default function HomeScreen() {
         </ThemedView>
 
         {/* Statistics */}
-        <ThemedText type="heading3" style={styles.sectionTitle}>
-          تأثیر ما در جامعه
-        </ThemedText>
+        <SectionHeader title="تأثیر ما در جامعه" />
         <View style={styles.statsContainer}>
           {charityStats.map((stat, index) => (
             <ThemedView key={index} type="card" style={styles.statCard}>
@@ -89,9 +87,7 @@ export default function HomeScreen() {
         </View>
 
         {/* How to Help */}
-        <ThemedText type="heading3" style={styles.sectionTitle}>
-          چگونه کمک کنیم؟
-        </ThemedText>
+        <SectionHeader title="چگونه کمک کنیم؟" />
         <View style={styles.helpGrid}>
           <TouchableOpacity style={styles.helpCard}>
             <ThemedView type="card" style={styles.helpCardContent}>
@@ -115,12 +111,10 @@ export default function HomeScreen() {
         </View>
 
         {/* Recent Activities */}
-        <ThemedText type="heading3" style={styles.sectionTitle}>
-          فعالیت‌های اخیر
-        </ThemedText>
+        <SectionHeader title="فعالیت‌های اخیر" />
         <View style={styles.activitiesContainer}>
           {recentActivities.map((activity, index) => (
-            <View key={index} style={styles.activityItem}>
+            <View key={index} style={[styles.activityItem, { borderBottomColor: withOpacity(borderColor, 10) }]}>
               <View style={[styles.activityIconContainer, { backgroundColor: withOpacity(activity.color, 20) }]}>
                 <ThemedText style={styles.activityIcon}>{activity.icon}</ThemedText>
               </View>
@@ -138,20 +132,25 @@ export default function HomeScreen() {
         </View>
 
         {/* Contact */}
-        <ThemedView type="card" style={styles.contactCard}>
-          <ThemedText type="heading3" center style={styles.contactTitle}>
+        <ThemedView type="card" style={[styles.contactCard, { borderColor: withOpacity(primaryColor, 20), backgroundColor: withOpacity(primaryColor, 5) }]}>
+          <ThemedText type="heading3" center style={[styles.contactTitle, { color: primaryColor }]}>
             با ما در تماس باشید
           </ThemedText>
-          <ThemedText type="body" center style={styles.contactInfo}>
+          <ThemedText type="body" center style={[styles.contactInfo, { color: primaryColor }]}>
             📞 تلفن: ۰۲۱-۱۲۳۴۵۶۷۸
           </ThemedText>
-          <ThemedText type="body" center style={styles.contactInfo}>
+          <ThemedText type="body" center style={[styles.contactInfo, { color: primaryColor }]}>
             📧 ایمیل: info@ashyaneh-mehr.ir
           </ThemedText>
-          <ThemedText type="body" center style={styles.contactInfo}>
+          <ThemedText type="body" center style={[styles.contactInfo, { color: primaryColor }]}>
             📍 آدرس: تهران، خیابان آزادی، پلاک ۱۲۳
           </ThemedText>
         </ThemedView>
+
+        {/* Sign Out Button */}
+        <View style={styles.signOutContainer}>
+          <SignOutButton />
+        </View>
       </ScrollView>
     </ThemedView>
   );
@@ -161,17 +160,8 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  header: {
-    marginBottom: Spacing['3xl'],
-    paddingTop: Spacing.xl,
-  },
-  appTitle: {
-    marginBottom: Spacing.sm,
-  },
-  tagline: {
-    opacity: 0.7,
-  },
   missionCard: {
+    marginTop: Spacing.xl,
     marginBottom: Spacing['3xl'],
     padding: Spacing.xl,
   },
@@ -243,6 +233,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: Spacing.md,
+    paddingBottom: Spacing.md,
+    borderBottomWidth: StyleSheet.hairlineWidth,
   },
   activityIconContainer: {
     width: 40,
@@ -269,16 +261,16 @@ const styles = StyleSheet.create({
   contactCard: {
     marginTop: Spacing.xl,
     marginBottom: Spacing['4xl'],
-    backgroundColor: 'rgba(46, 125, 50, 0.05)',
-    borderWidth: 1,
-    borderColor: 'rgba(46, 125, 50, 0.2)',
   },
   contactTitle: {
     marginBottom: Spacing.lg,
-    color: '#2E7D32',
   },
   contactInfo: {
     marginBottom: Spacing.sm,
-    color: '#2E7D32',
+  },
+  signOutContainer: {
+    marginTop: Spacing.xl,
+    marginBottom: Spacing['4xl'],
+    alignItems: 'center',
   },
 });

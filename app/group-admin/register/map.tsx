@@ -4,10 +4,11 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import { ThemedView } from '@/components/ThemedView';
 import { ThemedText } from '@/components/ThemedText';
 import { Button } from '@/components/Button';
-import { UniversalMap } from '@/components/UniversalMap';
+import UniversalMap from '@/components/UniversalMap';
 import { useThemeColor } from '@/hooks/useThemeColor';
 import { Spacing } from '@/constants/Design';
 import { withOpacity } from '@/utils/colorUtils';
+import AppHeader from '@/components/AppHeader';
 
 export default function GroupAdminRegisterMap() {
   const router = useRouter();
@@ -64,6 +65,8 @@ export default function GroupAdminRegisterMap() {
 
   return (
     <ThemedView type="container" style={styles.container}>
+      <AppHeader title="انتخاب موقعیت جغرافیایی" subtitle={`برای ${roleTitle}`} />
+
       {/* Progress Bar */}
       <ProgressBar />
 
@@ -81,7 +84,7 @@ export default function GroupAdminRegisterMap() {
       </View>
 
       {/* Group Admin Badge */}
-      <ThemedView type="card" style={[styles.badgeCard, { backgroundColor: withOpacity(primaryColor, 10) }]}>
+      <ThemedView type="card" style={[styles.badgeCard, { backgroundColor: withOpacity(primaryColor, 10), borderColor: withOpacity(primaryColor, 20) }]}>
         <View style={styles.badgeContent}>
           <ThemedText style={styles.badgeIcon}>👥</ThemedText>
           <ThemedText type="caption" style={styles.badgeText}>
@@ -133,7 +136,7 @@ export default function GroupAdminRegisterMap() {
 
         {/* Error State */}
         {error && (
-          <ThemedView style={[styles.errorContainer, { backgroundColor: withOpacity(errorColor, 10) }]}>
+          <ThemedView style={[styles.errorContainer, { backgroundColor: withOpacity(errorColor, 10), borderColor: withOpacity(errorColor, 20) }]}>
             <ThemedText type="caption" style={[styles.errorText, { color: errorColor }]}>
               ⚠️ {error}
             </ThemedText>
@@ -142,8 +145,8 @@ export default function GroupAdminRegisterMap() {
       </ThemedView>
 
       {/* Instructions */}
-      <ThemedView type="card" style={styles.instructionsCard}>
-        <ThemedText type="body" weight="medium" style={styles.instructionsTitle}>
+      <ThemedView type="card" style={[styles.instructionsCard, { backgroundColor: withOpacity(primaryColor, 5), borderColor: withOpacity(primaryColor, 20) }]}>
+        <ThemedText type="body" weight="medium" style={[styles.instructionsTitle]}>
           راهنمای استفاده از نقشه:
         </ThemedText>
         <ThemedText type="caption" style={styles.instructionText}>
@@ -230,7 +233,6 @@ const styles = StyleSheet.create({
   badgeCard: {
     marginBottom: Spacing.xl,
     borderWidth: 1,
-    borderColor: 'rgba(46, 125, 50, 0.2)',
   },
   badgeContent: {
     flexDirection: 'row',
@@ -249,7 +251,6 @@ const styles = StyleSheet.create({
   },
   mapTitle: {
     marginBottom: Spacing.lg,
-    color: '#2E7D32',
   },
   mapContainer: {
     height: 300,
@@ -285,16 +286,13 @@ const styles = StyleSheet.create({
     padding: Spacing.md,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: 'rgba(239, 83, 80, 0.2)',
   },
   errorText: {
     textAlign: 'center',
   },
   instructionsCard: {
-    backgroundColor: 'rgba(46, 125, 50, 0.05)',
-    borderWidth: 1,
-    borderColor: 'rgba(46, 125, 50, 0.2)',
     marginBottom: Spacing.xl,
+    borderWidth: 1,
   },
   instructionsTitle: {
     marginBottom: Spacing.md,

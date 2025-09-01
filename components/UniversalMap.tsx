@@ -20,15 +20,19 @@ interface UniversalMapProps {
   mapType?: 'standard' | 'satellite' | 'terrain';
   zoom?: number;
   showControls?: boolean;
+  city?: string; // new: hint for centering/zooming by city
 }
 
-export default function UniversalMap({ location, onLocationSelect, mapType = 'standard', zoom = 0.05, showControls = true }: UniversalMapProps) {
+export default function UniversalMap({ location, onLocationSelect, zoom, showControls = true, city }: UniversalMapProps) {
   if (Platform.OS === 'web') {
     return (
       <GoogleMapWeb
         apiKey="AIzaSyCx8-7Y3c7sPHyDfltKMvBitIAmdUwvLFk"
         onLocationSelect={onLocationSelect}
         initialLocation={location ? { latitude: location.latitude, longitude: location.longitude } : undefined}
+        zoom={zoom}
+        showControls={showControls}
+        city={city}
       />
     );
   }

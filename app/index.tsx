@@ -1,18 +1,21 @@
 import { useAuth } from '@/components/AuthContext';
 import { Redirect } from 'expo-router';
-import { View, ActivityIndicator } from 'react-native';
+import { ActivityIndicator } from 'react-native';
 import { ThemedText } from '@/components/ThemedText';
+import { ThemedView } from '@/components/ThemedView';
+import { useThemeColor } from '@/hooks/useThemeColor';
 
 export default function Index() {
   const { userType, isLoading } = useAuth();
+  const primary = useThemeColor({}, 'primary');
 
   // Show loading screen while checking authentication state
   if (isLoading) {
     return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#fff' }}>
-        <ActivityIndicator size="large" color="#2E7D32" />
+      <ThemedView type="container" style={{ justifyContent: 'center', alignItems: 'center' }}>
+        <ActivityIndicator size="large" color={primary} />
         <ThemedText style={{ marginTop: 16, fontSize: 16 }}>در حال بررسی وضعیت ورود...</ThemedText>
-      </View>
+      </ThemedView>
     );
   }
 

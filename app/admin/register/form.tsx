@@ -8,6 +8,7 @@ import { InputField } from '@/components/InputField';
 import { useThemeColor } from '@/hooks/useThemeColor';
 import { Spacing, BorderRadius } from '@/constants/Design';
 import { withOpacity } from '@/utils/colorUtils';
+import AppHeader from '@/components/AppHeader';
 
 // Types
 interface FieldOption { label: string; value: string; }
@@ -229,75 +230,31 @@ export default function AdminRegisterForm() {
   };
 
   return (
-    <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ padding: Spacing.xl }}>
-      <ProgressBar />
+    <ThemedView type="container" style={{ flex: 1 }}>
+      <AppHeader title={`ثبت‌نام ${roleTitle}`} subtitle="اطلاعات پایه" />
 
-      <View style={styles.header}>
-        <View style={[styles.roleIconContainer, { backgroundColor: withOpacity(primaryColor, 20) }]}>
-          <ThemedText style={styles.roleIcon}>{roleIcon}</ThemedText>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ padding: Spacing.xl }}>
+        <ProgressBar />
+
+        {/* Header with Role badge */}
+        <View style={styles.header}>
+          <View style={[styles.roleIconContainer, { backgroundColor: withOpacity(primaryColor, 20) }]}>
+            <ThemedText style={styles.roleIcon}>{roleIcon}</ThemedText>
+          </View>
+          <ThemedText type="heading2" weight="bold" style={styles.title}>
+            ثبت‌نام {roleTitle}
+          </ThemedText>
+          <ThemedText type="subtitle" style={styles.subtitle}>
+            لطفاً اطلاعات مورد نیاز را با دقت تکمیل کنید
+          </ThemedText>
         </View>
-        <ThemedText type="heading2" weight="bold" style={styles.title}>
-          ثبت‌نام {roleTitle}
-        </ThemedText>
-        <ThemedText type="subtitle" style={styles.subtitle}>
-          لطفاً اطلاعات مورد نیاز را با دقت تکمیل کنید
-        </ThemedText>
-      </View>
 
-      <ThemedView type="card" style={styles.formCard}>
-        <ThemedText type="heading3" style={styles.formTitle}>
-          ثبت‌نام {roleTitle}
-        </ThemedText>
-
-        {fields.slice(0, 6).map(field =>
-          field.type === 'select'
-            ? renderSelectField(field)
-            : (
-              <InputField
-                key={field.key}
-                label={field.label}
-                placeholder={field.placeholder}
-                value={form[field.key] || ''}
-                onChangeText={(value) => handleChange(field.key, value)}
-                secureTextEntry={field.secure}
-                keyboardType={
-                  field.type === 'phone' ? 'phone-pad'
-                    : field.type === 'email' ? 'email-address'
-                    : field.type === 'number' ? 'numeric'
-                    : 'default'
-                }
-                multiline={field.multiline}
-                error={errors[field.key]}
-              />
-            )
-        )}
-      </ThemedView>
-
-      <ThemedView type="card" style={styles.formCard}>
-        <ThemedText type="heading3" style={styles.formTitle}>
-          اطلاعات آدرس
-        </ThemedText>
-
-        {fields.slice(6, 9).map(field => (
-          <InputField
-            key={field.key}
-            label={field.label}
-            placeholder={field.placeholder}
-            value={form[field.key] || ''}
-            onChangeText={(value) => handleChange(field.key, value)}
-            multiline={field.multiline}
-            error={errors[field.key]}
-          />
-        ))}
-      </ThemedView>
-
-      {fields.length > 9 && (
         <ThemedView type="card" style={styles.formCard}>
-          <ThemedText type="heading3" style={styles.formTitle}>
-            اطلاعات تکمیلی
+          <ThemedText type="heading3" style={[styles.formTitle, { color: primaryColor }]}>
+            ثبت‌نام {roleTitle}
           </ThemedText>
 
-          {fields.slice(9).map(field =>
+          {fields.slice(0, 6).map(field =>
             field.type === 'select'
               ? renderSelectField(field)
               : (
@@ -307,25 +264,74 @@ export default function AdminRegisterForm() {
                   placeholder={field.placeholder}
                   value={form[field.key] || ''}
                   onChangeText={(value) => handleChange(field.key, value)}
-                  keyboardType={field.type === 'number' ? 'numeric' : 'default'}
+                  secureTextEntry={field.secure}
+                  keyboardType={
+                    field.type === 'phone' ? 'phone-pad'
+                      : field.type === 'email' ? 'email-address'
+                      : field.type === 'number' ? 'numeric'
+                      : 'default'
+                  }
                   multiline={field.multiline}
                   error={errors[field.key]}
                 />
               )
           )}
         </ThemedView>
-      )}
 
-      <View style={styles.buttonContainer}>
-        <Button
-          title="مرحله بعد: انتخاب موقعیت"
-          onPress={handleNext}
-          loading={loading}
-          fullWidth
-          icon={<ThemedText>📍</ThemedText>}
-        />
-      </View>
-    </ScrollView>
+        <ThemedView type="card" style={styles.formCard}>
+          <ThemedText type="heading3" style={styles.formTitle}>
+            اطلاعات آدرس
+          </ThemedText>
+
+          {fields.slice(6, 9).map(field => (
+            <InputField
+              key={field.key}
+              label={field.label}
+              placeholder={field.placeholder}
+              value={form[field.key] || ''}
+              onChangeText={(value) => handleChange(field.key, value)}
+              multiline={field.multiline}
+              error={errors[field.key]}
+            />
+          ))}
+        </ThemedView>
+
+        {fields.length > 9 && (
+          <ThemedView type="card" style={styles.formCard}>
+            <ThemedText type="heading3" style={styles.formTitle}>
+              اطلاعات تکمیلی
+            </ThemedText>
+
+            {fields.slice(9).map(field =>
+              field.type === 'select'
+                ? renderSelectField(field)
+                : (
+                  <InputField
+                    key={field.key}
+                    label={field.label}
+                    placeholder={field.placeholder}
+                    value={form[field.key] || ''}
+                    onChangeText={(value) => handleChange(field.key, value)}
+                    keyboardType={field.type === 'number' ? 'numeric' : 'default'}
+                    multiline={field.multiline}
+                    error={errors[field.key]}
+                  />
+                )
+            )}
+          </ThemedView>
+        )}
+
+        <View style={styles.buttonContainer}>
+          <Button
+            title="مرحله بعد: انتخاب موقعیت"
+            onPress={handleNext}
+            loading={loading}
+            fullWidth
+            icon={<ThemedText>📍</ThemedText>}
+          />
+        </View>
+      </ScrollView>
+    </ThemedView>
   );
 }
 
@@ -383,7 +389,6 @@ const styles = StyleSheet.create({
   },
   formTitle: {
     marginBottom: Spacing.lg,
-    color: '#2E7D32',
   },
   selectContainer: {
     marginBottom: Spacing.md,

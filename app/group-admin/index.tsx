@@ -1,16 +1,18 @@
 import React from 'react';
-import { ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
-import { useAuth } from '@/components/AuthContext';
+import { ScrollView, StyleSheet, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { ThemedView } from '@/components/ThemedView';
 import { ThemedText } from '@/components/ThemedText';
 import { Button } from '@/components/Button';
+import { SignOutButton } from '@/components/SignOutButton';
 import { useThemeColor } from '@/hooks/useThemeColor';
 import { Spacing, BorderRadius } from '@/constants/Design';
 import { withOpacity } from '@/utils/colorUtils';
+import AppHeader from '@/components/AppHeader';
+import SectionHeader from '@/components/SectionHeader';
+import NeedyMap from '@/components/NeedyMap';
 
 export default function GroupAdminHome() {
-  const { signOut, userId } = useAuth();
   const router = useRouter();
   const primaryColor = useThemeColor({}, 'primary');
   const childrenColor = useThemeColor({}, 'children');
@@ -21,12 +23,15 @@ export default function GroupAdminHome() {
   const volunteerColor = useThemeColor({}, 'warning');
   const donationColor = useThemeColor({}, 'success');
 
-  const myGroupStats = [
-    { label: 'کودکان تحت پوشش', value: '۲۵', subtitle: 'کودک', color: childrenColor, icon: '👶' },
-    { label: 'سالمندان', value: '۱۸', subtitle: 'نفر', color: elderlyColor, icon: '👴' },
-    { label: 'دانش‌آموزان', value: '۳۲', subtitle: 'نفر', color: educationColor, icon: '🎓' },
-    { label: 'بیماران', value: '۱۲', subtitle: 'نفر', color: healthColor, icon: '🏥' },
+  // Sample needy families data (replace with API later)
+  const needyFamilies = [
+    { id: 'g1', lat: 35.7062, lng: 51.392, name: 'خانواده قاسمی', info: 'نیاز به بسته ارزاق' },
+    { id: 'g2', lat: 35.699, lng: 51.415, name: 'خانواده احمدی', info: 'اجاره معوق' },
+    { id: 'g3', lat: 35.716, lng: 51.404, name: 'خانواده محمدی', info: 'درمان' },
+    { id: 'g4', lat: 35.689, lng: 51.43, name: 'خانواده مرادی', info: 'لوازم‌التحریر' },
+    { id: 'g5', lat: 35.68, lng: 51.41, name: 'خانواده یوسفی', info: 'کمک نقدی' },
   ];
+  const needyCount = needyFamilies.length;
 
   const myTasks = [
     { title: 'ویزیت ماهانه', subtitle: 'خانواده‌های تحت پوشش', priority: 'high', icon: '🏠', dueDate: 'امروز' },
@@ -55,47 +60,24 @@ export default function GroupAdminHome() {
 
   return (
     <ThemedView type="container" style={styles.container}>
-      <ScrollView showsVerticalScrollIndicator={false}>
-        {/* Header */}
-        <View style={styles.header}>
-          <View>
-            <ThemedText type="heading2" style={styles.welcome}>
-              سلام مدیر گروه عزیز! 👋
-            </ThemedText>
-            <ThemedText type="body" style={styles.subtitle}>
-              گروه شما: کودکان و نوجوانان منطقه ۲
-            </ThemedText>
-          </View>
-          <TouchableOpacity onPress={signOut} style={styles.signOutButton}>
-            <ThemedText type="caption" style={[styles.signOutText, { color: useThemeColor({}, 'error') }]}>
-              خروج 🚪
-            </ThemedText>
-          </TouchableOpacity>
-        </View>
+      <AppHeader
+        title="سلام مدیر گروه عزیز! 👋"
+        subtitle="گروه شما: کودکان و نوجوانان منطقه ۲"
+        rightAction={<SignOutButton />}
+      />
 
-        {/* Group Statistics */}
-        <ThemedText type="heading3" style={styles.sectionTitle}>
-          آمار گروه شما
+      <ScrollView showsVerticalScrollIndicator={false}>
+        {/* Map + Count Section */}
+        <SectionHeader title="نقشه خانواده‌های نیازمند" />
+        <ThemedView type="card" style={{ padding: 0, overflow: 'hidden' }}>
+          <NeedyMap points={needyFamilies} />
+        </ThemedView>
+        <ThemedText type="caption" style={{ marginTop: Spacing.sm, opacity: 0.8 }}>
+          تعداد خانواده‌های نیازمند: {needyCount}
         </ThemedText>
-        <View style={styles.statsGrid}>
-          {myGroupStats.map((stat, index) => (
-            <ThemedView key={index} type="card" style={[styles.statCard, { borderLeftColor: stat.color, borderLeftWidth: 4 }]}>
-              <View style={styles.statHeader}>
-                <ThemedText style={styles.statIcon}>{stat.icon}</ThemedText>
-                <View style={styles.statContent}>
-                  <ThemedText type="heading3" style={[styles.statValue, { color: stat.color }]}>
-                    {stat.value}
-                  </ThemedText>
-                  <ThemedText type="caption" style={styles.statLabel}>
-                    {stat.label}
-                  </ThemedText>
-                </View>
-              </View>
-            </ThemedView>
-          ))}
-        </View>
 
         {/* Quick Actions */}
+        <SectionHeader title="عملیات سریع" />
         <View style={styles.quickActionsRow}>
           <Button
             title="ثبت نیازمند جدید"
@@ -114,9 +96,7 @@ export default function GroupAdminHome() {
         </View>
 
         {/* My Tasks */}
-        <ThemedText type="heading3" style={styles.sectionTitle}>
-          وظایف من
-        </ThemedText>
+        <SectionHeader title="وظایف من" />
         <View style={styles.tasksContainer}>
           {myTasks.map((task, index) => (
             <ThemedView key={index} type="card" style={styles.taskCard}>
@@ -137,9 +117,7 @@ export default function GroupAdminHome() {
         </View>
 
         {/* Recent Updates */}
-        <ThemedText type="heading3" style={styles.sectionTitle}>
-          آخرین به‌روزرسانی‌ها
-        </ThemedText>
+        <SectionHeader title="آخرین به‌روزرسانی‌ها" />
         <ThemedView type="card" style={styles.updatesCard}>
           <View style={styles.updateItem}>
             <View style={[styles.updateDot, { backgroundColor: childrenColor }]} />
@@ -177,23 +155,11 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: Spacing.xl,
-  },
   welcome: {
     marginBottom: Spacing.xs,
   },
   subtitle: {
     opacity: 0.7,
-  },
-  signOutButton: {
-    padding: Spacing.sm,
-  },
-  signOutText: {
-    fontSize: 12,
   },
   sectionTitle: {
     marginBottom: Spacing.lg,

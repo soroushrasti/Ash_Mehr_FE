@@ -6,6 +6,8 @@ import { ThemedText } from '@/components/ThemedText';
 import { useThemeColor } from '@/hooks/useThemeColor';
 import { Spacing } from '@/constants/Design';
 import { withOpacity } from '@/utils/colorUtils';
+import AppHeader from '@/components/AppHeader';
+import SectionHeader from '@/components/SectionHeader';
 
 export default function AdminSelectRole() {
   const router = useRouter();
@@ -34,48 +36,36 @@ export default function AdminSelectRole() {
       route: '/admin/register/form?role=Child'
     },
     {
-      id: 'elderly',
-      title: 'سالمند نیازمند',
-      subtitle: 'ثبت سالمند تحت پوشش خیریه',
-      icon: '👴',
-      color: elderlyColor,
-      description: 'برای سالمندانی که نیاز به مراقبت، دارو یا کمک‌های درمانی دارند',
-      route: '/admin/register/form?role=Elderly'
-    },
-    {
       id: 'volunteer',
       title: 'داوطلب جدید',
-      subtitle: 'ثبت فرد داوطلب برای کمک',
+      subtitle: 'ثبت فرد مدیر گروه',
       icon: '🤝',
       color: volunteerColor,
-      description: 'برای افرادی که می‌خواهند به عنوان داوطلب در فعالیت‌های خیریه شرکت کنند',
-      route: '/admin/register/form?role=Volunteer'
+      description: 'ایجاد کاربر داوطلب با نقش مدیر گروه برای مدیریت گروه‌ها',
+      route: '/admin/register/admin-user?mode=volunteer'
+    },
+    {
+      id: 'admin',
+      title: 'مدیر جدید',
+      subtitle: 'افزودن مدیر سیستم',
+      icon: '🧩',
+      color: primaryColor,
+      description: 'ایجاد کاربر مدیر با نقش مدیر برای مدیریت کل سیستم',
+      route: '/admin/register/admin-user?mode=admin'
     }
   ];
 
-  const handleRoleSelect = (role) => {
-    router.push(role.route);
-  };
-
   return (
     <ThemedView type="container" style={styles.container}>
-      <ScrollView showsVerticalScrollIndicator={false}>
-        {/* Header */}
-        <View style={styles.header}>
-          <ThemedText type="heading2" center style={styles.title}>
-            انتخاب نوع ثبت‌نام
-          </ThemedText>
-          <ThemedText type="body" center style={styles.subtitle}>
-            لطفاً نوع فردی که می‌خواهید ثبت کنید را انتخاب نمایید
-          </ThemedText>
-        </View>
+      <AppHeader title="انتخاب نوع ثبت‌نام" subtitle="لطفاً نوع مورد نظر را انتخاب کنید" />
 
-        {/* Role Cards */}
+      <ScrollView showsVerticalScrollIndicator={false}>
+        <SectionHeader title="انواع ثبت‌نام" />
         <View style={styles.rolesContainer}>
           {roles.map((role) => (
             <TouchableOpacity
               key={role.id}
-              onPress={() => router.push(role.route)}
+              onPress={() => router.push({ pathname: role.route as any })}
               style={styles.roleCardWrapper}
             >
               <ThemedView type="card" style={[styles.roleCard, { borderRightColor: role.color, borderRightWidth: 4 }]}>
@@ -102,8 +92,8 @@ export default function AdminSelectRole() {
         </View>
 
         {/* Help Section */}
-        <ThemedView type="card" style={styles.helpCard}>
-          <ThemedText type="body" weight="medium" center style={styles.helpTitle}>
+        <ThemedView type="card" style={[styles.helpCard, { backgroundColor: withOpacity(primaryColor, 5), borderColor: withOpacity(primaryColor, 20) }]}>
+          <ThemedText type="body" weight="medium" center style={[styles.helpTitle, { color: primaryColor }]}>
             نیاز به راهنمایی دارید؟ 🤔
           </ThemedText>
           <ThemedText type="caption" center style={styles.helpText}>
@@ -121,16 +111,6 @@ export default function AdminSelectRole() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-  },
-  header: {
-    marginBottom: Spacing['4xl'],
-    paddingTop: Spacing.xl,
-  },
-  title: {
-    marginBottom: Spacing.md,
-  },
-  subtitle: {
-    opacity: 0.7,
   },
   rolesContainer: {
     marginBottom: Spacing['3xl'],
@@ -176,9 +156,7 @@ const styles = StyleSheet.create({
     lineHeight: 22,
   },
   helpCard: {
-    backgroundColor: 'rgba(46, 125, 50, 0.05)',
     borderWidth: 1,
-    borderColor: 'rgba(46, 125, 50, 0.2)',
   },
   helpTitle: {
     marginBottom: Spacing.md,

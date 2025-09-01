@@ -8,6 +8,8 @@ import { Button } from '@/components/Button';
 import { InputField } from '@/components/InputField';
 import { useThemeColor } from '@/hooks/useThemeColor';
 import { Spacing } from '@/constants/Design';
+import AppHeader from '@/components/AppHeader';
+import { withOpacity } from '@/utils/colorUtils';
 
 // Enable RTL layout for Farsi
 I18nManager.allowRTL(true);
@@ -72,26 +74,24 @@ export default function SignInScreen() {
 
   return (
     <ThemedView type="container" style={styles.container}>
+      <AppHeader title="آشیانه مهر" subtitle="خیریه‌ای برای همه" />
+
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
         {/* Logo and Welcome Section */}
         <ThemedView center style={styles.logoSection}>
-          <View style={[styles.logoContainer, { borderColor: primaryColor }]}>
+          <View style={[styles.logoContainer, { borderColor: primaryColor, backgroundColor: withOpacity(primaryColor, 10) }]}>
             <Image source={require('@/assets/images/icon.png')} style={styles.logo} />
           </View>
-          <ThemedText type="heading1" center style={styles.title}>
-            آشیانه مهر
+          <ThemedText type="heading2" center style={styles.title}>
+            خوش آمدید
           </ThemedText>
-          <ThemedText type="subtitle" center style={styles.subtitle}>
-            خیریه‌ای برای همه
+          <ThemedText type="caption" center style={styles.subtitle}>
+            لطفا اطلاعات خود را وارد کنید
           </ThemedText>
         </ThemedView>
 
         {/* Login Form */}
         <ThemedView type="card" style={styles.formCard}>
-          <ThemedText type="heading3" center style={styles.formTitle}>
-            ورود به حساب کاربری
-          </ThemedText>
-
           <InputField
             label="شماره تلفن"
             placeholder="09xxxxxxxxx"
@@ -124,14 +124,14 @@ export default function SignInScreen() {
         </ThemedView>
 
         {/* Demo Credentials */}
-        <ThemedView type="card" style={styles.demoCard}>
-          <ThemedText type="body" weight="medium" center style={styles.demoTitle}>
+        <ThemedView type="card" style={[styles.demoCard, { backgroundColor: withOpacity(primaryColor, 5), borderColor: withOpacity(primaryColor, 20) }]}>
+          <ThemedText type="body" weight="medium" center style={[styles.demoTitle, { color: primaryColor }]}>
             اطلاعات ورود نمونه:
           </ThemedText>
-          <ThemedText type="caption" center style={styles.demoText}>
+          <ThemedText type="caption" center style={[styles.demoText, { color: primaryColor }]}>
             مدیر کل: 1234 / admin
           </ThemedText>
-          <ThemedText type="caption" center style={styles.demoText}>
+          <ThemedText type="caption" center style={[styles.demoText, { color: primaryColor }]}>
             مدیر گروه: 12345 / group
           </ThemedText>
         </ThemedView>
@@ -160,7 +160,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: Spacing.xl,
-    backgroundColor: 'rgba(46, 125, 50, 0.1)',
   },
   logo: {
     width: 80,
@@ -176,24 +175,17 @@ const styles = StyleSheet.create({
   formCard: {
     marginBottom: Spacing.xl,
   },
-  formTitle: {
-    marginBottom: Spacing.xl,
-  },
   helpText: {
     marginTop: Spacing.lg,
     opacity: 0.6,
   },
   demoCard: {
-    backgroundColor: 'rgba(46, 125, 50, 0.05)',
     borderWidth: 1,
-    borderColor: 'rgba(46, 125, 50, 0.2)',
   },
   demoTitle: {
     marginBottom: Spacing.md,
-    color: '#2E7D32',
   },
   demoText: {
     marginBottom: Spacing.xs,
-    color: '#2E7D32',
   },
 });

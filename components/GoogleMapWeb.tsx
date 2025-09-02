@@ -19,7 +19,7 @@ export default function GoogleMapWeb({ onLocationSelect, initialLocation, apiKey
   useEffect(() => {
     if (!(window as any).google) {
       const script = document.createElement('script');
-      script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places`;
+      script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places,marker&loading=async`;
       script.async = true;
       script.onload = () => initMap();
       document.body.appendChild(script);
@@ -46,6 +46,33 @@ export default function GoogleMapWeb({ onLocationSelect, initialLocation, apiKey
     });
   }, [city, map, zoom]);
 
+  const removeMarker = (m: any) => {
+    if (!m) return;
+    if (typeof m.setMap === 'function') {
+      m.setMap(null);
+    } else if ('map' in m) {
+      m.map = null;
+    }
+  };
+
+  const createMarker = (position: any, gMap: any, title?: string) => {
+    const adv = (window as any).google?.maps?.marker?.AdvancedMarkerElement;
+    if (adv) {
+      const m = new adv({ map: gMap, position, title });
+      return m;
+    }
+    return new (window as any).google.maps.Marker({ position, map: gMap, title });
+  };
+
+  const addMarkerClick = (m: any, handler: () => void) => {
+    // Advanced markers fire 'gmp-click'
+    if ((window as any).google?.maps?.marker?.AdvancedMarkerElement && m && typeof m.addListener === 'function') {
+      m.addListener('gmp-click', handler);
+    } else if (m && typeof m.addListener === 'function') {
+      m.addListener('click', handler);
+    }
+  };
+
   const initMap = () => {
     if (!mapRef.current || !(window as any).google?.maps) return;
     const center = initialLocation || { latitude: 35.6892, longitude: 51.389 };
@@ -61,11 +88,8 @@ export default function GoogleMapWeb({ onLocationSelect, initialLocation, apiKey
 
     // Add marker if initialLocation
     if (initialLocation) {
-      const gMarker = new (window as any).google.maps.Marker({
-        position: { lat: center.latitude, lng: center.longitude },
-        map: gMap,
-      });
-      setMarker(gMarker);
+      const m = createMarker({ lat: center.latitude, lng: center.longitude }, gMap);
+      setMarker(m);
     }
 
     // Add click listener
@@ -113,12 +137,9 @@ export default function GoogleMapWeb({ onLocationSelect, initialLocation, apiKey
   };
 
   const placeMarker = (latLng: any, gMap: any, addr?: string) => {
-    if (marker) marker.setMap(null);
-    const gMarker = new (window as any).google.maps.Marker({
-      position: latLng,
-      map: gMap,
-    });
-    setMarker(gMarker);
+    removeMarker(marker);
+    const m = createMarker(latLng, gMap, addr);
+    setMarker(m);
     setLoading(true);
     // Get address from latLng
     const geocoder = new (window as any).google.maps.Geocoder();
@@ -126,16 +147,20 @@ export default function GoogleMapWeb({ onLocationSelect, initialLocation, apiKey
       setLoading(false);
       if (status === 'OK' && results && results[0]) {
         setAddress(addr || results[0].formatted_address);
+        const lat = typeof latLng.lat === 'function' ? latLng.lat() : latLng.lat;
+        const lng = typeof latLng.lng === 'function' ? latLng.lng() : latLng.lng;
         onLocationSelect({
-          latitude: typeof latLng.lat === 'function' ? latLng.lat() : latLng.lat,
-          longitude: typeof latLng.lng === 'function' ? latLng.lng() : latLng.lng,
+          latitude: lat,
+          longitude: lng,
           address: addr || results[0].formatted_address,
         });
       } else {
         setAddress('');
+        const lat = typeof latLng.lat === 'function' ? latLng.lat() : latLng.lat;
+        const lng = typeof latLng.lng === 'function' ? latLng.lng() : latLng.lng;
         onLocationSelect({
-          latitude: typeof latLng.lat === 'function' ? latLng.lat() : latLng.lat,
-          longitude: typeof latLng.lng === 'function' ? latLng.lng() : latLng.lng,
+          latitude: lat,
+          longitude: lng,
           address: '',
         });
       }

@@ -38,6 +38,8 @@ export const Config = {
     FIND_NEEDY: '/find-register',
     EDIT_ADMIN: '/edit-admin',
     LOGIN: '/login',
+    INFO_NEEDY: '/info-needy',
+    INFO_ADMIN: '/info-admin',
   }
 };
 

@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { ScrollView, StyleSheet, TouchableOpacity, View, Dimensions, Animated } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
@@ -8,6 +8,7 @@ import { SignOutButton } from '@/components/SignOutButton';
 import { useThemeColor } from '@/hooks/useThemeColor';
 import { Spacing, BorderRadius, Shadows, Typography } from '@/constants/Design';
 import NeedyMap from '@/components/NeedyMap';
+import { apiService } from '@/services/apiService';
 
 const { width } = Dimensions.get('window');
 
@@ -24,6 +25,17 @@ export default function AdminHome() {
    const surfaceColor = useThemeColor({}, 'surface');
    const textColor = useThemeColor({}, 'text');
    const borderColor = useThemeColor({}, 'border');
+
+   const [needyInfo, setNeedyInfo] = useState<{ numberNeedyPersons: number; LastNeedycreatedTime: string; LastNeedyNameCreated: string } | null>(null);
+   const [adminInfo, setAdminInfo] = useState<{ numberGroupAdminPersons: number; numberAdminPersons: number; LastAdmincreatedTime: string; LastAdminNameCreated: string } | null>(null);
+
+   useEffect(() => {
+     (async () => {
+       const [ni, ai] = await Promise.all([apiService.getNeedyInfo(), apiService.getAdminInfo()]);
+       if (ni.success) setNeedyInfo(ni.data!);
+       if (ai.success) setAdminInfo(ai.data!);
+     })();
+   }, []);
 
    // Sample needy families data (replace with API data later)
    const needyFamilies = [
@@ -183,6 +195,16 @@ export default function AdminHome() {
             showsVerticalScrollIndicator={false}
             contentContainerStyle={styles.scrollContent}
          >
+          {/* Stats from API */}
+          <ThemedView type="card" style={{ marginBottom: 12 }}>
+            <ThemedText type="heading3" style={{ marginBottom: 8 }}>خلاصه آمار</ThemedText>
+            <ThemedText type="body">تعداد نیازمندان: {needyInfo?.numberNeedyPersons ?? '—'}</ThemedText>
+            <ThemedText type="caption" style={{ opacity: 0.8 }}>آخرین ثبت نیازمند: {needyInfo?.LastNeedyNameCreated ?? '—'} ({needyInfo?.LastNeedycreatedTime ? new Date(needyInfo.LastNeedycreatedTime).toLocaleString('fa-IR') : '—'})</ThemedText>
+            <View style={{ height: 8 }} />
+            <ThemedText type="body">مدیران کل: {adminInfo?.numberAdminPersons ?? '—'} | مدیران گروه: {adminInfo?.numberGroupAdminPersons ?? '—'}</ThemedText>
+            <ThemedText type="caption" style={{ opacity: 0.8 }}>آخرین مدیر ثبت‌شده: {adminInfo?.LastAdminNameCreated ?? '—'} ({adminInfo?.LastAdmincreatedTime ? new Date(adminInfo.LastAdmincreatedTime).toLocaleString('fa-IR') : '—'})</ThemedText>
+          </ThemedView>
+
           {/* Map + count section replacing previous stats */}
           <Animated.View style={[styles.section, { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }]}>
             <View style={styles.sectionHeader}>

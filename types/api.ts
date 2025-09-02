@@ -90,3 +90,21 @@ export interface NeedyPersonLocation {
   name?: string;
   info?: string;
 }
+
+export interface InfoNeedyResponse {
+  numberNeedyPersons: number;
+  LastNeedycreatedTime: string; // ISO timestamp
+  LastNeedyNameCreated: string; // Firstname + lastname
+}
+
+export interface InfoAdminResponse {
+  numberGroupAdminPersons: number;
+  numberAdminPersons: number;
+  LastAdmincreatedTime: string; // ISO timestamp
+  LastAdminNameCreated: string; // Firstname + lastname
+}
+
+export interface LoginResponse {
+  adminId: number | string;
+  fullName: string; // firstName _ lastName
+}

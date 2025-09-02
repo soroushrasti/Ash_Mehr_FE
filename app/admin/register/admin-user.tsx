@@ -10,10 +10,12 @@ import { Spacing } from '@/constants/Design';
 import { apiService } from '@/services/apiService';
 import { AdminCreate } from '@/types/api';
 import { useThemeColor } from '@/hooks/useThemeColor';
+import { useAuth } from '@/components/AuthContext';
 
 export default function AdminUserForm() {
   const { mode } = useLocalSearchParams(); // 'volunteer' | 'admin'
   const router = useRouter();
+  const { userId } = useAuth();
 
   const isVolunteer = mode === 'volunteer';
   const title = isVolunteer ? 'افزودن داوطلب (مدیر گروه)' : 'افزودن مدیر جدید';
@@ -36,6 +38,7 @@ export default function AdminUserForm() {
   const setField = (k: string, v: string) => setForm(prev => ({ ...prev, [k]: v }));
 
   const onSubmit = async () => {
+    const numericUserId = typeof userId === 'string' && !isNaN(Number(userId)) ? Number(userId) : undefined;
 
     const payload: AdminCreate = {
       FirstName: form.FirstName,
@@ -66,7 +69,7 @@ export default function AdminUserForm() {
 
   return (
     <ThemedView type="container" style={{ flex: 1 }}>
-      <AppHeader title={title} subtitle={isVolunteer ? 'نقش: GroupAdmin' : 'نقش: Admin'} />
+      <AppHeader title={title} subtitle={isVolunteer ? 'نقش: مدیر گروه' : 'نقش: مدیر کل'} />
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
         <ThemedView type="card" style={{ marginBottom: Spacing.xl }}>
           <ThemedText type="heading3" style={{ marginBottom: Spacing.md, color: primary }}>
@@ -96,4 +99,3 @@ const styles = StyleSheet.create({
     padding: Spacing.xl,
   },
 });
-

@@ -19,9 +19,9 @@ const getEnvVar = (name: string, defaultValue?: string): string => {
 export const Config = {
   // API Configuration
     /// for DEV http://localhost:8000
-    API_BASE_URL: getEnvVar('API_BASE_URL', 'http://localhost:8000'),
+    // API_BASE_URL: getEnvVar('API_BASE_URL', 'http://localhost:8000'),
     /// for prod https://ashmehr-production.up.railway.app
-  // API_BASE_URL: getEnvVar('API_BASE_URL', 'https://ashmehr-production.up.railway.app'),
+  API_BASE_URL: getEnvVar('API_BASE_URL', 'https://ashmehr-production.up.railway.app'),
   API_TOKEN: getEnvVar('API_TOKEN', 'abd5ae82bad3dba4288914aeee0f6215fda2eb66490c72fdb5c1f080bb9dc441'),
 
   // Google Maps
@@ -54,7 +54,7 @@ export const getApiHeaders = (includeAuth: boolean = true) => {
   };
 
   if (includeAuth && Config.API_TOKEN) {
-    headers['Authorization'] = `Bearer ${Config.API_TOKEN}`;
+    headers['X-API-Token'] = `${Config.API_TOKEN}`;
   }
 
   return headers;

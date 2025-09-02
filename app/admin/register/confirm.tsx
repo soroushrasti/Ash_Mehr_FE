@@ -78,6 +78,7 @@ export default function AdminRegisterConfirm() {
 
     try {
       // Map form data to RegisterCreateWithChildren schema
+      const numericUserId = typeof userId === 'string' && !isNaN(Number(userId)) ? Number(userId) : undefined;
       const registerData: NeedyCreateWithChildren = {
         FirstName: parsedFormData.firstName || '',
         LastName: parsedFormData.lastName || '',
@@ -88,7 +89,7 @@ export default function AdminRegisterConfirm() {
         Street: parsedFormData.street || undefined,
         NameFather: parsedFormData.nameFather || undefined,
         NationalID: parsedFormData.nationalId || undefined,
-        CreatedBy: typeof userId === 'string' && !isNaN(Number(userId)) ? Number(userId) : undefined,
+        CreatedBy: numericUserId,
         Age: parsedFormData.age ? Number(parsedFormData.age) : undefined,
         Region: parsedFormData.region || undefined,
         Gender: parsedFormData.gender || undefined,

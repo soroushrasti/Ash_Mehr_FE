@@ -108,5 +108,6 @@ export interface InfoAdminResponse {
 
 export interface LoginResponse {
   adminId: number | string;
-  fullName: string; // firstName _ lastName
+  userRole: string,
+  name: string; // firstName _ lastName
 }

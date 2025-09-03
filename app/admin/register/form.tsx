@@ -32,7 +32,6 @@ const baseFields: FieldDef[] = [
   { key: 'phone', label: 'شماره تلفن', placeholder: '09xxxxxxxxx', required: false, type: 'phone' },
   { key: 'nationalId', label: 'کد ملی', placeholder: 'کد ملی ۱۰ رقمی', required: false, type: 'number' },
   { key: 'email', label: 'ایمیل', placeholder: 'example@email.com', required: false, type: 'email' },
-  { key: 'password', label: 'رمز عبور', placeholder: 'رمز عبور (حداقل ۶ کاراکتر)', required: false, secure: true },
   { key: 'province', label: 'استان', placeholder: 'استان محل سکونت', required: false },
   { key: 'city', label: 'شهر', placeholder: 'شهر محل سکونت', required: false },
   { key: 'street', label: 'آدرس', placeholder: 'آدرس کامل', required: false, multiline: true },
@@ -127,6 +126,13 @@ export default function AdminRegisterForm() {
       roleTitle = 'کاربر جدید';
       roleIcon = '👤';
   }
+
+  // Group fields explicitly (avoid index slices)
+  const personalKeys = ['firstName','lastName','phone','nationalId','email'];
+  const addressKeys = ['province','city','street'];
+  const personalFields = fields.filter(f => personalKeys.includes(f.key));
+  const addressFields = fields.filter(f => addressKeys.includes(f.key));
+  const additionalFields = fields.filter(f => !personalKeys.includes(f.key) && !addressKeys.includes(f.key));
 
   const handleChange = (key: string, value: string) => {
     setForm({ ...form, [key]: value });
@@ -254,7 +260,7 @@ export default function AdminRegisterForm() {
             ثبت‌نام {roleTitle}
           </ThemedText>
 
-          {fields.slice(0, 6).map(field =>
+          {personalFields.map(field =>
             field.type === 'select'
               ? renderSelectField(field)
               : (
@@ -283,7 +289,7 @@ export default function AdminRegisterForm() {
             اطلاعات آدرس
           </ThemedText>
 
-          {fields.slice(6, 9).map(field => (
+          {addressFields.map(field => (
             <InputField
               key={field.key}
               label={field.label}
@@ -296,13 +302,13 @@ export default function AdminRegisterForm() {
           ))}
         </ThemedView>
 
-        {fields.length > 9 && (
+        {additionalFields.length > 0 && (
           <ThemedView type="card" style={styles.formCard}>
             <ThemedText type="heading3" style={styles.formTitle}>
               اطلاعات تکمیلی
             </ThemedText>
 
-            {fields.slice(9).map(field =>
+            {additionalFields.map(field =>
               field.type === 'select'
                 ? renderSelectField(field)
                 : (
@@ -404,7 +410,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
     fontSize: 16,
     fontFamily: 'Arial',
-    writingDirection: 'rtl',
+    direction: 'rtl',
   },
   errorText: {
     marginTop: Spacing.xs,

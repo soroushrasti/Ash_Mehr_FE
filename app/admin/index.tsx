@@ -187,7 +187,7 @@ export default function AdminHome() {
                }]}>
                   <View style={styles.welcomeSection}>
                      <ThemedText style={styles.greeting}>سلام{userName ? `، ${userName}` : '، مدیر گرامی'} 👋</ThemedText>
-                     <ThemedText style={styles.welcomeText}>پنل مدیریت آش مهر</ThemedText>
+                     <ThemedText style={styles.welcomeText}>پنل مدیریت آشیانه مهر</ThemedText>
                      <ThemedText style={styles.dateText}>
                         {new Date().toLocaleDateString('fa-IR', {
                            weekday: 'long',

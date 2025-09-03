@@ -37,7 +37,7 @@ export default function AdminSelectRole() {
     },
     {
       id: 'volunteer',
-      title: 'داوطلب جدید',
+      title: 'مدیر گروه جدید',
       subtitle: 'ثبت فرد مدیر گروه',
       icon: '🤝',
       color: volunteerColor,

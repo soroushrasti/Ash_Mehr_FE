@@ -14,6 +14,8 @@ import * as Location from 'expo-location';
 export default function GroupAdminRegisterMap() {
   const router = useRouter();
   const { formData, role, roleTitle, roleIcon } = useLocalSearchParams();
+  const roleIconSafe = typeof roleIcon === 'string' ? roleIcon : Array.isArray(roleIcon) ? roleIcon[0] : '📍';
+  const roleTitleSafe = typeof roleTitle === 'string' ? roleTitle : Array.isArray(roleTitle) ? roleTitle[0] : '';
   const [location, setLocation] = useState<{ latitude: number; longitude: number; address?: string } | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -83,7 +85,7 @@ export default function GroupAdminRegisterMap() {
 
   return (
     <ThemedView type="container" style={styles.container}>
-      <AppHeader title="انتخاب موقعیت جغرافیایی" subtitle={`برای ${roleTitle}`} />
+      <AppHeader title="انتخاب موقعیت جغرافیایی" subtitle={`برای ${roleTitleSafe}`} />
 
       {/* Progress Bar */}
       <ProgressBar />
@@ -91,13 +93,13 @@ export default function GroupAdminRegisterMap() {
       {/* Header with Role Badge */}
       <View style={styles.header}>
         <View style={[styles.roleIconContainer, { backgroundColor: withOpacity(primaryColor, 20) }]}>
-          <ThemedText style={styles.roleIcon}>{roleIcon}</ThemedText>
+          <ThemedText style={styles.roleIcon}>{roleIconSafe}</ThemedText>
         </View>
         <ThemedText type="heading2" center style={styles.title}>
           انتخاب موقعیت جغرافیایی
         </ThemedText>
         <ThemedText type="body" center style={styles.subtitle}>
-          موقعیت {roleTitle} را روی نقشه مشخص کنید
+          موقعیت {roleTitleSafe} را روی نقشه مشخص کنید
         </ThemedText>
       </View>
 

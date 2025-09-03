@@ -14,6 +14,7 @@ import * as Location from 'expo-location';
 export default function AdminRegisterMap() {
   const router = useRouter();
   const { formData, role, roleTitle, roleIcon } = useLocalSearchParams();
+  const roleIconSafe = typeof roleIcon === 'string' ? roleIcon : Array.isArray(roleIcon) ? roleIcon[0] : '📍';
   const [location, setLocation] = useState<{ latitude: number; longitude: number; address?: string } | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -103,7 +104,7 @@ export default function AdminRegisterMap() {
       {/* Header with Role Badge */}
       <View style={styles.header}>
         <View style={[styles.roleIconContainer, { backgroundColor: withOpacity(primaryColor, 20) }]}>
-          <ThemedText style={styles.roleIcon}>{roleIcon}</ThemedText>
+          <ThemedText style={styles.roleIcon}>{roleIconSafe}</ThemedText>
         </View>
         <ThemedText type="heading2" center style={styles.title}>
           انتخاب موقعیت جغرافیایی

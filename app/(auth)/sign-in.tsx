@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, Image, ScrollView, I18nManager } from 'react-native';
+import { View, StyleSheet, Image, ScrollView, I18nManager, KeyboardAvoidingView, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAuth } from '@/components/AuthContext';
 import { ThemedView } from '@/components/ThemedView';
@@ -57,7 +57,7 @@ export default function SignInScreen() {
       const data: any = resp.data || {};
       const adminId = String(data.adminId ?? data.id ?? '');
       const userRole: 'Admin' | 'GroupAdmin' | undefined = data.userRole;
-      const displayName: string | null = (data.fullName as string) || [data.firstName, data.lastName].filter(Boolean).join(' ') || null;
+      const displayName: string | null = (data.name as string) || [data.firstName, data.lastName].filter(Boolean).join(' ') || null;
 
       if (userRole === 'GroupAdmin') {
         await signIn('GroupAdmin', adminId || 'group-id', phone, password, displayName);
@@ -78,53 +78,63 @@ export default function SignInScreen() {
     <ThemedView type="container" style={styles.container}>
       <AppHeader title="آشیانه مهر" subtitle="خیریه‌ای برای همه" />
 
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
-        {/* Logo and Welcome Section */}
-        <ThemedView center style={styles.logoSection}>
-          <View style={[styles.logoContainer, { borderColor: primaryColor, backgroundColor: withOpacity(primaryColor, 10) }]}>
-            <Image source={require('@/assets/images/icon.png')} style={styles.logo} />
-          </View>
-          <ThemedText type="heading2" center style={styles.title}>
-            خوش آمدید
-          </ThemedText>
-          <ThemedText type="caption" center style={styles.subtitle}>
-            لطفا اطلاعات خود را وارد کنید
-          </ThemedText>
-        </ThemedView>
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 80 : 0}
+      >
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.scrollContent}
+          keyboardShouldPersistTaps="handled"
+        >
+          {/* Logo and Welcome Section */}
+          <ThemedView center style={styles.logoSection}>
+            <View style={[styles.logoContainer, { borderColor: primaryColor, backgroundColor: withOpacity(primaryColor, 10) }]}>
+              <Image source={require('@/assets/images/icon.png')} style={styles.logo} />
+            </View>
+            <ThemedText type="heading2" center style={styles.title}>
+              خوش آمدید
+            </ThemedText>
+            <ThemedText type="caption" center style={styles.subtitle}>
+              لطفا اطلاعات خود را وارد کنید
+            </ThemedText>
+          </ThemedView>
 
-        {/* Login Form */}
-        <ThemedView type="card" style={styles.formCard}>
-          <InputField
-            label="شماره تلفن"
-            placeholder="09xxxxxxxxx"
-            value={phone}
-            onChangeText={setPhone}
-            keyboardType="phone-pad"
-            leftIcon={<ThemedText>📱</ThemedText>}
-          />
+          {/* Login Form */}
+          <ThemedView type="card" style={styles.formCard}>
+            <InputField
+              label="شماره تلفن"
+              placeholder="09xxxxxxxxx"
+              value={phone}
+              onChangeText={setPhone}
+              keyboardType="phone-pad"
+              leftIcon={<ThemedText>📱</ThemedText>}
+            />
 
-          <InputField
-            label="رمز عبور"
-            placeholder="رمز عبور خود را وارد کنید"
-            value={password}
-            onChangeText={setPassword}
-            secureTextEntry
-            leftIcon={<ThemedText>🔒</ThemedText>}
-            error={error}
-          />
+            <InputField
+              label="رمز عبور"
+              placeholder="رمز عبور خود را وارد کنید"
+              value={password}
+              onChangeText={setPassword}
+              secureTextEntry
+              leftIcon={<ThemedText>🔒</ThemedText>}
+              error={error}
+            />
 
-          <Button
-            title="ورود"
-            onPress={handleSignIn}
-            fullWidth
-            loading={loading}
-          />
+            <Button
+              title="ورود"
+              onPress={handleSignIn}
+              fullWidth
+              loading={loading}
+            />
 
-          <ThemedText type="caption" center style={styles.helpText}>
-            برای کمک به نیازمندان وارد شوید
-          </ThemedText>
-        </ThemedView>
-      </ScrollView>
+            <ThemedText type="caption" center style={styles.helpText}>
+              برای کمک به نیازمندان وارد شوید
+            </ThemedText>
+          </ThemedView>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </ThemedView>
   );
 }
@@ -137,6 +147,7 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     justifyContent: 'center',
     paddingVertical: Spacing['4xl'],
+    paddingBottom: Spacing['4xl'],
   },
   logoSection: {
     marginBottom: Spacing['4xl'],

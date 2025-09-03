@@ -17,7 +17,6 @@ const baseFields = [
   { key: 'phone', label: 'شماره تلفن', placeholder: '09xxxxxxxxx', required: false, type: 'phone' },
   { key: 'nationalId', label: 'کد ملی', placeholder: 'کد ملی ۱۰ رقمی', required: false, type: 'number' },
   { key: 'email', label: 'ایمیل', placeholder: 'example@email.com', required: false, type: 'email' },
-  { key: 'password', label: 'رمز عبور', placeholder: 'رمز عبور (حداقل ۶ کاراکتر)', required: false, secure: true },
   { key: 'province', label: 'استان', placeholder: 'استان محل سکونت', required: false },
   { key: 'city', label: 'شهر', placeholder: 'شهر محل سکونت', required: false },
   { key: 'street', label: 'آدرس', placeholder: 'آدرس کامل', required: false, multiline: true },
@@ -54,7 +53,6 @@ function validateField(field, value) {
   if (field.type === 'email' && value && !/^\S+@\S+\.\S+$/.test(value)) return 'فرمت ایمیل نادرست است';
   if (field.type === 'phone' && value && !/^09\d{9}$/.test(value)) return 'شماره تلفن باید با ۰۹ شروع شود و ۱۱ رقم باشد';
   if (field.type === 'number' && value && isNaN(Number(value))) return `${field.label} باید عدد باشد`;
-  if (field.key === 'password' && value && value.length < 6) return 'رمز عبور باید حداقل ۶ کاراکتر باشد';
   if (field.key === 'nationalId' && value && (!/^\d{10}$/.test(value) || !isValidNationalId(value))) return 'کد ملی نادرست است';
   return '';
 }
@@ -208,6 +206,13 @@ export default function GroupAdminRegisterForm() {
     }
   };
 
+  // Group fields explicitly instead of using index slices
+  const personalKeys = ['firstName','lastName','phone','nationalId','email'];
+  const addressKeys = ['province','city','street'];
+  const personalFields = fields.filter(f => personalKeys.includes(f.key));
+  const addressFields = fields.filter(f => addressKeys.includes(f.key));
+  const additionalFields = fields.filter(f => !personalKeys.includes(f.key) && !addressKeys.includes(f.key));
+
   return (
     <ThemedView type="container" style={styles.container}>
       <AppHeader title={`ثبت‌نام ${roleTitle}`} subtitle="توسط مدیر گروه" />
@@ -249,7 +254,7 @@ export default function GroupAdminRegisterForm() {
             اطلاعات شخصی
           </ThemedText>
 
-          {fields.slice(0, 6).map(field => (
+          {personalFields.map(field => (
             field.type === 'select' ? renderSelectField(field) : (
               <InputField
                 key={field.key}
@@ -271,7 +276,7 @@ export default function GroupAdminRegisterForm() {
             اطلاعات آدرس
           </ThemedText>
 
-          {fields.slice(6, 9).map(field => (
+          {addressFields.map(field => (
             <InputField
               key={field.key}
               label={field.label}
@@ -289,7 +294,7 @@ export default function GroupAdminRegisterForm() {
             اطلاعات تکمیلی
           </ThemedText>
 
-          {fields.slice(9).map(field => (
+          {additionalFields.map(field => (
             field.type === 'select' ? renderSelectField(field) : (
               <InputField
                 key={field.key}

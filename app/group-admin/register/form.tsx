@@ -176,7 +176,7 @@ export default function GroupAdminRegisterForm() {
               backgroundColor: 'white',
               fontSize: 16,
               fontFamily: 'Arial',
-              direction: 'rtl',
+                writingDirection: 'rtl',
               color: textColor as any,
             }}
             value={form[field.key] || ''}

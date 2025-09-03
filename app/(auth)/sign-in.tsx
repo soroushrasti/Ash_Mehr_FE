@@ -56,16 +56,15 @@ export default function SignInScreen() {
 
       const data: any = resp.data || {};
       const adminId = String(data.adminId ?? data.id ?? '');
-      const userRole = data.userRole
-        if (userRole == 'Admin') {
-            await signIn('Admin', adminId , phone, password);
-            router.replace('/admin');
-        }
-        else {
-            await signIn('GroupAdmin', adminId, phone, password);
-        console.log('signIn completed, redirecting to group-admin...');
+      const userRole: 'Admin' | 'GroupAdmin' | undefined = data.userRole;
+
+      if (userRole === 'GroupAdmin') {
+        await signIn('GroupAdmin', adminId || 'group-id', phone, password);
         router.replace('/group-admin');
-        }
+      } else {
+        await signIn('Admin', adminId || 'admin-id', phone, password);
+        router.replace('/admin');
+      }
     } catch (e) {
       console.error('Login error:', e);
       setError('خطا در ورود. لطفاً دوباره تلاش کنید');

@@ -9,6 +9,7 @@ import { useThemeColor } from '@/hooks/useThemeColor';
 import { Spacing, BorderRadius, Shadows, Typography } from '@/constants/Design';
 import NeedyMap from '@/components/NeedyMap';
 import { apiService } from '@/services/apiService';
+import type { NeedyPoint } from '@/components/NeedyMap';
 
 const { width } = Dimensions.get('window');
 
@@ -28,12 +29,21 @@ export default function AdminHome() {
 
    const [needyInfo, setNeedyInfo] = useState<{ numberNeedyPersons: number; LastNeedycreatedTime: string; LastNeedyNameCreated: string } | null>(null);
    const [adminInfo, setAdminInfo] = useState<{ numberGroupAdminPersons: number; numberAdminPersons: number; LastAdmincreatedTime: string; LastAdminNameCreated: string } | null>(null);
+   const [mapPoints, setMapPoints] = useState<NeedyPoint[]>([]);
+   const [adminMapPoints, setAdminMapPoints] = useState<NeedyPoint[]>([]);
 
    useEffect(() => {
      (async () => {
-       const [ni, ai] = await Promise.all([apiService.getNeedyInfo(), apiService.getAdminInfo()]);
+       const [ni, ai, ng, ag] = await Promise.all([
+         apiService.getNeedyInfo(),
+         apiService.getAdminInfo(),
+         apiService.getNeedyGeoPoints(),
+         apiService.getAdminGeoPoints(),
+       ]);
        if (ni.success) setNeedyInfo(ni.data!);
        if (ai.success) setAdminInfo(ai.data!);
+       if (ng.success && Array.isArray(ng.data)) setMapPoints(ng.data as any);
+       if (ag.success && Array.isArray(ag.data)) setAdminMapPoints(ag.data as any);
      })();
    }, []);
 
@@ -206,16 +216,16 @@ export default function AdminHome() {
           </ThemedView>
 
           {/* Map + count section replacing previous stats */}
-          <Animated.View style={[styles.section, { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }]}>
+          <Animated.View style={[styles.section, { opacity: fadeAnim, transform: [{ translateY: slideAnim }]}]}>
             <View style={styles.sectionHeader}>
               <ThemedText style={[styles.sectionTitle, { color: textColor }]}>🗺️ نقشه خانواده‌های نیازمند</ThemedText>
               <View style={styles.sectionDivider} />
             </View>
             <ThemedView type="card" style={{ padding: 0, overflow: 'hidden' }}>
-              <NeedyMap points={needyFamilies} />
+              <NeedyMap points={mapPoints} adminPoints={adminMapPoints} />
             </ThemedView>
             <ThemedText type="caption" style={{ marginTop: 8, opacity: 0.8 }}>
-              تعداد خانواده‌های نیازمند: {needyCount}
+              تعداد خانواده‌های نیازمند: {mapPoints.length}
             </ThemedText>
           </Animated.View>
 
@@ -233,7 +243,7 @@ export default function AdminHome() {
 
              <View style={styles.actionsContainer}>
                 {quickActions.map((action, index) => (
-                   <ActionCard key={index} action={action} index={index} />
+                   <ActionCard key={index} action={action} />
                 ))}
              </View>
           </Animated.View>
@@ -253,15 +263,15 @@ export default function AdminHome() {
              <View style={[styles.activityCard, { backgroundColor: surfaceColor, borderColor }]}>
                 <View style={styles.activityItem}>
                    <View style={styles.activityIconContainer}>
-                      <View style={[styles.activityDot, { backgroundColor: donationColor }]} />
-                      <View style={[styles.activityPulse, { backgroundColor: donationColor + '20' }]} />
+                      <View style={[styles.activityDot, { backgroundColor: primaryColor }]} />
+                      <View style={[styles.activityPulse, { backgroundColor: primaryColor + '20' }]} />
                    </View>
                    <View style={styles.activityContent}>
                       <ThemedText style={[styles.activityTitle, { color: textColor }]}>
-                         💰 کمک جدید دریافت شد
+                         👪 ثبت نیازمند جدید: {needyInfo?.LastNeedyNameCreated ?? '—'}
                       </ThemedText>
                       <ThemedText style={[styles.activityTime, { color: textColor, opacity: 0.6 }]}>
-                         ۱۰ دقیقه پیش
+                         {needyInfo?.LastNeedycreatedTime ? new Date(needyInfo.LastNeedycreatedTime).toLocaleString('fa-IR') : '—'}
                       </ThemedText>
                    </View>
                 </View>
@@ -275,10 +285,10 @@ export default function AdminHome() {
                    </View>
                    <View style={styles.activityContent}>
                       <ThemedText style={[styles.activityTitle, { color: textColor }]}>
-                         👥 داوطلب جدید ثبت‌نام کرد
+                         🧑‍💼 ثبت مدیر جدید: {adminInfo?.LastAdminNameCreated ?? '—'}
                       </ThemedText>
                       <ThemedText style={[styles.activityTime, { color: textColor, opacity: 0.6 }]}>
-                         ۳۰ دقیقه پیش
+                         {adminInfo?.LastAdmincreatedTime ? new Date(adminInfo.LastAdmincreatedTime).toLocaleString('fa-IR') : '—'}
                       </ThemedText>
                    </View>
                 </View>

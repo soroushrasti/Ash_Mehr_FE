@@ -64,12 +64,12 @@ const needyFamilyFields: FieldDef[] = [
 ];
 
 function validateField(field: FieldDef, value: string): string {
-  if (field.required && (!value || value.trim() === '')) return `${field.label} الزامی است`;
-  if (field.type === 'email' && value && !/^\S+@\S+\.\S+$/.test(value)) return 'فرمت ایمیل نادرست است';
-  if (field.type === 'phone' && value && !/^09\d{9}$/.test(value)) return 'شماره تلفن باید با ۰۹ شروع شود و ۱۱ رقم باشد';
-  if (field.type === 'number' && value && isNaN(Number(value))) return `${field.label} باید عدد باشد`;
-  if (field.key === 'password' && value && value.length < 6) return 'رمز عبور باید حداقل ۶ کاراکتر باشد';
-  if (field.key === 'nationalId' && value && (!/^\d{10}$/.test(value) || !isValidNationalId(value))) return 'کد ملی نادرست است';
+  // if (field.required && (!value || value.trim() === '')) return `${field.label} الزامی است`;
+  // if (field.type === 'email' && value && !/^\S+@\S+\.\S+$/.test(value)) return 'فرمت ایمیل نادرست است';
+  // if (field.type === 'phone' && value && !/^09\d{9}$/.test(value)) return 'شماره تلفن باید با ۰۹ شروع شود و ۱۱ رقم باشد';
+  // if (field.type === 'number' && value && isNaN(Number(value))) return `${field.label} باید عدد باشد`;
+  // if (field.key === 'password' && value && value.length < 6) return 'رمز عبور باید حداقل ۶ کاراکتر باشد';
+  // if (field.key === 'nationalId' && value && (!/^\d{10}$/.test(value) || !isValidNationalId(value))) return 'کد ملی نادرست است';
   return '';
 }
 

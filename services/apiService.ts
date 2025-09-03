@@ -1,5 +1,5 @@
 import { Config, buildApiUrl, getApiHeaders } from '@/constants/Config';
-import { AdminCreate, ApiResponse, NeedyCreateWithChildren, InfoNeedyResponse, InfoAdminResponse } from '@/types/api';
+import { AdminCreate, ApiResponse, NeedyCreateWithChildren, InfoNeedyResponse, InfoAdminResponse, NeedyPersonLocation } from '@/types/api';
 import { apiRequest } from './apiClient';
 
 class ApiService {
@@ -88,6 +88,24 @@ class ApiService {
       successMessage: 'ثبت مدیر با موفقیت انجام شد',
       redirectOnSuccessTo: '/',
       showErrorAlert: true,
+    });
+  }
+
+  async getNeedyGeoPoints(): Promise<ApiResponse<NeedyPersonLocation[]>> {
+    return apiRequest<NeedyPersonLocation[]>({
+      endpoint: Config.ENDPOINTS.FIND_NEEDY_GEO,
+      method: 'GET',
+      includeAuth: true,
+      showErrorAlert: false,
+    });
+  }
+
+  async getAdminGeoPoints(): Promise<ApiResponse<NeedyPersonLocation[]>> {
+    return apiRequest<NeedyPersonLocation[]>({
+      endpoint: Config.ENDPOINTS.FIND_ADMIN_GEO,
+      method: 'GET',
+      includeAuth: true,
+      showErrorAlert: false,
     });
   }
 }

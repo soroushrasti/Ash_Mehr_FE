@@ -40,6 +40,8 @@ export const Config = {
     LOGIN: '/login',
     INFO_NEEDY: '/info-needy',
     INFO_ADMIN: '/info-admin',
+    FIND_NEEDY_GEO: '/find-needy',
+    FIND_ADMIN_GEO: '/find-admin',
   }
 };
 

@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { StyleSheet, View, Platform, Alert } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { StyleSheet, View, Alert } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { ThemedView } from '@/components/ThemedView';
 import { ThemedText } from '@/components/ThemedText';
@@ -9,6 +9,7 @@ import { useThemeColor } from '@/hooks/useThemeColor';
 import { Spacing } from '@/constants/Design';
 import { withOpacity } from '@/utils/colorUtils';
 import AppHeader from '@/components/AppHeader';
+import * as Location from 'expo-location';
 
 export default function GroupAdminRegisterMap() {
   const router = useRouter();
@@ -16,6 +17,23 @@ export default function GroupAdminRegisterMap() {
   const [location, setLocation] = useState<{ latitude: number; longitude: number; address?: string } | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [locError, setLocError] = useState<string | null>(null);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const { status } = await Location.requestForegroundPermissionsAsync();
+        if (status !== 'granted') {
+          setLocError('مجوز دسترسی به موقعیت داده نشد. لطفاً به صورت دستی مکان را انتخاب کنید.');
+          return;
+        }
+        const pos = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
+        setLocation({ latitude: pos.coords.latitude, longitude: pos.coords.longitude });
+      } catch {
+        setLocError('امکان دریافت موقعیت فعلی وجود ندارد.');
+      }
+    })();
+  }, []);
 
   const primaryColor = useThemeColor({}, 'primary');
   const successColor = useThemeColor({}, 'success');
@@ -139,6 +157,15 @@ export default function GroupAdminRegisterMap() {
           <ThemedView style={[styles.errorContainer, { backgroundColor: withOpacity(errorColor, 10), borderColor: withOpacity(errorColor, 20) }]}>
             <ThemedText type="caption" style={[styles.errorText, { color: errorColor }]}>
               ⚠️ {error}
+            </ThemedText>
+          </ThemedView>
+        )}
+
+        {/* Location Error State */}
+        {locError && (
+          <ThemedView style={[styles.errorContainer, { backgroundColor: withOpacity(errorColor, 10), borderColor: withOpacity(errorColor, 20) }]}>
+            <ThemedText type="caption" style={[styles.errorText, { color: errorColor }]}>
+              ⚠️ {locError}
             </ThemedText>
           </ThemedView>
         )}

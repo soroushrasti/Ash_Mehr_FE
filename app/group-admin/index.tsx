@@ -11,9 +11,11 @@ import { withOpacity } from '@/utils/colorUtils';
 import AppHeader from '@/components/AppHeader';
 import SectionHeader from '@/components/SectionHeader';
 import NeedyMap from '@/components/NeedyMap';
+import { useAuth } from '@/components/AuthContext';
 
 export default function GroupAdminHome() {
   const router = useRouter();
+  const { userName } = useAuth();
   const primaryColor = useThemeColor({}, 'primary');
   const childrenColor = useThemeColor({}, 'children');
   const elderlyColor = useThemeColor({}, 'elderly');
@@ -61,7 +63,7 @@ export default function GroupAdminHome() {
   return (
     <ThemedView type="container" style={styles.container}>
       <AppHeader
-        title="سلام مدیر گروه عزیز! 👋"
+        title={`سلام${userName ? `، ${userName}` : ''} 👋`}
         subtitle="گروه شما: کودکان و نوجوانان منطقه ۲"
         rightAction={<SignOutButton />}
       />

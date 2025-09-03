@@ -8,8 +8,9 @@ export type UserType = 'Admin' | 'GroupAdmin' | null;
 interface AuthState {
   userType: UserType;
   userId: string | null;
+  userName: string | null;
   isLoading: boolean;
-  signIn: (userType: UserType, userId: string, phone: string, password: string) => Promise<void>;
+  signIn: (userType: UserType, userId: string, phone: string, password: string, userName?: string | null) => Promise<void>;
   signOut: () => Promise<void>;
   getCachedCredentials: () => Promise<{ phone: string; password: string } | null>;
 }
@@ -19,6 +20,7 @@ const AuthContext = createContext<AuthState | undefined>(undefined);
 const STORAGE_KEYS = {
   USER_TYPE: 'auth_user_type',
   USER_ID: 'auth_user_id',
+  USER_NAME: 'auth_user_name',
   PHONE: 'auth_phone',
   PASSWORD: 'auth_password',
 };
@@ -73,20 +75,23 @@ const deleteStorageItem = async (key: string): Promise<void> => {
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [userType, setUserType] = useState<UserType>(null);
   const [userId, setUserId] = useState<string | null>(null);
+  const [userName, setUserName] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   // Auto-login on app start
   useEffect(() => {
     const initializeAuth = async () => {
       try {
-        const [storedUserType, storedUserId] = await Promise.all([
+        const [storedUserType, storedUserId, storedUserName] = await Promise.all([
           getStorageItem(STORAGE_KEYS.USER_TYPE),
           getStorageItem(STORAGE_KEYS.USER_ID),
+          getStorageItem(STORAGE_KEYS.USER_NAME),
         ]);
 
         if (storedUserType && storedUserId) {
           setUserType(storedUserType as UserType);
           setUserId(storedUserId);
+          setUserName(storedUserName);
         }
       } catch (error) {
         console.error('Failed to restore authentication state:', error);
@@ -98,18 +103,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     initializeAuth();
   }, []);
 
-  const signIn = async (type: UserType, id: string, phone: string, password: string) => {
+  const signIn = async (type: UserType, id: string, phone: string, password: string, name?: string | null) => {
     try {
       // Store credentials and auth state securely
       await Promise.all([
         setStorageItem(STORAGE_KEYS.USER_TYPE, type || ''),
         setStorageItem(STORAGE_KEYS.USER_ID, id),
+        setStorageItem(STORAGE_KEYS.USER_NAME, name || ''),
         setStorageItem(STORAGE_KEYS.PHONE, phone),
         setStorageItem(STORAGE_KEYS.PASSWORD, password),
       ]);
 
       setUserType(type);
       setUserId(id);
+      setUserName(name || null);
     } catch (error) {
       console.error('Failed to store authentication data:', error);
       throw error;
@@ -122,12 +129,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       await Promise.all([
         deleteStorageItem(STORAGE_KEYS.USER_TYPE),
         deleteStorageItem(STORAGE_KEYS.USER_ID),
+        deleteStorageItem(STORAGE_KEYS.USER_NAME),
         deleteStorageItem(STORAGE_KEYS.PHONE),
         deleteStorageItem(STORAGE_KEYS.PASSWORD),
       ]);
 
       setUserType(null);
       setUserId(null);
+      setUserName(null);
     } catch (error) {
       console.error('Failed to clear authentication data:', error);
     }
@@ -154,6 +163,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     <AuthContext.Provider value={{
       userType,
       userId,
+      userName,
       isLoading,
       signIn,
       signOut,

@@ -11,6 +11,7 @@ import NeedyMap from '@/components/NeedyMap';
 import { apiService } from '@/services/apiService';
 import type { NeedyPoint } from '@/components/NeedyMap';
 import type { InfoAdminResponse } from '@/types/api';
+import { useAuth } from '@/components/AuthContext';
 
 const { width } = Dimensions.get('window');
 
@@ -18,6 +19,7 @@ export default function AdminHome() {
    const router = useRouter();
    const fadeAnim = useRef(new Animated.Value(0)).current;
    const slideAnim = useRef(new Animated.Value(50)).current;
+   const { userName } = useAuth();
 
    const primaryColor = useThemeColor({}, 'primary');
    const donationColor = useThemeColor({}, 'donation');
@@ -184,7 +186,7 @@ export default function AdminHome() {
                   transform: [{ translateY: slideAnim }]
                }]}>
                   <View style={styles.welcomeSection}>
-                     <ThemedText style={styles.greeting}>سلام، مدیر گرامی 👋</ThemedText>
+                     <ThemedText style={styles.greeting}>سلام{userName ? `، ${userName}` : '، مدیر گرامی'} 👋</ThemedText>
                      <ThemedText style={styles.welcomeText}>پنل مدیریت آش مهر</ThemedText>
                      <ThemedText style={styles.dateText}>
                         {new Date().toLocaleDateString('fa-IR', {

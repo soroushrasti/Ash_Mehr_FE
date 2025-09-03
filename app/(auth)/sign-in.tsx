@@ -57,12 +57,13 @@ export default function SignInScreen() {
       const data: any = resp.data || {};
       const adminId = String(data.adminId ?? data.id ?? '');
       const userRole: 'Admin' | 'GroupAdmin' | undefined = data.userRole;
+      const displayName: string | null = (data.fullName as string) || [data.firstName, data.lastName].filter(Boolean).join(' ') || null;
 
       if (userRole === 'GroupAdmin') {
-        await signIn('GroupAdmin', adminId || 'group-id', phone, password);
+        await signIn('GroupAdmin', adminId || 'group-id', phone, password, displayName);
         router.replace('/group-admin');
       } else {
-        await signIn('Admin', adminId || 'admin-id', phone, password);
+        await signIn('Admin', adminId || 'admin-id', phone, password, displayName);
         router.replace('/admin');
       }
     } catch (e) {

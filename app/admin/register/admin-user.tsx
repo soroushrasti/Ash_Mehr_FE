@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { ScrollView, StyleSheet, View, Alert } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { ThemedView } from '@/components/ThemedView';
@@ -11,6 +11,8 @@ import { apiService } from '@/services/apiService';
 import { AdminCreate } from '@/types/api';
 import { useThemeColor } from '@/hooks/useThemeColor';
 import { useAuth } from '@/components/AuthContext';
+import UniversalMap from '@/components/UniversalMap';
+import * as Location from 'expo-location';
 
 export default function AdminUserForm() {
   const { mode } = useLocalSearchParams(); // 'volunteer' | 'admin'
@@ -35,6 +37,27 @@ export default function AdminUserForm() {
   });
   const [loading, setLoading] = useState(false);
 
+  // Location state for GroupAdmin creation
+  const [location, setLocation] = useState<{ latitude: number; longitude: number; address?: string } | null>(null);
+  const [locError, setLocError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!isVolunteer) return;
+    (async () => {
+      try {
+        const { status } = await Location.requestForegroundPermissionsAsync();
+        if (status !== 'granted') {
+          setLocError('برای تعیین موقعیت مدیر گروه، مجوز دسترسی به موقعیت لازم است.');
+          return;
+        }
+        const pos = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
+        setLocation({ latitude: pos.coords.latitude, longitude: pos.coords.longitude });
+      } catch (e) {
+        setLocError('خطا در دریافت موقعیت فعلی');
+      }
+    })();
+  }, [isVolunteer]);
+
   const setField = (k: string, v: string) => setForm(prev => ({ ...prev, [k]: v }));
 
   const onSubmit = async () => {
@@ -52,7 +75,14 @@ export default function AdminUserForm() {
       NationalID: form.NationalID || undefined,
       UserRole: isVolunteer ? 'GroupAdmin' : 'Admin',
       Password: form.Password,
+      Latitude: isVolunteer && location ? String(location.latitude) : undefined,
+      Longitude: isVolunteer && location ? String(location.longitude) : undefined,
     };
+
+    if (isVolunteer && !location) {
+      Alert.alert('خطا', 'لطفاً موقعیت مدیر گروه را روی نقشه انتخاب کنید.');
+      return;
+    }
 
     setLoading(true);
     const res = await apiService.createAdmin(payload);
@@ -86,6 +116,35 @@ export default function AdminUserForm() {
           <InputField label="شهر" value={form.City} onChangeText={v => setField('City', v)} />
           <InputField label="خیابان/آدرس" value={form.Street} onChangeText={v => setField('Street', v)} />
           <InputField label="کد ملی" value={form.NationalID} onChangeText={v => setField('NationalID', v)} />
+
+          {isVolunteer && (
+            <>
+              <ThemedText type="heading3" style={{ marginVertical: Spacing.md, color: primary }}>
+                انتخاب موقعیت مدیر گروه
+              </ThemedText>
+              <ThemedText type="caption" style={{ marginBottom: Spacing.sm, opacity: 0.8 }}>
+                ابتدا مجوز دسترسی به موقعیت را تایید کنید. سپس نشانگر را روی موقعیت دقیق قرار دهید.
+              </ThemedText>
+              <View style={{ height: 300, borderRadius: 12, overflow: 'hidden', marginBottom: Spacing.md }}>
+                <UniversalMap
+                  location={location}
+                  onLocationSelect={(loc) => setLocation(loc)}
+                  zoom={13}
+                  showControls
+                />
+              </View>
+              {location && (
+                <ThemedText type="caption" style={{ opacity: 0.8, marginBottom: Spacing.sm }}>
+                  مختصات: {location.latitude.toFixed(6)} , {location.longitude.toFixed(6)}
+                </ThemedText>
+              )}
+              {!!locError && (
+                <ThemedText type="caption" style={{ color: 'red', marginBottom: Spacing.sm }}>
+                  {locError}
+                </ThemedText>
+              )}
+            </>
+          )}
 
           <Button title="ثبت" onPress={onSubmit} fullWidth loading={loading} />
         </ThemedView>

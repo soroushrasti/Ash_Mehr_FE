@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { StyleSheet, View, Platform, Alert } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { StyleSheet, View, Alert } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { ThemedView } from '@/components/ThemedView';
 import { ThemedText } from '@/components/ThemedText';
@@ -9,6 +9,7 @@ import { useThemeColor } from '@/hooks/useThemeColor';
 import { Spacing } from '@/constants/Design';
 import { withOpacity } from '@/utils/colorUtils';
 import AppHeader from '@/components/AppHeader';
+import * as Location from 'expo-location';
 
 export default function AdminRegisterMap() {
   const router = useRouter();
@@ -16,6 +17,23 @@ export default function AdminRegisterMap() {
   const [location, setLocation] = useState<{ latitude: number; longitude: number; address?: string } | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [locError, setLocError] = useState<string | null>(null);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const { status } = await Location.requestForegroundPermissionsAsync();
+        if (status !== 'granted') {
+          setLocError('مجوز دسترسی به موقعیت داده نشد. لطفاً به صورت دستی مکان را انتخاب کنید.');
+          return;
+        }
+        const pos = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
+        setLocation({ latitude: pos.coords.latitude, longitude: pos.coords.longitude });
+      } catch {
+        setLocError('امکان دریافت موقعیت فعلی وجود ندارد.');
+      }
+    })();
+  }, []);
 
   // Extract city from serialized formData (supports both lower and upper case keys)
   const formDataStr = Array.isArray(formData) ? formData[0] : (formData as string | undefined);
@@ -114,6 +132,12 @@ export default function AdminRegisterMap() {
             city={city}
           />
         </View>
+
+        {!!locError && (
+          <ThemedText type="caption" style={{ color: 'red', marginBottom: Spacing.sm }}>
+            {locError}
+          </ThemedText>
+        )}
 
         {location && (
           <ThemedView type="surface" style={styles.locationInfo}>

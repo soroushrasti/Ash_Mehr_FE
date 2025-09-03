@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef } from 'react';
 import { Config } from '@/constants/Config';
 
 export type NeedyPoint = {
@@ -11,7 +11,7 @@ export type NeedyPoint = {
 
 interface NeedyMapProps {
   points: NeedyPoint[];
-  adminPoints?: NeedyPoint[]; // new: admins with different color
+  adminPoints?: NeedyPoint[]; // admins with different color
   initialCenter?: { lat: number; lng: number };
 }
 
@@ -21,14 +21,6 @@ export default function NeedyMap({ points, adminPoints = [], initialCenter }: Ne
   const markersRef = useRef<any[]>([]);
   const infoWindowsRef = useRef<any[]>([]);
   const clustererRef = useRef<any>(null);
-  const [debugLogs, setDebugLogs] = useState<string[]>([]);
-
-  const log = (msg: string) => {
-    const line = `[web-needy-map] ${new Date().toISOString()} ${msg}`;
-    // eslint-disable-next-line no-console
-    console.log(line);
-    setDebugLogs((prev) => [...prev.slice(-150), line]);
-  };
 
   const center = useMemo(() => initialCenter || { lat: (points[0]?.lat ?? adminPoints[0]?.lat ?? 35.6892), lng: (points[0]?.lng ?? adminPoints[0]?.lng ?? 51.389) }, [initialCenter, points, adminPoints]);
 
@@ -37,11 +29,10 @@ export default function NeedyMap({ points, adminPoints = [], initialCenter }: Ne
     const init = async () => {
       try {
         if (!(window as any).google) {
-          log('google missing, injecting script');
-          await loadGoogleMaps(log);
+          await loadGoogleMaps();
         }
         const { Map } = (window as any).google.maps;
-        if (!mapRef.current) { log('mapRef missing, abort init'); return; }
+        if (!mapRef.current) { return; }
         const map = new Map(mapRef.current!, {
           center,
           zoom: 12,
@@ -49,7 +40,6 @@ export default function NeedyMap({ points, adminPoints = [], initialCenter }: Ne
           streetViewControl: false,
         });
         mapObj.current = map;
-        log(`map created center=(${center.lat},${center.lng})`);
 
         const { Marker } = (window as any).google.maps;
         const { MarkerClusterer } = await import('@googlemaps/markerclusterer');
@@ -84,17 +74,14 @@ export default function NeedyMap({ points, adminPoints = [], initialCenter }: Ne
         };
 
         // Create markers for needy (red) and admins (blue)
-        log(`render markers needy=${points.length} admins=${adminPoints.length}`);
         points.forEach(p => addMarker(p, '#ef4444', 'نیازمند'));
         adminPoints.forEach(p => addMarker(p, '#2563eb', 'مدیر'));
 
         // Clusterer
         clustererRef.current = new MarkerClusterer({ markers: markersRef.current, map });
-        log('clusterer initialized');
 
         const onZoom = () => {
           const z = map.getZoom();
-          log(`zoom_changed z=${z}`);
           if (z >= 15) {
             infoWindowsRef.current.forEach((iw, idx) => iw.open({ anchor: markersRef.current[idx], map }));
           } else {
@@ -104,14 +91,13 @@ export default function NeedyMap({ points, adminPoints = [], initialCenter }: Ne
         map.addListener('zoom_changed', onZoom);
 
         cleanup = () => {
-          log('cleanup listeners and markers');
           map && (window as any).google.maps.event.clearInstanceListeners(map);
           markersRef.current.forEach(m => (window as any).google.maps.event.clearInstanceListeners(m));
           infoWindowsRef.current.forEach(iw => iw.close());
           clustererRef.current && clustererRef.current.clearMarkers();
         };
-      } catch (e: any) {
-        log(`init error: ${String(e?.message || e)}`);
+      } catch {
+        // no-op
       }
     };
 
@@ -120,32 +106,24 @@ export default function NeedyMap({ points, adminPoints = [], initialCenter }: Ne
   }, [center, points, adminPoints]);
 
   return (
-    <div style={{ width: '100%', height: 300, borderRadius: 12, overflow: 'hidden', position: 'relative' }} ref={mapRef}>
-      {Config.DEBUG_MODE && (
-        <div style={{ position: 'absolute', top: 8, left: 8, right: 8, maxHeight: 160, overflow: 'auto', background: 'rgba(0,0,0,0.65)', borderRadius: 8, padding: 8 }}>
-          {debugLogs.map((l, i) => (<div key={i} style={{ color: '#fff', fontSize: 10, marginBottom: 2 }}>{l}</div>))}
-        </div>
-      )}
-    </div>
+    <div style={{ width: '100%', height: 300, borderRadius: 12, overflow: 'hidden', position: 'relative' }} ref={mapRef} />
   );
 }
 
-function loadGoogleMaps(log?: (m: string) => void): Promise<void> {
+function loadGoogleMaps(): Promise<void> {
   return new Promise((resolve) => {
     const existing = document.querySelector('script[data-google-maps]') as HTMLScriptElement | null;
     if (existing) {
-      existing.addEventListener('load', () => { log?.('script existing onload'); resolve(); });
-      if ((window as any).google) { log?.('google already present'); return resolve(); }
+      existing.addEventListener('load', () => { resolve(); });
+      if ((window as any).google) { return resolve(); }
       return;
     }
-    const apiKey = Config.GOOGLE_MAPS_API_KEY;
     const script = document.createElement('script');
     script.dataset.googleMaps = 'true';
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}`;
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${Config.GOOGLE_MAPS_API_KEY}`;
     script.async = true;
-    script.onload = () => { log?.('script onload'); resolve(); };
-    script.onerror = () => { log?.('script onerror'); resolve(); };
+    script.onload = () => { resolve(); };
+    script.onerror = () => { resolve(); };
     document.body.appendChild(script);
-    log?.('script appended');
   });
 }

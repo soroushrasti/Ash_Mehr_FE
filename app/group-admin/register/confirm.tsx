@@ -1,3 +1,4 @@
+/* eslint-disable import/no-unused-modules */
 import React, { useState } from 'react';
 import { ScrollView, StyleSheet, View, Alert, Platform } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
@@ -7,7 +8,6 @@ import { ThemedText } from '@/components/ThemedText';
 import { Button } from '@/components/Button';
 import { useThemeColor } from '@/hooks/useThemeColor';
 import { Spacing } from '@/constants/Design';
-import { withOpacity } from '@/utils/colorUtils';
 
 // Helper function to convert hex to rgba
 function hexToRgba(hex: string, alpha: number) {
@@ -159,7 +159,18 @@ export default function GroupAdminRegisterConfirm() {
 
   return (
     <ThemedView type="container" style={styles.container}>
-      <ScrollView showsVerticalScrollIndicator={false}>
+      <ScrollView
+        style={{ flex: 1 }}
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode={Platform.OS === 'ios' ? 'on-drag' : 'none'}
+        contentInsetAdjustmentBehavior="always"
+        nestedScrollEnabled
+        overScrollMode={Platform.OS === 'android' ? 'always' : undefined}
+        removeClippedSubviews={false}
+        scrollEnabled
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ flexGrow: 1, padding: Spacing.xl, paddingBottom: Spacing['4xl'] }}
+      >
         {/* Progress Bar */}
         <ProgressBar />
 

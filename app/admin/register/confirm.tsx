@@ -1,5 +1,6 @@
+/* eslint-disable react/no-unescaped-entities */
 import React, { useState } from 'react';
-import { ScrollView, StyleSheet, View, Alert, Platform } from 'react-native';
+import { ScrollView as RNScrollView, StyleSheet, View, Alert, Platform } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useAuth } from '@/components/AuthContext';
 import { ThemedView } from '@/components/ThemedView';
@@ -10,15 +11,13 @@ import { Spacing } from '@/constants/Design';
 import { withOpacity } from '@/utils/colorUtils';
 import { apiService } from '@/services/apiService';
 import { NeedyCreateWithChildren } from '@/types/api';
-import KeyboardAwareContainer from '@/components/KeyboardAwareContainer';
 
 export default function AdminRegisterConfirm() {
   const router = useRouter();
-  const { formData, role, roleTitle, roleIcon, location } = useLocalSearchParams();
+  const { formData, roleTitle, roleIcon, location } = useLocalSearchParams();
   const { userId, userType } = useAuth();
   const [loading, setLoading] = useState(false);
 
-  const primaryColor = useThemeColor({}, 'primary');
   const successColor = useThemeColor({}, 'success');
 
   const parsedFormData = formData ? JSON.parse(formData as string) : {};
@@ -103,31 +102,32 @@ export default function AdminRegisterConfirm() {
         Latitude: parsedLocation.latitude?.toString() || undefined,
         Longitude: parsedLocation.longitude?.toString() || undefined,
         children_of_registre: null,
-      };
+      } as NeedyCreateWithChildren;
 
       const result = await apiService.createNeedyPerson(registerData);
 
-      if (result.success) {
-        Alert.alert(
-          'ثبت‌نام موفق',
-          `${roleTitle} با موفقیت در سیستم ثبت شد.`,
-          [
-            {
-              text: 'تأیید',
-              onPress: () => {
-                // Navigate back to appropriate dashboard
-                if (userType === 'Admin') {
-                  router.replace('/admin');
-                } else if (userType === 'GroupAdmin') {
-                  router.replace('/group-admin');
-                }
+      if (!result.success) {
+        Alert.alert('خطا', result.error || 'در ثبت‌نام خطایی رخ داد.');
+        return;
+      }
+
+      Alert.alert(
+        'ثبت‌نام موفق',
+        `${roleTitle} با موفقیت در سیستم ثبت شد.`,
+        [
+          {
+            text: 'تأیید',
+            onPress: () => {
+              // Navigate back to appropriate dashboard
+              if (userType === 'Admin') {
+                router.replace('/admin');
+              } else if (userType === 'GroupAdmin') {
+                router.replace('/group-admin');
               }
             }
-          ]
-        );
-      } else {
-        throw new Error(result.error || 'Registration failed');
-      }
+          }
+        ]
+      );
 
     } catch (error) {
       console.error('Registration error:', error);
@@ -136,6 +136,9 @@ export default function AdminRegisterConfirm() {
       setLoading(false);
     }
   };
+
+  const INSET_BEHAVIOR: any = 'always';
+  const ANDROID_OVERSCROLL: any = Platform.OS === 'android' ? 'always' : undefined;
 
   const ProgressBar = () => (
     <View style={styles.progressContainer}>
@@ -177,12 +180,28 @@ export default function AdminRegisterConfirm() {
 
   return (
     <ThemedView type="container" style={styles.container}>
-      <KeyboardAwareContainer contentContainerStyle={{ padding: Spacing.xl }}>
-        keyboardShouldPersistTaps="handled"
+      <View style={[styles.topBar, { backgroundColor: withOpacity(successColor, 10) }]}>
+        <Button
+          title="تأیید و ثبت‌نام"
+          onPress={handleSubmit}
+          loading={loading}
+          variant="success"
+          size="small"
+        />
+      </View>
+      <RNScrollView
+        style={{ flex: 1 }}
+        keyboardShouldPersistTaps="always"
         keyboardDismissMode={Platform.OS === 'ios' ? 'on-drag' : 'none'}
-        contentInsetAdjustmentBehavior="always"
+        contentInsetAdjustmentBehavior={INSET_BEHAVIOR}
         nestedScrollEnabled
-        overScrollMode={Platform.OS === 'android' ? 'always' : undefined}
+        overScrollMode={ANDROID_OVERSCROLL}
+        removeClippedSubviews={false}
+        scrollEnabled
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ flexGrow: 1, padding: Spacing.xl, paddingBottom: Spacing['4xl'] }}
+      >
+        {/* Progress Bar */}
         <ProgressBar />
 
         {/* Header */}
@@ -279,7 +298,7 @@ export default function AdminRegisterConfirm() {
             icon={<ThemedText>🎉</ThemedText>}
           />
         </View>
-      </KeyboardAwareContainer>
+      </RNScrollView>
     </ThemedView>
   );
 }
@@ -287,6 +306,13 @@ export default function AdminRegisterConfirm() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  topBar: {
+    paddingHorizontal: Spacing.xl,
+    paddingTop: Spacing.md,
+    paddingBottom: Spacing.sm,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderColor: 'rgba(0,0,0,0.06)'
   },
   progressContainer: {
     flexDirection: 'row',

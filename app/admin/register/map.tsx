@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, View, Alert } from 'react-native';
+import { StyleSheet, View, Alert, Platform, ScrollView as RNScrollView } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { ThemedView } from '@/components/ThemedView';
 import { ThemedText } from '@/components/ThemedText';
@@ -78,6 +78,9 @@ export default function AdminRegisterMap() {
     }, 500);
   };
 
+  const INSET_BEHAVIOR: any = 'always';
+  const ANDROID_OVERSCROLL: any = Platform.OS === 'android' ? 'always' : undefined;
+
   const ProgressBar = () => (
     <View style={styles.progressContainer}>
       <View style={[styles.progressStep, { backgroundColor: successColor }]}>
@@ -98,119 +101,151 @@ export default function AdminRegisterMap() {
     <ThemedView type="container" style={styles.container}>
       <AppHeader title="انتخاب موقعیت جغرافیایی" subtitle={`برای ${roleTitle}`} />
 
-      {/* Progress Bar */}
-      <ProgressBar />
-
-      {/* Header with Role Badge */}
-      <View style={styles.header}>
-        <View style={[styles.roleIconContainer, { backgroundColor: withOpacity(primaryColor, 20) }]}>
-          <ThemedText style={styles.roleIcon}>{roleIconSafe}</ThemedText>
-        </View>
-        <ThemedText type="heading2" center style={styles.title}>
-          انتخاب موقعیت جغرافیایی
-        </ThemedText>
-        <ThemedText type="body" center style={styles.subtitle}>
-          لطفاً موقعیت دقیق را روی نقشه مشخص کنید
-        </ThemedText>
-      </View>
-
-      {/* Map Section */}
-      <ThemedView type="card" style={styles.mapCard}>
-        <ThemedText type="heading3" style={styles.mapTitle}>
-          انتخاب آدرس روی نقشه
-        </ThemedText>
-
-        <View style={styles.mapContainer}>
-          <UniversalMap
-            location={location}
-            onLocationSelect={(loc) => {
-              setLocation(loc);
-              setError('');
-            }}
-            mapType="standard"
-            zoom={13}
-            showControls={true}
-            city={city}
-          />
-        </View>
-
-        {!!locError && (
-          <ThemedText type="caption" style={{ color: 'red', marginBottom: Spacing.sm }}>
-            {locError}
-          </ThemedText>
-        )}
-
-        {location && (
-          <ThemedView type="surface" style={styles.locationInfo}>
-            <View style={styles.locationHeader}>
-              <ThemedText style={styles.locationIcon}>📍</ThemedText>
-              <ThemedText type="body" weight="medium" style={styles.locationTitle}>
-                موقعیت انتخاب شده
-              </ThemedText>
-            </View>
-            <ThemedText type="caption" style={styles.coordinates}>
-              عرض جغرافیایی: {location.latitude.toFixed(6)}
-            </ThemedText>
-            <ThemedText type="caption" style={styles.coordinates}>
-              طول جغرافیایی: {location.longitude.toFixed(6)}
-            </ThemedText>
-            {location.address && (
-              <ThemedText type="body" style={styles.address}>
-                آدرس: {location.address}
-              </ThemedText>
-            )}
-          </ThemedView>
-        )}
-
-        {/* Error State */}
-        {error && (
-          <ThemedView style={[styles.errorContainer, { backgroundColor: withOpacity(errorColor, 10), borderColor: withOpacity(errorColor, 20) }]}>
-            <ThemedText type="caption" style={[styles.errorText, { color: errorColor }]}>
-              ⚠️ {error}
-            </ThemedText>
-          </ThemedView>
-        )}
-      </ThemedView>
-
-      {/* Instructions */}
-      <ThemedView type="card" style={[styles.instructionsCard, { backgroundColor: withOpacity(primaryColor, 5), borderColor: withOpacity(primaryColor, 20) }]}>
-        <ThemedText type="body" weight="medium" style={styles.instructionsTitle}>
-          راهنمای استفاده از نقشه:
-        </ThemedText>
-        <ThemedText type="caption" style={styles.instructionText}>
-          • روی نقشه کلیک کنید تا موقعیت انتخاب شود
-        </ThemedText>
-        <ThemedText type="caption" style={styles.instructionText}>
-          • با دو انگشت روی نقشه حرکت کنید تا بزرگ یا کوچک شود
-        </ThemedText>
-        <ThemedText type="caption" style={styles.instructionText}>
-          • موقعیت انتخابی با نشانگر قرمز مشخص می‌شود
-        </ThemedText>
-      </ThemedView>
-
-      {/* Action Buttons */}
-      <View style={styles.buttonContainer}>
-        <Button
-          title="بازگشت"
-          onPress={() => router.back()}
-          variant="outline"
-          style={styles.backButton}
-        />
+      {/* Top action bar so user can confirm without scrolling */}
+      <View style={[styles.topBar, { backgroundColor: withOpacity(primaryColor, 8) }]}>
         <Button
           title="تأیید و ادامه"
           onPress={handleFinalize}
           loading={loading}
           disabled={!location}
-          style={styles.continueButton}
-          icon={<ThemedText>✓</ThemedText>}
+          size="small"
+          variant="success"
         />
       </View>
+
+      <RNScrollView
+        style={{ flex: 1 }}
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode={Platform.OS === 'ios' ? 'on-drag' : 'none'}
+        contentInsetAdjustmentBehavior={INSET_BEHAVIOR}
+        nestedScrollEnabled
+        overScrollMode={ANDROID_OVERSCROLL}
+        removeClippedSubviews={false}
+        scrollEnabled
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ flexGrow: 1, paddingHorizontal: Spacing.xl, paddingBottom: Spacing['4xl'] }}
+      >
+        {/* Progress Bar */}
+        <ProgressBar />
+
+        {/* Header with Role Badge */}
+        <View style={styles.header}>
+          <View style={[styles.roleIconContainer, { backgroundColor: withOpacity(primaryColor, 20) }]}>
+            <ThemedText style={styles.roleIcon}>{roleIconSafe}</ThemedText>
+          </View>
+          <ThemedText type="heading2" center style={styles.title}>
+            انتخاب موقعیت جغرافیایی
+          </ThemedText>
+          <ThemedText type="body" center style={styles.subtitle}>
+            لطفاً موقعیت دقیق را روی نقشه مشخص کنید
+          </ThemedText>
+        </View>
+
+        {/* Map Section */}
+        <ThemedView type="card" style={styles.mapCard}>
+          <ThemedText type="heading3" style={styles.mapTitle}>
+            انتخاب آدرس روی نقشه
+          </ThemedText>
+
+          <View style={styles.mapContainer} onStartShouldSetResponderCapture={() => true}>
+            <UniversalMap
+              location={location}
+              onLocationSelect={(loc) => {
+                setLocation(loc);
+                setError('');
+              }}
+              mapType="standard"
+              zoom={13}
+              showControls={true}
+              city={city}
+            />
+          </View>
+
+          {!!locError && (
+            <ThemedText type="caption" style={{ color: 'red', marginBottom: Spacing.sm }}>
+              {locError}
+            </ThemedText>
+          )}
+
+          {location && (
+            <ThemedView type="surface" style={styles.locationInfo}>
+              <View style={styles.locationHeader}>
+                <ThemedText style={styles.locationIcon}>📍</ThemedText>
+                <ThemedText type="body" weight="medium" style={styles.locationTitle}>
+                  موقعیت انتخاب شده
+                </ThemedText>
+              </View>
+              <ThemedText type="caption" style={styles.coordinates}>
+                عرض جغرافیایی: {location.latitude.toFixed(6)}
+              </ThemedText>
+              <ThemedText type="caption" style={styles.coordinates}>
+                طول جغرافیایی: {location.longitude.toFixed(6)}
+              </ThemedText>
+              {location.address && (
+                <ThemedText type="body" style={styles.address}>
+                  آدرس: {location.address}
+                </ThemedText>
+              )}
+            </ThemedView>
+          )}
+
+          {/* Error State */}
+          {error && (
+            <ThemedView style={[styles.errorContainer, { backgroundColor: withOpacity(errorColor, 10), borderColor: withOpacity(errorColor, 20) }]}>
+              <ThemedText type="caption" style={[styles.errorText, { color: errorColor }]}>
+                ⚠️ {error}
+              </ThemedText>
+            </ThemedView>
+          )}
+        </ThemedView>
+
+        {/* Instructions */}
+        <ThemedView type="card" style={[styles.instructionsCard, { backgroundColor: withOpacity(primaryColor, 5), borderColor: withOpacity(primaryColor, 20) }]}>
+          <ThemedText type="body" weight="medium" style={styles.instructionsTitle}>
+            راهنمای استفاده از نقشه:
+          </ThemedText>
+          <ThemedText type="caption" style={styles.instructionText}>
+            • روی نقشه کلیک کنید تا موقعیت انتخاب شود
+          </ThemedText>
+          <ThemedText type="caption" style={styles.instructionText}>
+            • با دو انگشت روی نقشه حرکت کنید تا بزرگ یا کوچک شود
+          </ThemedText>
+          <ThemedText type="caption" style={styles.instructionText}>
+            • موقعیت انتخابی با نشانگر قرمز مشخص می‌شود
+          </ThemedText>
+        </ThemedView>
+
+        {/* Action Buttons (still available at bottom) */}
+        <View style={styles.buttonContainer}>
+          <Button
+            title="بازگشت"
+            onPress={() => router.back()}
+            variant="outline"
+            style={styles.backButton}
+          />
+          <Button
+            title="تأیید و ادامه"
+            onPress={handleFinalize}
+            loading={loading}
+            disabled={!location}
+            style={styles.continueButton}
+            icon={<ThemedText>✓</ThemedText>}
+          />
+        </View>
+      </RNScrollView>
     </ThemedView>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
+  topBar: {
+    paddingHorizontal: Spacing.xl,
+    paddingTop: Spacing.md,
+    paddingBottom: Spacing.sm,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderColor: 'rgba(0,0,0,0.06)',
+  },
   progressContainer: {
     flexDirection: 'row',
     alignItems: 'center',

@@ -100,7 +100,7 @@ export default function AdminSelectRole() {
             اگر مطمئن نیستید که کدام نوع ثبت‌نام مناسب است، با تیم پشتیبانی تماس بگیرید
           </ThemedText>
           <ThemedText type="caption" center style={[styles.contactInfo, { color: primaryColor }]}>
-            تلفن: ۰۲۱-۱۲۳۴۵۶۷۸
+            تلفن: ۰۳۱۳۴۵۱۱۰۳۲-
           </ThemedText>
         </ThemedView>
       </ScrollView>

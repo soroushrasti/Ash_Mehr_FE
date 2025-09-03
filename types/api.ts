@@ -100,8 +100,10 @@ export interface InfoNeedyResponse {
 export interface InfoAdminResponse {
   numberGroupAdminPersons: number;
   numberAdminPersons: number;
-  LastAdmincreatedTime: string; // ISO timestamp
+  LastAdminCreatedTime: string; // ISO timestamp
   LastAdminNameCreated: string; // Firstname + lastname
+    LastGroupAdminCreatedTime: string; // ISO timestamp
+  LastGroupAdminNameCreated: string; // Firstname + lastname
 }
 
 export interface LoginResponse {

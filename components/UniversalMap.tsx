@@ -29,7 +29,7 @@ export default function UniversalMap({ location, onLocationSelect, zoom, showCon
       <GoogleMapWeb
         apiKey="AIzaSyCx8-7Y3c7sPHyDfltKMvBitIAmdUwvLFk"
         onLocationSelect={onLocationSelect}
-        initialLocation={location ? { latitude: location.latitude, longitude: location.longitude } : undefined}
+        initialLocation={location ? { latitude: Number(location.latitude as any), longitude: Number(location.longitude as any) } : undefined}
         zoom={zoom}
         showControls={showControls}
         city={city}

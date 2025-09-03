@@ -56,6 +56,12 @@ export default function GoogleMapWeb({ onLocationSelect, initialLocation, apiKey
   };
 
   const createMarker = (position: any, gMap: any, title?: string) => {
+    // Coerce literal objects to numbers if present
+    if (position && typeof position.lat !== 'function') {
+      const latN = Number(position.lat);
+      const lngN = Number(position.lng);
+      position = { lat: isFinite(latN) ? latN : 0, lng: isFinite(lngN) ? lngN : 0 };
+    }
     const adv = (window as any).google?.maps?.marker?.AdvancedMarkerElement;
     if (adv) {
       const m = new adv({ map: gMap, position, title });
@@ -75,9 +81,13 @@ export default function GoogleMapWeb({ onLocationSelect, initialLocation, apiKey
 
   const initMap = () => {
     if (!mapRef.current || !(window as any).google?.maps) return;
-    const center = initialLocation || { latitude: 35.6892, longitude: 51.389 };
+    const centerRaw = initialLocation || { latitude: 35.6892, longitude: 51.389 };
+    const latN = Number((centerRaw as any).latitude);
+    const lngN = Number((centerRaw as any).longitude);
+    const center = { lat: isFinite(latN) ? latN : 35.6892, lng: isFinite(lngN) ? lngN : 51.389 };
+
     const gMap = new (window as any).google.maps.Map(mapRef.current, {
-      center: { lat: center.latitude, lng: center.longitude },
+      center,
       zoom: Math.max(3, Math.min(20, zoom || 13)),
       mapTypeControl: !!showControls,
       zoomControl: !!showControls,
@@ -88,7 +98,7 @@ export default function GoogleMapWeb({ onLocationSelect, initialLocation, apiKey
 
     // Add marker if initialLocation
     if (initialLocation) {
-      const m = createMarker({ lat: center.latitude, lng: center.longitude }, gMap);
+      const m = createMarker(center, gMap);
       setMarker(m);
     }
 

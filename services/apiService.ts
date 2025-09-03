@@ -59,22 +59,6 @@ class ApiService {
   }
 
 
-  /** Find Register */
-  async findNeedy(filters: Record<string, any>): Promise<ApiResponse> {
-    try {
-      const response = await fetch(buildApiUrl(Config.ENDPOINTS.FIND_NEEDY), {
-        method: 'POST',
-        headers: getApiHeaders(),
-        body: JSON.stringify(filters),
-      });
-      const result = await response.json();
-      if (!response.ok) throw new Error(result.message || `HTTP ${response.status}`);
-      return { success: true, data: result };
-    } catch (error) {
-      console.error('Error find register:', error);
-      return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
-    }
-  }
 
   /**
    * Signup Admin - POST /signup-admin

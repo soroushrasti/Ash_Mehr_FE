@@ -10,6 +10,7 @@ import { Spacing, BorderRadius, Shadows, Typography } from '@/constants/Design';
 import NeedyMap from '@/components/NeedyMap';
 import { apiService } from '@/services/apiService';
 import type { NeedyPoint } from '@/components/NeedyMap';
+import type { InfoAdminResponse } from '@/types/api';
 
 const { width } = Dimensions.get('window');
 
@@ -28,7 +29,7 @@ export default function AdminHome() {
    const borderColor = useThemeColor({}, 'border');
 
    const [needyInfo, setNeedyInfo] = useState<{ numberNeedyPersons: number; LastNeedycreatedTime: string; LastNeedyNameCreated: string } | null>(null);
-   const [adminInfo, setAdminInfo] = useState<{ numberGroupAdminPersons: number; numberAdminPersons: number; LastAdmincreatedTime: string; LastAdminNameCreated: string } | null>(null);
+   const [adminInfo, setAdminInfo] = useState<InfoAdminResponse | null>(null);
    const [mapPoints, setMapPoints] = useState<NeedyPoint[]>([]);
    const [adminMapPoints, setAdminMapPoints] = useState<NeedyPoint[]>([]);
 
@@ -212,7 +213,7 @@ export default function AdminHome() {
             <ThemedText type="caption" style={{ opacity: 0.8 }}>آخرین ثبت نیازمند: {needyInfo?.LastNeedyNameCreated ?? '—'} ({needyInfo?.LastNeedycreatedTime ? new Date(needyInfo.LastNeedycreatedTime).toLocaleString('fa-IR') : '—'})</ThemedText>
             <View style={{ height: 8 }} />
             <ThemedText type="body">مدیران کل: {adminInfo?.numberAdminPersons ?? '—'} | مدیران گروه: {adminInfo?.numberGroupAdminPersons ?? '—'}</ThemedText>
-            <ThemedText type="caption" style={{ opacity: 0.8 }}>آخرین مدیر ثبت‌شده: {adminInfo?.LastAdminNameCreated ?? '—'} ({adminInfo?.LastAdmincreatedTime ? new Date(adminInfo.LastAdmincreatedTime).toLocaleString('fa-IR') : '—'})</ThemedText>
+            <ThemedText type="caption" style={{ opacity: 0.8 }}>آخرین مدیر ثبت‌شده: {adminInfo?.LastAdminNameCreated ?? '—'} ({adminInfo?.LastAdminCreatedTime ? new Date(adminInfo.LastAdminCreatedTime).toLocaleString('fa-IR') : '—'})</ThemedText>
           </ThemedView>
 
           {/* Map + count section replacing previous stats */}
@@ -288,7 +289,7 @@ export default function AdminHome() {
                          🧑‍💼 ثبت مدیر جدید: {adminInfo?.LastAdminNameCreated ?? '—'}
                       </ThemedText>
                       <ThemedText style={[styles.activityTime, { color: textColor, opacity: 0.6 }]}>
-                         {adminInfo?.LastAdmincreatedTime ? new Date(adminInfo.LastAdmincreatedTime).toLocaleString('fa-IR') : '—'}
+                         {adminInfo?.LastAdminCreatedTime ? new Date(adminInfo.LastAdminCreatedTime).toLocaleString('fa-IR') : '—'}
                       </ThemedText>
                    </View>
                 </View>

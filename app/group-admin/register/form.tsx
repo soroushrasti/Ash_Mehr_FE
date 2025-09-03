@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ScrollView, StyleSheet, View, Platform } from 'react-native';
+import { /* ScrollView, */ StyleSheet, View, Platform } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { ThemedView } from '@/components/ThemedView';
 import { ThemedText } from '@/components/ThemedText';
@@ -9,6 +9,7 @@ import { useThemeColor } from '@/hooks/useThemeColor';
 import { Spacing, BorderRadius } from '@/constants/Design';
 import { withOpacity } from '@/utils/colorUtils';
 import AppHeader from '@/components/AppHeader';
+import KeyboardAwareContainer from '@/components/KeyboardAwareContainer';
 
 // Same field definitions as admin form but with Group Admin context
 const baseFields = [
@@ -216,7 +217,7 @@ export default function GroupAdminRegisterForm() {
   return (
     <ThemedView type="container" style={styles.container}>
       <AppHeader title={`ثبت‌نام ${roleTitle}`} subtitle="توسط مدیر گروه" />
-      <ScrollView showsVerticalScrollIndicator={false}>
+      <KeyboardAwareContainer contentContainerStyle={{ padding: Spacing.xl }}>
         {/* Progress Bar */}
         <ProgressBar />
 
@@ -319,7 +320,7 @@ export default function GroupAdminRegisterForm() {
             icon={<ThemedText>📍</ThemedText>}
           />
         </View>
-      </ScrollView>
+      </KeyboardAwareContainer>
     </ThemedView>
   );
 }

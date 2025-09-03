@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { ScrollView, StyleSheet, View, Alert } from 'react-native';
+import { StyleSheet, View, Alert } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { ThemedView } from '@/components/ThemedView';
 import { ThemedText } from '@/components/ThemedText';
@@ -13,6 +13,7 @@ import { useThemeColor } from '@/hooks/useThemeColor';
 import { useAuth } from '@/components/AuthContext';
 import UniversalMap from '@/components/UniversalMap';
 import * as Location from 'expo-location';
+import KeyboardAwareContainer from '@/components/KeyboardAwareContainer';
 
 export default function AdminUserForm() {
   const { mode } = useLocalSearchParams(); // 'volunteer' | 'admin'
@@ -100,7 +101,7 @@ export default function AdminUserForm() {
   return (
     <ThemedView type="container" style={{ flex: 1 }}>
       <AppHeader title={title} subtitle={isVolunteer ? 'نقش: مدیر گروه' : 'نقش: مدیر کل'} />
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
+      <KeyboardAwareContainer contentContainerStyle={styles.content}>
         <ThemedView type="card" style={{ marginBottom: Spacing.xl }}>
           <ThemedText type="heading3" style={{ marginBottom: Spacing.md, color: primary }}>
             اطلاعات کاربر
@@ -148,7 +149,7 @@ export default function AdminUserForm() {
 
           <Button title="ثبت" onPress={onSubmit} fullWidth loading={loading} />
         </ThemedView>
-      </ScrollView>
+      </KeyboardAwareContainer>
     </ThemedView>
   );
 }

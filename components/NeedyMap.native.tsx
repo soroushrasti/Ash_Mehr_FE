@@ -1,6 +1,7 @@
-import React, { useMemo, useState } from 'react';
-import { View, StyleSheet, Text } from 'react-native';
+import React, { useMemo, useState, useEffect, useRef } from 'react';
+import { View, StyleSheet, Text, LayoutChangeEvent, ScrollView } from 'react-native';
 import Constants from 'expo-constants';
+import { Config } from '@/constants/Config';
 
 export type NeedyPoint = {
   id: string;
@@ -17,6 +18,21 @@ interface NeedyMapProps {
 
 export default function NeedyMap({ points, initialRegion }: NeedyMapProps) {
   const [region, setRegion] = useState<any | undefined>(initialRegion);
+  const [debugLogs, setDebugLogs] = useState<string[]>([]);
+  const containerSize = useRef<{ w: number; h: number }>({ w: 0, h: 0 });
+
+  const log = (msg: string) => {
+    const line = `[native-map] ${new Date().toISOString()} ${msg}`;
+    // eslint-disable-next-line no-console
+    console.log(line);
+    setDebugLogs((prev) => [...prev.slice(-80), line]);
+  };
+
+  const onLayout = (e: LayoutChangeEvent) => {
+    const { width, height } = e.nativeEvent.layout;
+    containerSize.current = { w: width, h: height };
+    log(`container onLayout width=${width} height=${height}`);
+  };
 
   const defaultRegion: any = useMemo(() => ({
     latitude: initialRegion?.latitude ?? (points[0]?.lat || 35.6892),
@@ -27,44 +43,72 @@ export default function NeedyMap({ points, initialRegion }: NeedyMapProps) {
 
   const isExpoGo = Constants?.appOwnership === 'expo';
 
-  // Try to load map modules lazily unless running in Expo Go
-  let MapsMod: any;
-  if (!isExpoGo) {
+  // Compute map module without logging during render to avoid re-render loops
+  const mapsModule = useMemo(() => {
+    if (isExpoGo) return null;
     try {
       // eslint-disable-next-line @typescript-eslint/no-require-imports
-      MapsMod = require('react-native-maps');
+      return require('react-native-maps');
     } catch {
-      MapsMod = null;
+      return null;
     }
-  } else {
-    MapsMod = null;
-  }
+  }, [isExpoGo]);
 
-  if (!MapsMod) {
+  useEffect(() => {
+    if (isExpoGo) {
+      log('running in Expo Go; react-native-maps not available');
+    } else if (mapsModule) {
+      log('react-native-maps module loaded');
+    } else {
+      log('failed to load react-native-maps');
+    }
+  }, [isExpoGo, !!mapsModule]);
+
+  useEffect(() => {
+    log(`initial points=${points.length}, initialRegion=${JSON.stringify(initialRegion || {})}`);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  if (!mapsModule) {
     return (
-      <View style={[styles.container, { alignItems: 'center', justifyContent: 'center', backgroundColor: '#f2f2f2' }]}>
+      <View onLayout={onLayout} style={[styles.container, { alignItems: 'center', justifyContent: 'center', backgroundColor: '#f2f2f2' }]}>
         <Text>نمایش نقشه در این نسخه در دسترس نیست.</Text>
         <Text style={{ marginTop: 6, opacity: 0.8, fontSize: 12 }}>برای مشاهده نقشه، اپلیکیشن را با پکیج react-native-maps بیلد کنید.</Text>
+        {Config.DEBUG_MODE && (
+          <ScrollView style={styles.debugOverlay} contentContainerStyle={{ padding: 8 }}>
+            {debugLogs.map((l, i) => (<Text key={i} style={styles.debugText}>{l}</Text>))}
+          </ScrollView>
+        )}
       </View>
     );
   }
 
-  const MapView = (MapsMod.default || MapsMod.MapView) as any;
-  const Marker = MapsMod.Marker as any;
-  const Callout = MapsMod.Callout as any;
+  const MapView = (mapsModule.default || mapsModule.MapView) as any;
+  const Marker = mapsModule.Marker as any;
+  const Callout = mapsModule.Callout as any;
 
-  // Try to use clustering map if available, otherwise fallback to plain MapView
-  let ClusterComponent: any = MapView;
-  try {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const mod = require('react-native-map-clustering');
-    const DefaultExport = mod && (mod.default || mod);
-    if (typeof DefaultExport === 'function') {
-      ClusterComponent = DefaultExport;
+  // Compute clustering component without logging during render
+  const ClusterComponent: any = useMemo(() => {
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const mod = require('react-native-map-clustering');
+      const DefaultExport = mod && (mod.default || mod);
+      if (typeof DefaultExport === 'function') {
+        return DefaultExport;
+      }
+    } catch {}
+    return MapView;
+  }, [MapView]);
+
+  useEffect(() => {
+    if (ClusterComponent === MapView) {
+      log('react-native-map-clustering not available');
+    } else {
+      log('react-native-map-clustering loaded');
     }
-  } catch {
-    ClusterComponent = MapView;
-  }
+  // We intentionally do not include MapView in deps to avoid noisy logs
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ClusterComponent]);
 
   const isZoomedIn = (reg: any | undefined) => {
     if (!reg) return false;
@@ -72,22 +116,30 @@ export default function NeedyMap({ points, initialRegion }: NeedyMapProps) {
   };
 
   return (
-    <View style={styles.container}>
+    <View style={styles.container} onLayout={onLayout}>
       <ClusterComponent
         style={styles.map}
         initialRegion={defaultRegion}
         region={region}
-        onRegionChangeComplete={(r: any) => setRegion(r)}
+        onRegionChangeComplete={(r: any) => {
+          log(`onRegionChangeComplete lat=${r.latitude} lng=${r.longitude} dLat=${r.latitudeDelta} dLng=${r.longitudeDelta}`);
+          setRegion(r);
+        }}
+        onMapReady={() => log('onMapReady fired')}
+        onMapLoaded={() => log('onMapLoaded fired')}
+        // @ts-expect-error: Android only
+        onUserLocationChange={(e: any) => log(`onUserLocationChange lat=${e?.nativeEvent?.coordinate?.latitude} lng=${e?.nativeEvent?.coordinate?.longitude}`)}
+        onPress={(e: any) => log(`onPress at lat=${e?.nativeEvent?.coordinate?.latitude}, lng=${e?.nativeEvent?.coordinate?.longitude}`)}
       >
         {points.map((p) => (
-          <Marker key={p.id} coordinate={{ latitude: p.lat, longitude: p.lng }}>
+          <Marker key={p.id} coordinate={{ latitude: p.lat, longitude: p.lng }} onPress={() => log(`marker press id=${p.id}`)}>
             <View style={styles.redDot} />
             {isZoomedIn(region) && (
               <View style={styles.labelBubble}>
                 <Text style={styles.labelText} numberOfLines={1}>{p.name || 'نیازمند'}</Text>
               </View>
             )}
-            <Callout>
+            <Callout onPress={() => log(`callout press id=${p.id}`)}>
               <View style={{ maxWidth: 220 }}>
                 <Text style={{ fontWeight: '700', marginBottom: 4 }}>{p.name || 'نیازمند'}</Text>
                 <Text>{p.info || 'اطلاعات بیشتر در دسترس نیست'}</Text>
@@ -96,6 +148,14 @@ export default function NeedyMap({ points, initialRegion }: NeedyMapProps) {
           </Marker>
         ))}
       </ClusterComponent>
+
+      {Config.DEBUG_MODE && (
+        <ScrollView style={styles.debugOverlay} contentContainerStyle={{ padding: 8 }}>
+          <Text style={styles.debugText}>apiKey(meta) present: unknown (native)</Text>
+          <Text style={styles.debugText}>container: {containerSize.current.w}x{containerSize.current.h}</Text>
+          {debugLogs.map((l, i) => (<Text key={i} style={styles.debugText}>{l}</Text>))}
+        </ScrollView>
+      )}
     </View>
   );
 }
@@ -120,4 +180,14 @@ const styles = StyleSheet.create({
     borderRadius: 6,
   },
   labelText: { color: '#fff', fontSize: 11 },
+  debugOverlay: {
+    position: 'absolute',
+    top: 8,
+    left: 8,
+    right: 8,
+    maxHeight: 160,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    borderRadius: 8,
+  },
+  debugText: { color: '#fff', fontSize: 10, marginBottom: 2 },
 });

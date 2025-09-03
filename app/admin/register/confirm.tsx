@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ScrollView, StyleSheet, View, Alert } from 'react-native';
+import { ScrollView, StyleSheet, View, Alert, Platform } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useAuth } from '@/components/AuthContext';
 import { ThemedView } from '@/components/ThemedView';
@@ -10,6 +10,7 @@ import { Spacing } from '@/constants/Design';
 import { withOpacity } from '@/utils/colorUtils';
 import { apiService } from '@/services/apiService';
 import { NeedyCreateWithChildren } from '@/types/api';
+import KeyboardAwareContainer from '@/components/KeyboardAwareContainer';
 
 export default function AdminRegisterConfirm() {
   const router = useRouter();
@@ -176,8 +177,12 @@ export default function AdminRegisterConfirm() {
 
   return (
     <ThemedView type="container" style={styles.container}>
-      <ScrollView showsVerticalScrollIndicator={false}>
-        {/* Progress Bar */}
+      <KeyboardAwareContainer contentContainerStyle={{ padding: Spacing.xl }}>
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode={Platform.OS === 'ios' ? 'on-drag' : 'none'}
+        contentInsetAdjustmentBehavior="always"
+        nestedScrollEnabled
+        overScrollMode={Platform.OS === 'android' ? 'always' : undefined}
         <ProgressBar />
 
         {/* Header */}
@@ -274,7 +279,7 @@ export default function AdminRegisterConfirm() {
             icon={<ThemedText>🎉</ThemedText>}
           />
         </View>
-      </ScrollView>
+      </KeyboardAwareContainer>
     </ThemedView>
   );
 }

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ScrollView, StyleSheet, View, Alert } from 'react-native';
+import { ScrollView, StyleSheet, View, Alert, Platform } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useAuth } from '@/components/AuthContext';
 import { ThemedView } from '@/components/ThemedView';
@@ -7,6 +7,7 @@ import { ThemedText } from '@/components/ThemedText';
 import { Button } from '@/components/Button';
 import { useThemeColor } from '@/hooks/useThemeColor';
 import { Spacing } from '@/constants/Design';
+import { withOpacity } from '@/utils/colorUtils';
 
 // Helper function to convert hex to rgba
 function hexToRgba(hex: string, alpha: number) {

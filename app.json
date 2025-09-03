@@ -20,7 +20,12 @@
       },
       "edgeToEdgeEnabled": true,
       "package": "com.soroushrasti.Ashyaneh_Mehr",
-      "icon": "./assets/images/icon.png"
+      "icon": "./assets/images/icon.png",
+      "config": {
+        "googleMaps": {
+          "apiKey": "AIzaSyCx8-7Y3c7sPHyDfltKMvBitIAmdUwvLFk"
+        }
+      }
     },
     "web": {
       "bundler": "metro",

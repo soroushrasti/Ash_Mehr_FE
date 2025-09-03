@@ -1,6 +1,7 @@
 import React from 'react';
 import { Platform, View } from 'react-native';
 import GoogleMapWeb from './GoogleMapWeb';
+import { Config } from '@/constants/Config';
 
 interface UniversalMapProps {
   location: {
@@ -27,7 +28,7 @@ export default function UniversalMap({ location, onLocationSelect, zoom, showCon
   if (Platform.OS === 'web') {
     return (
       <GoogleMapWeb
-        apiKey="AIzaSyCx8-7Y3c7sPHyDfltKMvBitIAmdUwvLFk"
+        apiKey={Config.GOOGLE_MAPS_API_KEY}
         onLocationSelect={onLocationSelect}
         initialLocation={location ? { latitude: Number(location.latitude as any), longitude: Number(location.longitude as any) } : undefined}
         zoom={zoom}

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ScrollView, StyleSheet, View, Platform } from 'react-native';
+import { /* ScrollView, */ StyleSheet, View, Platform } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { ThemedView } from '@/components/ThemedView';
 import { ThemedText } from '@/components/ThemedText';
@@ -9,6 +9,7 @@ import { useThemeColor } from '@/hooks/useThemeColor';
 import { Spacing, BorderRadius } from '@/constants/Design';
 import { withOpacity } from '@/utils/colorUtils';
 import AppHeader from '@/components/AppHeader';
+import KeyboardAwareContainer from '@/components/KeyboardAwareContainer';
 
 // Types
 interface FieldOption { label: string; value: string; }
@@ -239,7 +240,7 @@ export default function AdminRegisterForm() {
     <ThemedView type="container" style={{ flex: 1 }}>
       <AppHeader title={`ثبت‌نام ${roleTitle}`} subtitle="اطلاعات پایه" />
 
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ padding: Spacing.xl }}>
+      <KeyboardAwareContainer contentContainerStyle={{ padding: Spacing.xl }}>
         <ProgressBar />
 
         {/* Header with Role badge */}
@@ -336,7 +337,7 @@ export default function AdminRegisterForm() {
             icon={<ThemedText>📍</ThemedText>}
           />
         </View>
-      </ScrollView>
+      </KeyboardAwareContainer>
     </ThemedView>
   );
 }

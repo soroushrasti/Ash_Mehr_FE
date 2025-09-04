@@ -1,4 +1,3 @@
-/* eslint-disable import/no-unused-modules */
 import React, { useEffect, useMemo, useState } from 'react';
 import { View, Button, Text, Platform } from 'react-native';
 import Constants from 'expo-constants';
@@ -71,6 +70,7 @@ export default function UniversalMap({ location, onLocationSelect, mapType = 'st
 
   const MapView = (MapsMod.default || MapsMod.MapView) as any;
   const Marker = MapsMod.Marker as any;
+  const safeMapType = Platform.OS === 'ios' && mapType === 'terrain' ? 'standard' : mapType;
 
   return (
     <View onLayout={onLayout}>
@@ -89,7 +89,7 @@ export default function UniversalMap({ location, onLocationSelect, mapType = 'st
           provider={Platform.OS === 'android' ? MapsMod.PROVIDER_GOOGLE : undefined}
           initialRegion={region}
           region={region}
-          mapType={mapType}
+          mapType={safeMapType}
           onPress={(e: any) => {
             const coord = e.nativeEvent.coordinate;
             onLocationSelect({

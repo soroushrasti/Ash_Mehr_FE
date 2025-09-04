@@ -1,5 +1,5 @@
 import React, { useMemo, useState, useRef } from 'react';
-import { View, StyleSheet, Text, LayoutChangeEvent } from 'react-native';
+import { View, StyleSheet, Text, LayoutChangeEvent, Platform } from 'react-native';
 import Constants from 'expo-constants';
 
 export type NeedyPoint = {
@@ -56,7 +56,8 @@ export default function NeedyMap({ points, initialRegion }: NeedyMapProps) {
   const Marker = mapsModule.Marker as any;
   const Callout = mapsModule.Callout as any;
 
-  const ClusterComponent: any = React.useMemo(() => {
+  // Choose clustering component without using hooks (avoid conditional hook after early return)
+  const ClusterComponent: any = (() => {
     try {
       // eslint-disable-next-line @typescript-eslint/no-require-imports
       const mod = require('react-native-map-clustering');
@@ -66,7 +67,7 @@ export default function NeedyMap({ points, initialRegion }: NeedyMapProps) {
       }
     } catch {}
     return MapView;
-  }, [MapView]);
+  })();
 
   const isZoomedIn = (reg: any | undefined) => {
     if (!reg) return false;
@@ -77,6 +78,7 @@ export default function NeedyMap({ points, initialRegion }: NeedyMapProps) {
     <View style={styles.container} onLayout={onLayout}>
       <ClusterComponent
         style={styles.map}
+        provider={Platform.OS === 'android' ? mapsModule.PROVIDER_GOOGLE : undefined}
         initialRegion={defaultRegion}
         region={region}
         onRegionChangeComplete={(r: any) => setRegion(r)}

@@ -15,6 +15,7 @@ export default function GoogleMapWeb({ onLocationSelect, initialLocation, apiKey
   const [loading, setLoading] = useState(false);
   const [map, setMap] = useState<any>(null);
   const [marker, setMarker] = useState<any>(null);
+  const markerRef = useRef<any>(null);
 
   useEffect(() => {
     if (!(window as any).google) {
@@ -105,6 +106,7 @@ export default function GoogleMapWeb({ onLocationSelect, initialLocation, apiKey
       // Add marker if initialLocation
       if (initialLocation) {
         const m = createMarker(center, gMap);
+        markerRef.current = m;
         setMarker(m);
       }
 
@@ -155,8 +157,9 @@ export default function GoogleMapWeb({ onLocationSelect, initialLocation, apiKey
 
   const placeMarker = (latLng: any, gMap: any, addr?: string) => {
     try {
-      removeMarker(marker);
+      removeMarker(markerRef.current);
       const m = createMarker(latLng, gMap, addr);
+      markerRef.current = m;
       setMarker(m);
       setLoading(true);
       const lat = typeof latLng.lat === 'function' ? latLng.lat() : latLng.lat;

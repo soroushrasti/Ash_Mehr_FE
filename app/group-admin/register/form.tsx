@@ -13,14 +13,14 @@ import KeyboardAwareContainer from '@/components/KeyboardAwareContainer';
 
 // Same field definitions as admin form but with Group Admin context
 const baseFields = [
-  { key: 'firstName', label: 'نام', placeholder: 'نام خود را وارد کنید', required: false },
-  { key: 'lastName', label: 'نام خانوادگی', placeholder: 'نام خانوادگی خود را وارد کنید', required: false },
-  { key: 'phone', label: 'شماره تلفن', placeholder: '09xxxxxxxxx', required: false, type: 'phone' },
-  { key: 'nationalId', label: 'کد ملی', placeholder: 'کد ملی ۱۰ رقمی', required: false, type: 'number' },
+  { key: 'firstName', label: 'نام', placeholder: 'نام خود را وارد کنید', required: true },
+  { key: 'lastName', label: 'نام خانوادگی', placeholder: 'نام خانوادگی خود را وارد کنید', required: true },
+  { key: 'phone', label: 'شماره تلفن', placeholder: '09xxxxxxxxx', required: true, type: 'phone' },
+  { key: 'nationalId', label: 'کد ملی', placeholder: 'کد ملی ۱۰ رقمی', required: true, type: 'number' },
   { key: 'email', label: 'ایمیل', placeholder: 'example@email.com', required: false, type: 'email' },
-  { key: 'province', label: 'استان', placeholder: 'استان محل سکونت', required: false },
-  { key: 'city', label: 'شهر', placeholder: 'شهر محل سکونت', required: false },
-  { key: 'street', label: 'آدرس', placeholder: 'آدرس کامل', required: false, multiline: true },
+  { key: 'province', label: 'استان', placeholder: 'استان محل سکونت', required: true },
+  { key: 'city', label: 'شهر', placeholder: 'شهر محل سکونت', required: true },
+  { key: 'street', label: 'آدرس', placeholder: 'آدرس کامل', required: true, multiline: true },
 ];
 
 // Group Admin can only register needy families, so all use these fields

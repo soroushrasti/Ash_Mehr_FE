@@ -1,3 +1,4 @@
+/* eslint-disable import/no-unused-modules */
 import React, { useState, useEffect } from 'react';
 import { StyleSheet, View, Alert, Platform, ScrollView as RNScrollView } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
@@ -146,7 +147,7 @@ export default function GroupAdminRegisterMap() {
             انتخاب آدرس روی نقشه
           </ThemedText>
 
-          <View style={styles.mapContainer}>
+          <View style={styles.mapContainer} onStartShouldSetResponderCapture={() => true}>
             <UniversalMap
               location={location}
               onLocationSelect={(loc) => {

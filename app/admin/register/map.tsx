@@ -1,3 +1,4 @@
+/* eslint-disable import/no-unused-modules */
 import React, { useState, useEffect } from 'react';
 import { StyleSheet, View, Alert, Platform, ScrollView as RNScrollView } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
@@ -155,7 +156,7 @@ export default function AdminRegisterMap() {
                 setError('');
               }}
               mapType="standard"
-              zoom={13}
+              zoom={0.01}
               showControls={true}
               city={city}
             />

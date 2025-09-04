@@ -28,14 +28,14 @@ type FormState = Record<string, string>;
 
 // Field definitions with Farsi labels and validation
 const baseFields: FieldDef[] = [
-  { key: 'firstName', label: 'نام', placeholder: 'نام خود را وارد کنید', required: false },
-  { key: 'lastName', label: 'نام خانوادگی', placeholder: 'نام خانوادگی خود را وارد کنید', required: false },
-  { key: 'phone', label: 'شماره تلفن', placeholder: '09xxxxxxxxx', required: false, type: 'phone' },
-  { key: 'nationalId', label: 'کد ملی', placeholder: 'کد ملی ۱۰ رقمی', required: false, type: 'number' },
+  { key: 'firstName', label: 'نام', placeholder: 'نام خود را وارد کنید', required: true },
+  { key: 'lastName', label: 'نام خانوادگی', placeholder: 'نام خانوادگی خود را وارد کنید', required: true },
+  { key: 'phone', label: 'شماره تلفن', placeholder: '09xxxxxxxxx', required: true, type: 'phone' },
+  { key: 'nationalId', label: 'کد ملی', placeholder: 'کد ملی ۱۰ رقمی', required: true, type: 'number' },
   { key: 'email', label: 'ایمیل', placeholder: 'example@email.com', required: false, type: 'email' },
-  { key: 'province', label: 'استان', placeholder: 'استان محل سکونت', required: false },
-  { key: 'city', label: 'شهر', placeholder: 'شهر محل سکونت', required: false },
-  { key: 'street', label: 'آدرس', placeholder: 'آدرس کامل', required: false, multiline: true },
+  { key: 'province', label: 'استان', placeholder: 'استان محل سکونت', required: true },
+  { key: 'city', label: 'شهر', placeholder: 'شهر محل سکونت', required: true },
+  { key: 'street', label: 'آدرس', placeholder: 'آدرس کامل', required: true, multiline: true },
 ];
 
 const needyFamilyFields: FieldDef[] = [
@@ -64,15 +64,15 @@ const needyFamilyFields: FieldDef[] = [
 ];
 
 function validateField(field: FieldDef, value: string): string {
-  // if (field.required && (!value || value.trim() === '')) return `${field.label} الزامی است`;
-  // if (field.type === 'email' && value && !/^\S+@\S+\.\S+$/.test(value)) return 'فرمت ایمیل نادرست است';
-  // if (field.type === 'phone' && value && !/^09\d{9}$/.test(value)) return 'شماره تلفن باید با ۰۹ شروع شود و ۱۱ رقم باشد';
-  // if (field.type === 'number' && value && isNaN(Number(value))) return `${field.label} باید عدد باشد`;
-  // if (field.key === 'password' && value && value.length < 6) return 'رمز عبور باید حداقل ۶ کاراکتر باشد';
-  // if (field.key === 'nationalId' && value && (!/^\d{10}$/.test(value) || !isValidNationalId(value))) return 'کد ملی نادرست است';
+  if (field.required && (!value || value.trim() === '')) return `${field.label} الزامی است`;
+  if (field.type === 'email' && value && !/^\S+@\S+\.\S+$/.test(value)) return 'فرمت ایمیل نادرست است';
+  if (field.type === 'phone' && value && !/^09\d{9}$/.test(value)) return 'شماره تلفن باید با ۰۹ شروع شود و ۱۱ رقم باشد';
+  if (field.type === 'number' && value && isNaN(Number(value))) return `${field.label} باید عدد باشد`;
+  if (field.key === 'nationalId' && value && (!/^\d{10}$/.test(value) || !isValidNationalId(value))) return 'کد ملی نادرست است';
   return '';
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function isValidNationalId(nationalId: string): boolean {
   if (nationalId.length !== 10) return false;
   const check = parseInt(nationalId[9]);

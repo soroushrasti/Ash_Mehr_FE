@@ -24,8 +24,8 @@ export default function GoogleMapWeb({ onLocationSelect, initialLocation, apiKey
         script.dataset.googleMaps = 'true';
         script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places,marker&loading=async`;
         script.async = true;
-        script.onload = () => { initMap(); };
-        script.onerror = () => { /* no-op */ };
+        script.onload = () => { console.debug('[Map] Google script loaded'); initMap(); };
+        script.onerror = () => { console.error('[Map] Google script failed to load'); };
         document.body.appendChild(script);
       } else {
         sExisting.onload = () => { initMap(); };
@@ -159,22 +159,21 @@ export default function GoogleMapWeb({ onLocationSelect, initialLocation, apiKey
       const m = createMarker(latLng, gMap, addr);
       setMarker(m);
       setLoading(true);
+      const lat = typeof latLng.lat === 'function' ? latLng.lat() : latLng.lat;
+      const lng = typeof latLng.lng === 'function' ? latLng.lng() : latLng.lng;
+      console.debug('[Map] placeMarker', { lat, lng, addr });
       // Get address from latLng
       const geocoder = new (window as any).google.maps.Geocoder();
       geocoder.geocode({ location: latLng }, (results: any, status: any) => {
         setLoading(false);
-        const lat = typeof latLng.lat === 'function' ? latLng.lat() : latLng.lat;
-        const lng = typeof latLng.lng === 'function' ? latLng.lng() : latLng.lng;
-        if (status === 'OK' && results && results[0]) {
-          setAddress(addr || results[0].formatted_address);
-          onLocationSelect({ latitude: lat, longitude: lng, address: addr || results[0].formatted_address });
-        } else {
-          setAddress('');
-          onLocationSelect({ latitude: lat, longitude: lng, address: '' });
-        }
+        const formatted = (status === 'OK' && results && results[0]) ? (addr || results[0].formatted_address) : '';
+        if (!formatted) console.warn('[Map] reverse geocode failed', { status });
+        setAddress(formatted);
+        onLocationSelect({ latitude: Number(lat), longitude: Number(lng), address: formatted });
       });
-    } catch {
+    } catch (err) {
       setLoading(false);
+      console.error('[Map] placeMarker error', err);
     }
   };
 

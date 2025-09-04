@@ -1,5 +1,6 @@
+/* eslint-disable import/no-unused-modules */
 import React, { useEffect, useMemo, useState } from 'react';
-import { View, Image, Button, Text } from 'react-native';
+import { View, Button, Text, Platform } from 'react-native';
 import Constants from 'expo-constants';
 
 interface UniversalMapProps {
@@ -49,7 +50,7 @@ export default function UniversalMap({ location, onLocationSelect, mapType = 'st
       // eslint-disable-next-line @typescript-eslint/no-require-imports
       const mod = require('react-native-maps');
       setMapsMod(mod);
-    } catch (e: any) {
+    } catch {
       setMapsError('react-native-maps load failed');
     }
   }, []);
@@ -82,27 +83,37 @@ export default function UniversalMap({ location, onLocationSelect, mapType = 'st
           <Button title="Zoom Out" onPress={() => onLocationSelect({ ...(location || region), latitude: region.latitude, longitude: region.longitude, mapType, zoom: Math.min(zoom * 2, 1) })} />
         </View>
       )}
-      <MapView
-        style={{ width: '100%', height: 300, borderRadius: 12, marginBottom: 16 }}
-        initialRegion={region}
-        region={region}
-        mapType={mapType}
-        onPress={(e: any) => {
-          const coord = e.nativeEvent.coordinate;
-          onLocationSelect({
-            latitude: coord.latitude,
-            longitude: coord.longitude,
-            mapType,
-            zoom,
-          });
-        }}
-      >
-        {location && (
-          <Marker coordinate={location as any}>
-            <Image source={require('@/assets/images/icon.png')} style={{ width: 32, height: 32 }} />
-          </Marker>
-        )}
-      </MapView>
+      <View style={{ width: '100%', height: 300, borderRadius: 12, overflow: 'hidden', marginBottom: 16 }}>
+        <MapView
+          style={{ flex: 1 }}
+          provider={Platform.OS === 'android' ? MapsMod.PROVIDER_GOOGLE : undefined}
+          initialRegion={region}
+          region={region}
+          mapType={mapType}
+          onPress={(e: any) => {
+            const coord = e.nativeEvent.coordinate;
+            onLocationSelect({
+              latitude: coord.latitude,
+              longitude: coord.longitude,
+              mapType,
+              zoom,
+            });
+          }}
+        >
+          {location && (
+            <Marker
+              coordinate={{ latitude: location.latitude, longitude: location.longitude }}
+              anchor={{ x: 0.5, y: 0.98 }}
+              tracksViewChanges={false}
+            >
+              <View style={{ alignItems: 'center' }}>
+                <View style={{ width: 28, height: 28, borderRadius: 14, backgroundColor: '#2E7D32', borderWidth: 2, borderColor: '#fff', shadowColor: '#000', shadowOpacity: 0.2, shadowRadius: 2, elevation: 3 }} />
+                <View style={{ width: 0, height: 0, borderLeftWidth: 6, borderRightWidth: 6, borderTopWidth: 8, borderLeftColor: 'transparent', borderRightColor: 'transparent', borderTopColor: '#2E7D32' }} />
+              </View>
+            </Marker>
+          )}
+        </MapView>
+      </View>
     </View>
   );
 }

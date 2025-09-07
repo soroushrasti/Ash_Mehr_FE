@@ -212,10 +212,34 @@ export default function AdminHome() {
           <ThemedView type="card" style={{ marginBottom: 12 }}>
             <ThemedText type="heading3" style={{ marginBottom: 8 }}>خلاصه آمار</ThemedText>
             <ThemedText type="body">تعداد نیازمندان: {needyInfo?.numberNeedyPersons ?? '—'}</ThemedText>
-            <ThemedText type="caption" style={{ opacity: 0.8 }}>آخرین ثبت نیازمند: {needyInfo?.LastNeedyNameCreated ?? '—'} ({needyInfo?.LastNeedycreatedTime ? new Date(needyInfo.LastNeedycreatedTime).toLocaleString('fa-IR') : '—'})</ThemedText>
+            <ThemedText type="caption" style={{ opacity: 0.8 }}>
+              آخرین ثبت نیازمند: {needyInfo?.LastNeedyNameCreated ?? '—'}
+              ({needyInfo?.LastNeedycreatedTime ?
+                new Date(new Date(needyInfo.LastNeedycreatedTime).getTime() + (3.5 * 60 * 60 * 1000)).toLocaleString('fa-IR', {
+                  year: 'numeric',
+                  month: '2-digit',
+                  day: '2-digit',
+                  hour: '2-digit',
+                  minute: '2-digit',
+                  second: '2-digit'
+                })
+                : '—'})
+            </ThemedText>
             <View style={{ height: 8 }} />
             <ThemedText type="body">مدیران کل: {adminInfo?.numberAdminPersons ?? '—'} | مدیران گروه: {adminInfo?.numberGroupAdminPersons ?? '—'}</ThemedText>
-            <ThemedText type="caption" style={{ opacity: 0.8 }}>آخرین مدیر ثبت‌شده: {adminInfo?.LastAdminNameCreated ?? '—'} ({adminInfo?.LastAdminCreatedTime ? new Date(adminInfo.LastAdminCreatedTime).toLocaleString('fa-IR') : '—'})</ThemedText>
+            <ThemedText type="caption" style={{ opacity: 0.8 }}>
+                          آخرین مدیر ثبت‌شده: {adminInfo?.LastAdminNameCreated ?? '—'}
+                          ({adminInfo?.LastAdminCreatedTime ?
+                            new Date(new Date(adminInfo.LastAdminCreatedTime).getTime() + (3.5 * 60 * 60 * 1000)).toLocaleString('fa-IR', {
+                              year: 'numeric',
+                              month: '2-digit',
+                              day: '2-digit',
+                              hour: '2-digit',
+                              minute: '2-digit',
+                              second: '2-digit'
+                            })
+                            : '—'})
+                        </ThemedText>
           </ThemedView>
 
           {/* Map + count section replacing previous stats */}

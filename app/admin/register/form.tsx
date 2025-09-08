@@ -72,9 +72,6 @@ function validateField(field: FieldDef, value: string): string {
   if (field.type === 'number' && value && !/^[۰-۹0-9]+$/.test(value)) {
       return `${field.label} باید عدد باشد`;
   }
-if (field.key === 'nationalId' && value && (!/^(?:d{10}|[۰-۹]{10})$/.test(value) || !isValidNationalId(value))) {
-    return 'کد ملی نادرست است';
-}
 return '';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 function isValidNationalId(nationalId: string): boolean {

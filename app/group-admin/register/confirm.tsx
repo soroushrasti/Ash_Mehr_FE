@@ -8,6 +8,8 @@ import { ThemedText } from '@/components/ThemedText';
 import { Button } from '@/components/Button';
 import { useThemeColor } from '@/hooks/useThemeColor';
 import { Spacing } from '@/constants/Design';
+import {NeedyCreateWithChildren} from "@/types/api";
+import {apiService} from "@/services/apiService";
 
 // Helper function to convert hex to rgba
 function hexToRgba(hex: string, alpha: number) {
@@ -20,7 +22,7 @@ function hexToRgba(hex: string, alpha: number) {
 export default function GroupAdminRegisterConfirm() {
   const router = useRouter();
   const { formData, role, roleTitle, roleIcon, location } = useLocalSearchParams();
-  const { userId } = useAuth(); // Removed unused userType
+  const { userId } = useAuth();
   const [loading, setLoading] = useState(false);
 
   const primaryColor = useThemeColor({}, 'primary');
@@ -94,9 +96,33 @@ export default function GroupAdminRegisterConfirm() {
       };
 
       // Simulate API call to POST /signup-admin with GroupAdminID in payload
-      await new Promise(resolve => setTimeout(resolve, 2000));
+        const registerData: NeedyCreateWithChildren = {
+            FirstName: parsedFormData.firstName || '',
+            LastName: parsedFormData.lastName || '',
+            Phone: parsedFormData.phone || undefined,
+            Email: parsedFormData.email || undefined,
+            City: parsedFormData.city || undefined,
+            Province: parsedFormData.province || undefined,
+            Street: parsedFormData.street || undefined,
+            NameFather: parsedFormData.nameFather || undefined,
+            NationalID: parsedFormData.nationalId || undefined,
+            CreatedBy: userId,
+            Age: parsedFormData.age ? Number(parsedFormData.age) : undefined,
+            Region: parsedFormData.region || undefined,
+            Gender: parsedFormData.gender || undefined,
+            HusbandFirstName: parsedFormData.housebandFirstName || undefined,
+            HusbandLastName: parsedFormData.housebandLastName || undefined,
+            ReasonMissingHusband: parsedFormData.reasonMissingHouseband || undefined,
+            UnderOrganizationName: parsedFormData.underOrganizationName || undefined,
+            EducationLevel: parsedFormData.educationLevel || undefined,
+            IncomeForm: parsedFormData.incomeAmount ? String(parsedFormData.incomeAmount) : undefined,
+            Latitude: parsedLocation.latitude?.toString() || undefined,
+            Longitude: parsedLocation.longitude?.toString() || undefined,
+            children_of_registre: null,
+        } as NeedyCreateWithChildren;
+        console.log('Submitting registration data:', registerData);
+        const result = await apiService.createNeedyPerson(registerData);
 
-      console.log('Group Admin Registration Data:', registrationData);
 
       Alert.alert(
         'ثبت‌نام موفق',

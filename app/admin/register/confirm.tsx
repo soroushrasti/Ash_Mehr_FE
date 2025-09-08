@@ -78,7 +78,6 @@ export default function AdminRegisterConfirm() {
 
     try {
       // Map form data to RegisterCreateWithChildren schema
-      const numericUserId = typeof userId === 'string' && !isNaN(Number(userId)) ? Number(userId) : undefined;
       const registerData: NeedyCreateWithChildren = {
         FirstName: parsedFormData.firstName || '',
         LastName: parsedFormData.lastName || '',
@@ -89,7 +88,7 @@ export default function AdminRegisterConfirm() {
         Street: parsedFormData.street || undefined,
         NameFather: parsedFormData.nameFather || undefined,
         NationalID: parsedFormData.nationalId || undefined,
-        CreatedBy: numericUserId,
+        CreatedBy: userId,
         Age: parsedFormData.age ? Number(parsedFormData.age) : undefined,
         Region: parsedFormData.region || undefined,
         Gender: parsedFormData.gender || undefined,
@@ -103,7 +102,6 @@ export default function AdminRegisterConfirm() {
         Longitude: parsedLocation.longitude?.toString() || undefined,
         children_of_registre: null,
       } as NeedyCreateWithChildren;
-
       const result = await apiService.createNeedyPerson(registerData);
 
       if (!result.success) {

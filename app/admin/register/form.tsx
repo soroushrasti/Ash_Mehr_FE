@@ -66,14 +66,21 @@ const needyFamilyFields: FieldDef[] = [
 function validateField(field: FieldDef, value: string): string {
   if (field.required && (!value || value.trim() === '')) return `${field.label} الزامی است`;
   if (field.type === 'email' && value && !/^\S+@\S+\.\S+$/.test(value)) return 'فرمت ایمیل نادرست است';
-  if (field.type === 'phone' && value && !/^09\d{9}$/.test(value)) return 'شماره تلفن باید با ۰۹ شروع شود و ۱۱ رقم باشد';
-  if (field.type === 'number' && value && isNaN(Number(value))) return `${field.label} باید عدد باشد`;
-  if (field.key === 'nationalId' && value && (!/^\d{10}$/.test(value) || !isValidNationalId(value))) return 'کد ملی نادرست است';
-  return '';
+  if (field.type === 'phone' && value && !/^(۰۹|09)[۰-۹0-9]{9}$/.test(value.replace(/[^۰-۹0-9]/g, ''))) {
+      return 'شماره تلفن باید با ۰۹ یا 09 شروع شود و ۱۱ رقم باشد';
+  }
+  if (field.type === 'number' && value && !/^[۰-۹0-9]+$/.test(value)) {
+      return `${field.label} باید عدد باشد`;
+  }
+if (field.key === 'nationalId' && value && (!/^(?:d{10}|[۰-۹]{10})$/.test(value) || !isValidNationalId(value))) {
+    return 'کد ملی نادرست است';
 }
-
+return '';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 function isValidNationalId(nationalId: string): boolean {
+  // تبدیل کد ملی به اعداد انگلیسی
+  nationalId = nationalId.replace(/[۰-۹]/g, (char) => String(char.charCodeAt(0) - 1776));
+
   if (nationalId.length !== 10) return false;
   const check = parseInt(nationalId[9]);
   const sum = nationalId
@@ -83,7 +90,7 @@ function isValidNationalId(nationalId: string): boolean {
   const remainder = sum % 11;
   return (remainder < 2 && check === remainder) || (remainder >= 2 && check === 11 - remainder);
 }
-
+}
 export default function AdminRegisterForm() {
   const router = useRouter();
   const { role } = useLocalSearchParams();

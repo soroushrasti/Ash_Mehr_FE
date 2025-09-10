@@ -19,9 +19,9 @@ const getEnvVar = (name: string, defaultValue?: string): string => {
 export const Config = {
   // API Configuration
     /// for DEV http://localhost:8000
-     API_BASE_URL: getEnvVar('API_BASE_URL', 'http://localhost:8080'),
-    /// for prod https://ashmehr-production.up.railway.app
-  //API_BASE_URL: getEnvVar('API_BASE_URL', 'https://ashmehr-production.up.railway.app'),
+    //  API_BASE_URL: getEnvVar('API_BASE_URL', 'http://localhost:8080'),
+    // / for prod https://ashmehr-production.up.railway.app
+  API_BASE_URL: getEnvVar('API_BASE_URL', 'https://ashmehr-production.up.railway.app'),
   API_TOKEN: getEnvVar('API_TOKEN', 'abd5ae82bad3dba4288914aeee0f6215fda2eb66490c72fdb5c1f080bb9dc441'),
 
   // Google Maps
@@ -35,13 +35,20 @@ export const Config = {
   ENDPOINTS: {
     CREATE_NEEDY: '/signup-register',
     CREATE_ADMIN: '/signup-admin',
-    FIND_NEEDY: '/find-register',
+    FIND_NEEDY: '/find-needy',
+    FIND_ADMIN: '/find-admin',
     EDIT_ADMIN: '/edit-admin',
     LOGIN: '/login',
+    SIGNIN_NEEDY: '/signin-needy',
     INFO_NEEDY: '/info-needy',
     INFO_ADMIN: '/info-admin',
     FIND_NEEDY_GEO: '/find-needy',
     FIND_ADMIN_GEO: '/find-admin',
+    GET_NEEDY: '/get-needy',
+    GET_ADMIN: '/get-admin',
+    EDIT_NEEDY: '/edit-needy',
+    DELETE_NEEDY: '/delete-needy',
+    DELETE_ADMIN: '/delete-admin',
   }
 };
 

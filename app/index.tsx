@@ -32,6 +32,10 @@ export default function Index() {
     return <Redirect href="/group-admin" />;
   }
 
+  if (userType === 'Needy') {
+    return <Redirect href="/(tabs)" />;
+  }
+
   // Default fallback to tabs
   return <Redirect href="/(tabs)" />;
 }

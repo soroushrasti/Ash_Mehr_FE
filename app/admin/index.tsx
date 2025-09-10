@@ -1,7 +1,7 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { ScrollView, StyleSheet, TouchableOpacity, View, Dimensions, Animated } from 'react-native';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
+import { ScrollView, StyleSheet, TouchableOpacity, View, Dimensions, Animated, RefreshControl } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { ThemedView } from '@/components/ThemedView';
 import { ThemedText } from '@/components/ThemedText';
 import { SignOutButton } from '@/components/SignOutButton';
@@ -34,9 +34,11 @@ export default function AdminHome() {
    const [adminInfo, setAdminInfo] = useState<InfoAdminResponse | null>(null);
    const [mapPoints, setMapPoints] = useState<NeedyPoint[]>([]);
    const [adminMapPoints, setAdminMapPoints] = useState<NeedyPoint[]>([]);
+   const [refreshing, setRefreshing] = useState(false);
 
-   useEffect(() => {
-     (async () => {
+   const fetchData = useCallback(async (showRefreshing = false) => {
+     if (showRefreshing) setRefreshing(true);
+     try {
        const [ni, ai, ng, ag] = await Promise.all([
          apiService.getNeedyInfo(),
          apiService.getAdminInfo(),
@@ -47,8 +49,23 @@ export default function AdminHome() {
        if (ai.success) setAdminInfo(ai.data!);
        if (ng.success && Array.isArray(ng.data)) setMapPoints(ng.data as any);
        if (ag.success && Array.isArray(ag.data)) setAdminMapPoints(ag.data as any);
-     })();
+     } catch (error) {
+       console.error('Error fetching data:', error);
+     } finally {
+       if (showRefreshing) setRefreshing(false);
+     }
    }, []);
+
+   // Refresh data when page comes into focus
+   useFocusEffect(
+     useCallback(() => {
+       fetchData();
+     }, [fetchData])
+   );
+
+   useEffect(() => {
+     fetchData();
+   }, [fetchData]);
 
    // Sample needy families data (replace with API data later)
    const needyFamilies = [
@@ -86,27 +103,28 @@ export default function AdminHome() {
          gradient: ['#667eea', '#764ba2'],
          action: () => router.push('/admin/register/select-role')
       },
+       {
+           title: 'مدیریت اطلاعات',
+           subtitle: 'مدیریت اطلاعات مددجویان و مدیران',
+           icon: '🤝',
+           gradient: ['#a8edea', '#fed6e3'],
+           action: () => router.push('/admin/volunteer-management')
+       },
       {
-         title: 'مدیریت کمک‌ها',
-         subtitle: 'پیگیری و تخصیص کمک‌ها',
+         title: 'مدیریت پیام ها',
+         subtitle: 'پیگیری و پیام های کذاشته شده',
          icon: '📦',
          gradient: ['#f093fb', '#f5576c'],
          action: () => {}
       },
       {
          title: 'گزارش‌گیری',
-         subtitle: 'مشاهده آمار و گزارشات',
+         subtitle: 'مشاهده آمار و مدیریت مددجویان',
          icon: '📊',
          gradient: ['#4facfe', '#00f2fe'],
-         action: () => {}
+         action: () => router.push('/admin/reports')
       },
-      {
-         title: 'مدیریت داوطلبان',
-         subtitle: 'هماهنگی با داوطلبان',
-         icon: '🤝',
-         gradient: ['#a8edea', '#fed6e3'],
-         action: () => {}
-      },
+
    ];
 
    const ActionCard = ({ action }: { action: any }) => (
@@ -207,6 +225,13 @@ export default function AdminHome() {
             style={styles.scrollView}
             showsVerticalScrollIndicator={false}
             contentContainerStyle={styles.scrollContent}
+            refreshControl={
+               <RefreshControl
+                  refreshing={refreshing}
+                  onRefresh={() => fetchData(true)}
+                  tintColor={primaryColor}
+               />
+            }
          >
           {/* Stats from API */}
           <ThemedView type="card" style={{ marginBottom: 12 }}>
@@ -228,18 +253,18 @@ export default function AdminHome() {
             <View style={{ height: 8 }} />
             <ThemedText type="body">نمایندگان کل: {adminInfo?.numberAdminPersons ?? '—'} | نمایندگان گروه: {adminInfo?.numberGroupAdminPersons ?? '—'}</ThemedText>
             <ThemedText type="caption" style={{ opacity: 0.8 }}>
-                          آخرین نماینده ثبت‌شده: {adminInfo?.LastAdminNameCreated ?? '—'}
-                          ({adminInfo?.LastAdminCreatedTime ?
-                            new Date(new Date(adminInfo.LastAdminCreatedTime).getTime() + (3.5 * 60 * 60 * 1000)).toLocaleString('fa-IR', {
-                              year: 'numeric',
-                              month: '2-digit',
-                              day: '2-digit',
-                              hour: '2-digit',
-                              minute: '2-digit',
-                              second: '2-digit'
-                            })
-                            : '—'})
-                        </ThemedText>
+              آخرین نماینده ثبت‌شده: {adminInfo?.LastAdminNameCreated ?? '—'}
+              ({adminInfo?.LastAdminCreatedTime ?
+                new Date(new Date(adminInfo.LastAdminCreatedTime).getTime() + (3.5 * 60 * 60 * 1000)).toLocaleString('fa-IR', {
+                  year: 'numeric',
+                  month: '2-digit',
+                  day: '2-digit',
+                  hour: '2-digit',
+                  minute: '2-digit',
+                  second: '2-digit'
+                })
+                : '—'})
+            </ThemedText>
           </ThemedView>
 
           {/* Map + count section replacing previous stats */}

@@ -89,6 +89,7 @@ export interface NeedyPersonLocation {
   lng: number;
   name?: string;
   info?: string;
+  role?: string;
 }
 
 export interface InfoNeedyResponse {

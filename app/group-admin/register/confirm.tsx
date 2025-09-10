@@ -209,7 +209,7 @@ export default function GroupAdminRegisterConfirm() {
             تأیید نهایی ثبت‌نام
           </ThemedText>
           <ThemedText type="body" center style={styles.subtitle}>
-            ثبت‌نام توسط مدیر گروه
+            ثبت‌نام توسط نماینده گروه
           </ThemedText>
         </View>
 
@@ -219,7 +219,7 @@ export default function GroupAdminRegisterConfirm() {
             <ThemedText style={styles.summaryIcon}>👥</ThemedText>
             <View>
               <ThemedText type="heading3" style={[styles.summaryTitle, { color: primaryColor }]}>
-                ثبت‌نام {roleTitle} توسط مدیر گروه
+                ثبت‌نام {roleTitle} توسط نماینده گروه
               </ThemedText>
               <ThemedText type="caption" style={styles.summarySubtitle}>
                 این فرد تحت پوشش گروه شما قرار خواهد گرفت

@@ -70,19 +70,19 @@ export default function GroupAdminHome() {
 
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* Map + Count Section */}
-        <SectionHeader title="نقشه خانواده‌های نیازمند" />
+        <SectionHeader title="نقشه خانواده‌های مددجو" />
         <ThemedView type="card" style={{ padding: 0, overflow: 'hidden' }}>
           <NeedyMap points={needyFamilies} />
         </ThemedView>
         <ThemedText type="caption" style={{ marginTop: Spacing.sm, opacity: 0.8 }}>
-          تعداد خانواده‌های نیازمند: {needyCount}
+          تعداد خانواده‌های مددجو: {needyCount}
         </ThemedText>
 
         {/* Quick Actions */}
         <SectionHeader title="عملیات سریع" />
         <View style={styles.quickActionsRow}>
           <Button
-            title="ثبت نیازمند جدید"
+            title="ثبت مددجو جدید"
             onPress={() => router.push('/group-admin/register/select-role')}
             variant="primary"
             size="medium"

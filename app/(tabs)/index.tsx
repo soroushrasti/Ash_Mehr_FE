@@ -28,7 +28,7 @@ export default function HomeScreen() {
   const recentActivities = [
     {
       title: 'توزیع بسته‌های غذایی',
-      subtitle: 'برای ۱۰۰ خانواده نیازمند',
+      subtitle: 'برای ۱۰۰ خانواده مددجو',
       time: 'امروز',
       icon: '🍲',
       color: donationColor
@@ -52,7 +52,7 @@ export default function HomeScreen() {
   return (
     <ThemedView type="container" style={styles.container}>
       <AppHeader
-        title="آشیانه مهر 🏠"
+        title="کانون ایتام مهر راستی 🏠"
         subtitle="جایی برای مهربانی و امید"
         rightAction={<SignOutButton />}
       />
@@ -64,7 +64,7 @@ export default function HomeScreen() {
             ماموریت ما
           </ThemedText>
           <ThemedText type="body" center style={styles.missionText}>
-            کمک به خانواده‌های نیازمند، حمایت از کودکان و سالمندان، و ایجاد جامعه‌ای پر از مهربانی و همدلی
+            کمک به خانواده‌های مددجو، حمایت از کودکان و سالمندان، و ایجاد جامعه‌ای پر از مهربانی و همدلی
           </ThemedText>
         </ThemedView>
 
@@ -94,7 +94,7 @@ export default function HomeScreen() {
               <ThemedText style={styles.helpIcon}>💰</ThemedText>
               <ThemedText type="body" weight="medium" center>کمک مالی</ThemedText>
               <ThemedText type="caption" center style={styles.helpDescription}>
-                با کمک‌های نقدی به خانواده‌های نیازمند یاری برسانید
+                با کمک‌های نقدی به خانواده‌های مددجو یاری برسانید
               </ThemedText>
             </ThemedView>
           </TouchableOpacity>

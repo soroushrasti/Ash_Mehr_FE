@@ -74,8 +74,8 @@ export default function NeedyMap({ points, adminPoints = [], initialCenter }: Ne
         };
 
         // Create markers for needy (red) and admins (blue)
-        points.forEach(p => addMarker(p, '#ef4444', 'نیازمند'));
-        adminPoints.forEach(p => addMarker(p, '#2563eb', 'مدیر'));
+        points.forEach(p => addMarker(p, '#ef4444', 'مددجو'));
+        adminPoints.forEach(p => addMarker(p, '#2563eb', 'نماینده'));
 
         // Clusterer
         clustererRef.current = new MarkerClusterer({ markers: markersRef.current, map });

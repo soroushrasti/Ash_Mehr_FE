@@ -86,15 +86,15 @@ export default function GroupAdminRegisterForm() {
 
   switch (role) {
     case 'NeedyFamily':
-      roleTitle = 'خانواده نیازمند';
+      roleTitle = 'خانواده مددجو';
       roleIcon = '🏠';
       break;
     case 'Child':
-      roleTitle = 'کودک نیازمند';
+      roleTitle = 'کودک مددجو';
       roleIcon = '👶';
       break;
     case 'Elderly':
-      roleTitle = 'سالمند نیازمند';
+      roleTitle = 'سالمند مددجو';
       roleIcon = '👴';
       break;
     case 'Volunteer':
@@ -102,7 +102,7 @@ export default function GroupAdminRegisterForm() {
       roleIcon = '🤝';
       break;
     default:
-      roleTitle = 'نیازمند';
+      roleTitle = 'مددجو';
       roleIcon = '👤';
   }
 
@@ -216,7 +216,7 @@ export default function GroupAdminRegisterForm() {
 
   return (
     <ThemedView type="container" style={styles.container}>
-      <AppHeader title={`ثبت‌نام ${roleTitle}`} subtitle="توسط مدیر گروه" />
+      <AppHeader title={`ثبت‌نام ${roleTitle}`} subtitle="توسط نماینده گروه" />
       <KeyboardAwareContainer contentContainerStyle={{ padding: Spacing.xl }}>
         {/* Progress Bar */}
         <ProgressBar />
@@ -240,7 +240,7 @@ export default function GroupAdminRegisterForm() {
             <ThemedText style={styles.badgeIcon}>👥</ThemedText>
             <View>
               <ThemedText type="body" weight="medium" style={[styles.badgeTitle, { color: primaryColor }]}>
-                ثبت‌نام توسط مدیر گروه
+                ثبت‌نام توسط نماینده گروه
               </ThemedText>
               <ThemedText type="caption" style={styles.badgeSubtitle}>
                 این فرد تحت پوشش گروه شما قرار خواهد گرفت

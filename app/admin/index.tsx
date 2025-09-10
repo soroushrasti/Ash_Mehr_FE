@@ -81,7 +81,7 @@ export default function AdminHome() {
    const quickActions = [
       {
          title: 'ثبت فرد جدید',
-         subtitle: 'افزودن خانواده یا مدیر به سیستم',
+         subtitle: 'افزودن خانواده یا نماینده به سیستم',
          icon: '➕',
          gradient: ['#667eea', '#764ba2'],
          action: () => router.push('/admin/register/select-role')
@@ -186,8 +186,8 @@ export default function AdminHome() {
                   transform: [{ translateY: slideAnim }]
                }]}>
                   <View style={styles.welcomeSection}>
-                     <ThemedText style={styles.greeting}>سلام{userName ? `، ${userName}` : '، مدیر گرامی'} 👋</ThemedText>
-                     <ThemedText style={styles.welcomeText}>پنل مدیریت آشیانه مهر</ThemedText>
+                     <ThemedText style={styles.greeting}>سلام{userName ? `، ${userName}` : '، نماینده گرامی'} 👋</ThemedText>
+                     <ThemedText style={styles.welcomeText}>پنل نمایندگان کانون ایتام مهر راستی</ThemedText>
                      <ThemedText style={styles.dateText}>
                         {new Date().toLocaleDateString('fa-IR', {
                            weekday: 'long',
@@ -211,9 +211,9 @@ export default function AdminHome() {
           {/* Stats from API */}
           <ThemedView type="card" style={{ marginBottom: 12 }}>
             <ThemedText type="heading3" style={{ marginBottom: 8 }}>خلاصه آمار</ThemedText>
-            <ThemedText type="body">تعداد نیازمندان: {needyInfo?.numberNeedyPersons ?? '—'}</ThemedText>
+            <ThemedText type="body">تعداد مددجویان: {needyInfo?.numberNeedyPersons ?? '—'}</ThemedText>
             <ThemedText type="caption" style={{ opacity: 0.8 }}>
-              آخرین ثبت نیازمند: {needyInfo?.LastNeedyNameCreated ?? '—'}
+              آخرین ثبت مددجو: {needyInfo?.LastNeedyNameCreated ?? '—'}
               ({needyInfo?.LastNeedycreatedTime ?
                 new Date(new Date(needyInfo.LastNeedycreatedTime).getTime() + (3.5 * 60 * 60 * 1000)).toLocaleString('fa-IR', {
                   year: 'numeric',
@@ -226,9 +226,9 @@ export default function AdminHome() {
                 : '—'})
             </ThemedText>
             <View style={{ height: 8 }} />
-            <ThemedText type="body">مدیران کل: {adminInfo?.numberAdminPersons ?? '—'} | مدیران گروه: {adminInfo?.numberGroupAdminPersons ?? '—'}</ThemedText>
+            <ThemedText type="body">نمایندگان کل: {adminInfo?.numberAdminPersons ?? '—'} | نمایندگان گروه: {adminInfo?.numberGroupAdminPersons ?? '—'}</ThemedText>
             <ThemedText type="caption" style={{ opacity: 0.8 }}>
-                          آخرین مدیر ثبت‌شده: {adminInfo?.LastAdminNameCreated ?? '—'}
+                          آخرین نماینده ثبت‌شده: {adminInfo?.LastAdminNameCreated ?? '—'}
                           ({adminInfo?.LastAdminCreatedTime ?
                             new Date(new Date(adminInfo.LastAdminCreatedTime).getTime() + (3.5 * 60 * 60 * 1000)).toLocaleString('fa-IR', {
                               year: 'numeric',
@@ -245,14 +245,14 @@ export default function AdminHome() {
           {/* Map + count section replacing previous stats */}
           <Animated.View style={[styles.section, { opacity: fadeAnim, transform: [{ translateY: slideAnim }]}]}>
             <View style={styles.sectionHeader}>
-              <ThemedText style={[styles.sectionTitle, { color: textColor }]}>🗺️ نقشه خانواده‌های نیازمند</ThemedText>
+              <ThemedText style={[styles.sectionTitle, { color: textColor }]}>🗺️ نقشه خانواده‌های مددجو</ThemedText>
               <View style={styles.sectionDivider} />
             </View>
             <ThemedView type="card" style={{ padding: 0, overflow: 'hidden' }}>
               <NeedyMap points={mapPoints} adminPoints={adminMapPoints} />
             </ThemedView>
             <ThemedText type="caption" style={{ marginTop: 8, opacity: 0.8 }}>
-              تعداد خانواده‌های نیازمند: {mapPoints.length}
+              تعداد خانواده‌های مددجو: {mapPoints.length}
             </ThemedText>
           </Animated.View>
 
@@ -295,7 +295,7 @@ export default function AdminHome() {
                    </View>
                    <View style={styles.activityContent}>
                       <ThemedText style={[styles.activityTitle, { color: textColor }]}>
-                         👪 ثبت نیازمند جدید: {needyInfo?.LastNeedyNameCreated ?? '—'}
+                         👪 ثبت مددجو جدید: {needyInfo?.LastNeedyNameCreated ?? '—'}
                       </ThemedText>
                       <ThemedText style={[styles.activityTime, { color: textColor, opacity: 0.6 }]}>
                          {needyInfo?.LastNeedycreatedTime ? new Date(needyInfo.LastNeedycreatedTime).toLocaleString('fa-IR') : '—'}
@@ -312,7 +312,7 @@ export default function AdminHome() {
                    </View>
                    <View style={styles.activityContent}>
                       <ThemedText style={[styles.activityTitle, { color: textColor }]}>
-                         🧑‍💼 ثبت مدیر جدید: {adminInfo?.LastAdminNameCreated ?? '—'}
+                         🧑‍💼 ثبت نماینده جدید: {adminInfo?.LastAdminNameCreated ?? '—'}
                       </ThemedText>
                       <ThemedText style={[styles.activityTime, { color: textColor, opacity: 0.6 }]}>
                          {adminInfo?.LastAdminCreatedTime ? new Date(adminInfo.LastAdminCreatedTime).toLocaleString('fa-IR') : '—'}

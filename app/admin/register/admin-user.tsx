@@ -21,7 +21,7 @@ export default function AdminUserForm() {
   const { userId } = useAuth();
 
   const isVolunteer = mode === 'volunteer';
-  const title = isVolunteer ? 'افزودن داوطلب (مدیر گروه)' : 'افزودن مدیر جدید';
+  const title = isVolunteer ? 'افزودن داوطلب (نماینده گروه)' : 'افزودن نماینده جدید';
   const primary = useThemeColor({}, 'primary');
 
   const [form, setForm] = useState({
@@ -48,7 +48,7 @@ export default function AdminUserForm() {
       try {
         const { status } = await Location.requestForegroundPermissionsAsync();
         if (status !== 'granted') {
-          setLocError('برای تعیین موقعیت مدیر گروه، مجوز دسترسی به موقعیت لازم است.');
+          setLocError('برای تعیین موقعیت نماینده گروه، مجوز دسترسی به موقعیت لازم است.');
           return;
         }
         const pos = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
@@ -81,7 +81,7 @@ export default function AdminUserForm() {
     };
 
     if (isVolunteer && !location) {
-      Alert.alert('خطا', 'لطفاً موقعیت مدیر گروه را روی نقشه انتخاب کنید.');
+      Alert.alert('خطا', 'لطفاً موقعیت نماینده گروه را روی نقشه انتخاب کنید.');
       return;
     }
 
@@ -90,7 +90,7 @@ export default function AdminUserForm() {
     setLoading(false);
 
     if (res.success) {
-      Alert.alert('موفق', isVolunteer ? 'داوطلب با نقش مدیرگروه ایجاد شد.' : 'مدیر جدید ایجاد شد.', [
+      Alert.alert('موفق', isVolunteer ? 'داوطلب با نقش نماینده گروه ایجاد شد.' : 'نماینده جدید ایجاد شد.', [
         { text: 'باشه', onPress: () => router.back() },
       ]);
     } else {
@@ -100,7 +100,7 @@ export default function AdminUserForm() {
 
   return (
     <ThemedView type="container" style={{ flex: 1 }}>
-      <AppHeader title={title} subtitle={isVolunteer ? 'نقش: مدیر گروه' : 'نقش: مدیر کل'} />
+      <AppHeader title={title} subtitle={isVolunteer ? 'نقش: نماینده گروه' : 'نقش: نماینده کل'} />
       <KeyboardAwareContainer contentContainerStyle={styles.content}>
         <ThemedView type="card" style={{ marginBottom: Spacing.xl }}>
           <ThemedText type="heading3" style={{ marginBottom: Spacing.md, color: primary }}>
@@ -121,7 +121,7 @@ export default function AdminUserForm() {
           {isVolunteer && (
             <>
               <ThemedText type="heading3" style={{ marginVertical: Spacing.md, color: primary }}>
-                انتخاب موقعیت مدیر گروه
+                انتخاب موقعیت نماینده گروه
               </ThemedText>
               <ThemedText type="caption" style={{ marginBottom: Spacing.sm, opacity: 0.8 }}>
                 ابتدا مجوز دسترسی به موقعیت را تایید کنید. سپس نشانگر را روی موقعیت دقیق قرار دهید.

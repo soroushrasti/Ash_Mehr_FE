@@ -76,7 +76,7 @@ export default function SignInScreen() {
 
   return (
     <ThemedView type="container" style={styles.container}>
-      <AppHeader title="آشیانه مهر" subtitle="خیریه‌ای برای همه" />
+      <AppHeader title="کانون ایتام مهر راستی" subtitle="خیریه‌ای برای همه" />
 
       <KeyboardAvoidingView
         style={{ flex: 1 }}
@@ -130,7 +130,7 @@ export default function SignInScreen() {
             />
 
             <ThemedText type="caption" center style={styles.helpText}>
-              برای کمک به نیازمندان وارد شوید
+              برای کمک به مددجویان وارد شوید
             </ThemedText>
           </ThemedView>
         </ScrollView>

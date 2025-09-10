@@ -18,7 +18,7 @@ export default function GroupAdminSelectRole() {
   const roles = [
     {
       id: 'needyFamily',
-      title: 'خانواده نیازمند',
+      title: 'خانواده مددجو',
       subtitle: 'ثبت خانواده‌ای که نیاز به کمک دارد',
       icon: '🏠',
       color: primaryColor,
@@ -27,7 +27,7 @@ export default function GroupAdminSelectRole() {
     },
     {
       id: 'child',
-      title: 'کودک نیازمند',
+      title: 'کودک مددجو',
       subtitle: 'ثبت کودک تحت پوشش گروه',
       icon: '👶',
       color: childrenColor,
@@ -45,7 +45,7 @@ export default function GroupAdminSelectRole() {
             انتخاب نوع ثبت‌نام
           </ThemedText>
           <ThemedText type="body" center style={styles.subtitle}>
-            به عنوان مدیر گروه، می‌توانید افراد زیر را ثبت کنید
+            به عنوان نماینده گروه، می‌توانید افراد زیر را ثبت کنید
           </ThemedText>
         </View>
 
@@ -79,13 +79,13 @@ export default function GroupAdminSelectRole() {
         {/* Group Admin Info */}
         <ThemedView type="card" style={styles.infoCard}>
           <ThemedText type="body" weight="medium" center style={styles.infoTitle}>
-            اختیارات مدیر گروه 👥
+            اختیارات نماینده گروه 👥
           </ThemedText>
           <ThemedText type="caption" center style={styles.infoText}>
-            شما به عنوان مدیر گروه می‌توانید نیازمندان منطقه خود را ثبت کنید
+            شما به عنوان نماینده گروه می‌توانید مددجویان منطقه خود را ثبت کنید
           </ThemedText>
           <ThemedText type="caption" center style={styles.infoText}>
-            تمام ثبت‌نام‌ها با شناسه مدیر گروه شما ذخیره می‌شوند
+            تمام ثبت‌نام‌ها با شناسه نماینده گروه شما ذخیره می‌شوند
           </ThemedText>
         </ThemedView>
 
@@ -95,7 +95,7 @@ export default function GroupAdminSelectRole() {
             نیاز به راهنمایی دارید؟ 🤔
           </ThemedText>
           <ThemedText type="caption" center style={styles.helpText}>
-            برای سوالات مربوط به ثبت‌نام یا تعیین نوع نیازمند، با مدیر کل تماس بگیرید
+            برای سوالات مربوط به ثبت‌نام یا تعیین نوع مددجو، با نماینده کل تماس بگیرید
           </ThemedText>
           <ThemedText type="caption" center style={[styles.contactInfo, { color: primaryColor }]}>
             تلفن: ۰۲۱-۱۲۳۴۵۶۷۸

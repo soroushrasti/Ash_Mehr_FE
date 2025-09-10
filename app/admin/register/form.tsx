@@ -72,6 +72,9 @@ function validateField(field: FieldDef, value: string): string {
   if (field.type === 'number' && value && !/^[۰-۹0-9]+$/.test(value)) {
       return `${field.label} باید عدد باشد`;
   }
+  if (field.key === 'nationalId' && value && (!/^(?:d{10}|[۰-۹]{10})$/.test(value) || !isValidNationalId(value))) {
+    return 'کد ملی نادرست است';
+}
 return '';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 function isValidNationalId(nationalId: string): boolean {
@@ -108,11 +111,11 @@ export default function AdminRegisterForm() {
 
   switch (roleParam) {
     case 'Admin':
-      roleTitle = 'مدیر کل';
+      roleTitle = 'نماینده کل';
       roleIcon = '👨‍💼';
       break;
     case 'GroupAdmin':
-      roleTitle = 'مدیر گروه';
+      roleTitle = 'نماینده گروه';
       roleIcon = '👥';
       break;
     case 'NeedyFamily':
@@ -120,9 +123,9 @@ export default function AdminRegisterForm() {
     case 'Elderly':
     case 'Volunteer':
       fields = [...baseFields, ...needyFamilyFields];
-      roleTitle = roleParam === 'NeedyFamily' ? 'خانواده نیازمند' :
-                 roleParam === 'Child' ? 'کودک نیازمند' :
-                 roleParam === 'Elderly' ? 'سالمند نیازمند' : 'داوطلب';
+      roleTitle = roleParam === 'NeedyFamily' ? 'خانواده مددجو' :
+                 roleParam === 'Child' ? 'کودک مددجو' :
+                 roleParam === 'Elderly' ? 'سالمند مددجو' : 'داوطلب';
       roleIcon = roleParam === 'NeedyFamily' ? '🏠' :
                 roleParam === 'Child' ? '👶' :
                 roleParam === 'Elderly' ? '👴' : '🤝';

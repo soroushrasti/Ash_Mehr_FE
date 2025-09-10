@@ -19,7 +19,7 @@ export default function AdminSelectRole() {
   const roles = [
     {
       id: 'needyFamily',
-      title: 'خانواده نیازمند',
+      title: 'خانواده مددجو',
       subtitle: 'ثبت خانواده‌ای که نیاز به کمک دارد',
       icon: '🏠',
       color: primaryColor,
@@ -28,7 +28,7 @@ export default function AdminSelectRole() {
     },
     {
       id: 'child',
-      title: 'کودک نیازمند',
+      title: 'کودک مددجو',
       subtitle: 'ثبت کودک تحت پوشش خیریه',
       icon: '👶',
       color: childrenColor,
@@ -37,20 +37,20 @@ export default function AdminSelectRole() {
     },
     {
       id: 'volunteer',
-      title: 'مدیر گروه جدید',
-      subtitle: 'ثبت فرد مدیر گروه',
+      title: 'نماینده گروه جدید',
+      subtitle: 'ثبت فرد نماینده گروه',
       icon: '🤝',
       color: volunteerColor,
-      description: 'ایجاد کاربر داوطلب با نقش مدیر گروه برای مدیریت گروه‌ها',
+      description: 'ایجاد کاربر داوطلب با نقش نماینده گروه برای مدیریت گروه‌ها',
       route: '/admin/register/admin-user?mode=volunteer'
     },
     {
       id: 'admin',
-      title: 'مدیر جدید',
-      subtitle: 'افزودن مدیر سیستم',
+      title: 'نماینده جدید',
+      subtitle: 'افزودن نماینده سیستم',
       icon: '🧩',
       color: primaryColor,
-      description: 'ایجاد کاربر مدیر با نقش مدیر برای مدیریت کل سیستم',
+      description: 'ایجاد کاربر نماینده با نقش نماینده برای مدیریت کل سیستم',
       route: '/admin/register/admin-user?mode=admin'
     }
   ];

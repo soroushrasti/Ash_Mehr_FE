@@ -69,7 +69,7 @@ class ApiService {
       endpoint: Config.ENDPOINTS.CREATE_ADMIN,
       method: 'POST',
       body: adminData,
-      successMessage: 'ثبت مدیر با موفقیت انجام شد',
+      successMessage: 'ثبت نماینده با موفقیت انجام شد',
       redirectOnSuccessTo: '/',
       showErrorAlert: true,
     });

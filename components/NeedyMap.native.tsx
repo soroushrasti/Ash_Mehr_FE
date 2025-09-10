@@ -88,12 +88,12 @@ export default function NeedyMap({ points, initialRegion }: NeedyMapProps) {
             <View style={styles.redDot} />
             {isZoomedIn(region) && (
               <View style={styles.labelBubble}>
-                <Text style={styles.labelText} numberOfLines={1}>{p.name || 'نیازمند'}</Text>
+                <Text style={styles.labelText} numberOfLines={1}>{p.name || 'مددجو'}</Text>
               </View>
             )}
             <Callout>
               <View style={{ maxWidth: 220 }}>
-                <Text style={{ fontWeight: '700', marginBottom: 4 }}>{p.name || 'نیازمند'}</Text>
+                <Text style={{ fontWeight: '700', marginBottom: 4 }}>{p.name || 'مددجو'}</Text>
                 <Text>{p.info || 'اطلاعات بیشتر در دسترس نیست'}</Text>
               </View>
             </Callout>

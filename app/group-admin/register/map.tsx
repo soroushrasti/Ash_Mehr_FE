@@ -136,7 +136,7 @@ export default function GroupAdminRegisterMap() {
           <View style={styles.badgeContent}>
             <ThemedText style={styles.badgeIcon}>👥</ThemedText>
             <ThemedText type="caption" style={styles.badgeText}>
-              ثبت‌نام توسط مدیر گروه - این موقعیت تحت پوشش گروه شما ثبت می‌شود
+              ثبت‌نام توسط نماینده گروه - این موقعیت تحت پوشش گروه شما ثبت می‌شود
             </ThemedText>
           </View>
         </ThemedView>

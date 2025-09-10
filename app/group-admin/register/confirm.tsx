@@ -95,8 +95,7 @@ export default function GroupAdminRegisterConfirm() {
         isGroupAdminRegistration: true,
       };
 
-      // Simulate API call to POST /signup-admin with GroupAdminID in payload
-        const registerData: NeedyCreateWithChildren = {
+      const registerData: NeedyCreateWithChildren = {
             FirstName: parsedFormData.firstName || '',
             LastName: parsedFormData.lastName || '',
             Phone: parsedFormData.phone || undefined,

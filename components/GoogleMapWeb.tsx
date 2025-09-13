@@ -27,7 +27,8 @@ interface GoogleMapWebProps {
 declare global {
   interface Window {
     google: any;
-    initMap: () => void;
+    initGoogleMaps: () => void;
+    googleMapsCallback: () => void;
   }
 }
 
@@ -50,35 +51,103 @@ const GoogleMapWeb: React.FC<GoogleMapWebProps> = ({
   const clustererRef = useRef<any>(null);
   const selectedMarkerRef = useRef<any>(null);
   const [isMapLoaded, setIsMapLoaded] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const initTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Load Google Maps script
+  // Clear any existing timeouts on unmount
   useEffect(() => {
+    return () => {
+      if (initTimeoutRef.current) {
+        clearTimeout(initTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  // Load Google Maps script with better error handling
+  const loadGoogleMaps = useCallback(() => {
     if (typeof window === 'undefined' || Platform.OS !== 'web') return;
 
-    const loadGoogleMaps = () => {
-      if (window.google && window.google.maps) {
-        setIsMapLoaded(true);
+    // Check if already loaded
+    if (window.google && window.google.maps) {
+      setIsMapLoaded(true);
+      return Promise.resolve();
+    }
+
+    return new Promise<void>((resolve, reject) => {
+      // Check if script is already being loaded
+      const existingScript = document.querySelector('script[src*="maps.googleapis.com"]');
+      if (existingScript) {
+        // Wait for existing script to load
+        const checkLoaded = () => {
+          if (window.google && window.google.maps) {
+            setIsMapLoaded(true);
+            resolve();
+          } else {
+            setTimeout(checkLoaded, 100);
+          }
+        };
+        checkLoaded();
         return;
       }
 
+      // Create callback function name
+      const callbackName = 'googleMapsCallback' + Date.now();
+
+      // Set up callback
+      (window as any)[callbackName] = () => {
+        try {
+          if (window.google && window.google.maps) {
+            setIsMapLoaded(true);
+            setLoadError(null);
+            resolve();
+          } else {
+            throw new Error('Google Maps API not properly loaded');
+          }
+        } catch (error) {
+          console.error('Google Maps callback error:', error);
+          setLoadError('Failed to initialize Google Maps');
+          reject(error);
+        } finally {
+          // Cleanup callback
+          delete (window as any)[callbackName];
+        }
+      };
+
+      // Create and load script
       const script = document.createElement('script');
-      script.src = `https://maps.googleapis.com/maps/api/js?key=${Config.GOOGLE_MAPS_API_KEY}&libraries=geometry,places`;
+      script.src = `https://maps.googleapis.com/maps/api/js?key=${Config.GOOGLE_MAPS_API_KEY}&libraries=geometry,places&callback=${callbackName}`;
       script.async = true;
       script.defer = true;
-      script.onload = () => {
-        setIsMapLoaded(true);
-      };
-      document.head.appendChild(script);
-    };
 
-    loadGoogleMaps();
+      script.onerror = () => {
+        setLoadError('Failed to load Google Maps API');
+        reject(new Error('Failed to load Google Maps script'));
+      };
+
+      // Set timeout for loading
+      const timeout = setTimeout(() => {
+        setLoadError('Google Maps API loading timeout');
+        reject(new Error('Google Maps loading timeout'));
+      }, 10000);
+
+      script.onload = () => {
+        clearTimeout(timeout);
+      };
+
+      document.head.appendChild(script);
+    });
   }, []);
 
-  // Initialize map
-  useEffect(() => {
+  // Initialize map with proper error handling
+  const initializeMap = useCallback(() => {
     if (!isMapLoaded || !mapRef.current || mapInstanceRef.current) return;
 
     try {
+      // Verify Google Maps is properly loaded
+      if (!window.google || !window.google.maps || !window.google.maps.Map) {
+        throw new Error('Google Maps API not properly initialized');
+      }
+
       const mapOptions = {
         center: {
           lat: initialRegion.latitude,
@@ -91,6 +160,7 @@ const GoogleMapWeb: React.FC<GoogleMapWebProps> = ({
         mapTypeControl: false,
         streetViewControl: false,
         fullscreenControl: true,
+        styles: [], // Add custom styles if needed
       };
 
       mapInstanceRef.current = new window.google.maps.Map(mapRef.current, mapOptions);
@@ -98,34 +168,70 @@ const GoogleMapWeb: React.FC<GoogleMapWebProps> = ({
       // Add click listener for location selection
       if (onLocationSelect) {
         mapInstanceRef.current.addListener('click', (event: any) => {
-          const lat = event.latLng.lat();
-          const lng = event.latLng.lng();
-          onLocationSelect({ latitude: lat, longitude: lng });
+          try {
+            const lat = event.latLng.lat();
+            const lng = event.latLng.lng();
+            onLocationSelect({ latitude: lat, longitude: lng });
+          } catch (error) {
+            console.error('Error handling map click:', error);
+          }
         });
       }
 
-      console.log('Map initialized successfully');
+      console.log('Google Maps initialized successfully');
+      setLoadError(null);
     } catch (error) {
       console.error('Error initializing map:', error);
+      setLoadError('Failed to initialize map');
     }
   }, [isMapLoaded, initialRegion, onLocationSelect]);
 
+  // Load Google Maps on component mount
+  useEffect(() => {
+    if (Platform.OS === 'web') {
+      loadGoogleMaps().catch((error) => {
+        console.error('Failed to load Google Maps:', error);
+        setLoadError('Failed to load Google Maps API');
+      });
+    }
+  }, [loadGoogleMaps]);
+
+  // Initialize map when loaded
+  useEffect(() => {
+    if (isMapLoaded) {
+      // Small delay to ensure DOM is ready
+      initTimeoutRef.current = setTimeout(() => {
+        initializeMap();
+      }, 100);
+    }
+  }, [isMapLoaded, initializeMap]);
+
   // Update markers when points change
   const updateMarkers = useCallback(() => {
-    if (!mapInstanceRef.current || !window.google) return;
+    if (!mapInstanceRef.current || !window.google || !isMapLoaded) return;
 
     try {
       // Clear existing markers
       markersRef.current.forEach(marker => {
-        if (marker && marker.setMap) {
-          marker.setMap(null);
+        try {
+          if (marker && marker.setMap) {
+            marker.setMap(null);
+          }
+        } catch (error) {
+          console.error('Error removing marker:', error);
         }
       });
       markersRef.current = [];
 
       // Clear existing clusterer
-      if (clustererRef.current && clustererRef.current.clearMarkers) {
-        clustererRef.current.clearMarkers();
+      if (clustererRef.current) {
+        try {
+          if (clustererRef.current.clearMarkers) {
+            clustererRef.current.clearMarkers();
+          }
+        } catch (error) {
+          console.error('Error clearing clusterer:', error);
+        }
       }
 
       // Filter valid points
@@ -134,14 +240,18 @@ const GoogleMapWeb: React.FC<GoogleMapWebProps> = ({
         typeof point.lat === 'number' &&
         typeof point.lng === 'number' &&
         !isNaN(point.lat) &&
-        !isNaN(point.lng)
+        !isNaN(point.lng) &&
+        point.lat >= -90 &&
+        point.lat <= 90 &&
+        point.lng >= -180 &&
+        point.lng <= 180
       );
 
-      console.log('Valid points for markers:', validPoints.length);
+      console.log(`Creating ${validPoints.length} valid markers from ${points.length} points`);
 
       if (validPoints.length === 0) return;
 
-      // Create markers
+      // Create markers with error handling
       const markers = validPoints.map(point => {
         try {
           const marker = new window.google.maps.Marker({
@@ -149,29 +259,32 @@ const GoogleMapWeb: React.FC<GoogleMapWebProps> = ({
             map: mapInstanceRef.current,
             title: point.name || `Location ${point.id}`,
             icon: {
-              url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <circle cx="12" cy="12" r="10" fill="#FF4444" stroke="#FFFFFF" stroke-width="2"/>
-                  <circle cx="12" cy="12" r="4" fill="#FFFFFF"/>
-                </svg>
-              `),
-              scaledSize: new window.google.maps.Size(24, 24),
+              path: window.google.maps.SymbolPath.CIRCLE,
+              scale: 8,
+              fillColor: '#FF4444',
+              fillOpacity: 0.8,
+              strokeColor: '#FFFFFF',
+              strokeWeight: 2,
             }
           });
 
-          // Add info window
+          // Add info window with error handling
           if (point.info || point.name) {
             const infoWindow = new window.google.maps.InfoWindow({
               content: `
-                <div style="padding: 8px;">
-                  <h3 style="margin: 0 0 8px 0; font-size: 14px;">${point.name || 'Location'}</h3>
-                  ${point.info ? `<p style="margin: 0; font-size: 12px;">${point.info}</p>` : ''}
+                <div style="padding: 8px; font-family: Arial, sans-serif;">
+                  <h3 style="margin: 0 0 8px 0; font-size: 14px; color: #333;">${point.name || 'Location'}</h3>
+                  ${point.info ? `<p style="margin: 0; font-size: 12px; color: #666;">${point.info}</p>` : ''}
                 </div>
               `
             });
 
             marker.addListener('click', () => {
-              infoWindow.open(mapInstanceRef.current, marker);
+              try {
+                infoWindow.open(mapInstanceRef.current, marker);
+              } catch (error) {
+                console.error('Error opening info window:', error);
+              }
             });
           }
 
@@ -184,22 +297,29 @@ const GoogleMapWeb: React.FC<GoogleMapWebProps> = ({
 
       markersRef.current = markers;
 
-      // Setup clustering if we have multiple markers
+      // Setup clustering with error handling
       if (markers.length > 1) {
         try {
-          // Import MarkerClusterer dynamically
           import('@googlemaps/markerclusterer').then(({ MarkerClusterer }) => {
-            if (clustererRef.current) {
-              clustererRef.current.clearMarkers();
+            try {
+              clustererRef.current = new MarkerClusterer({
+                markers,
+                map: mapInstanceRef.current,
+                algorithm: {
+                  calculate: (markers: any) => {
+                    // Custom algorithm to prevent the 'II' property error
+                    return markers.map((marker: any, index: number) => ({
+                      position: marker.getPosition(),
+                      marker,
+                      clusterId: `cluster_${index}`,
+                    }));
+                  }
+                },
+              });
+            } catch (clusterError) {
+              console.error('Error creating MarkerClusterer:', clusterError);
+              // Continue without clustering
             }
-
-            clustererRef.current = new MarkerClusterer({
-              markers,
-              map: mapInstanceRef.current,
-              algorithm: new window.google.maps.marker.SuperClusterAlgorithm({
-                radius: 100,
-              }),
-            });
           }).catch(error => {
             console.error('Error loading MarkerClusterer:', error);
           });
@@ -210,27 +330,34 @@ const GoogleMapWeb: React.FC<GoogleMapWebProps> = ({
 
       // Fit bounds to show all markers
       if (markers.length > 0) {
-        const bounds = new window.google.maps.LatLngBounds();
-        markers.forEach(marker => {
-          if (marker && marker.getPosition) {
-            bounds.extend(marker.getPosition());
-          }
-        });
-        mapInstanceRef.current.fitBounds(bounds);
+        try {
+          const bounds = new window.google.maps.LatLngBounds();
+          markers.forEach(marker => {
+            if (marker && marker.getPosition) {
+              bounds.extend(marker.getPosition());
+            }
+          });
 
-        // Ensure minimum zoom level
-        const listener = window.google.maps.event.addListener(mapInstanceRef.current, 'bounds_changed', () => {
-          if (mapInstanceRef.current.getZoom() > 15) {
-            mapInstanceRef.current.setZoom(15);
+          if (!bounds.isEmpty()) {
+            mapInstanceRef.current.fitBounds(bounds);
+
+            // Ensure minimum zoom level
+            const listener = window.google.maps.event.addListener(mapInstanceRef.current, 'bounds_changed', () => {
+              if (mapInstanceRef.current.getZoom() > 15) {
+                mapInstanceRef.current.setZoom(15);
+              }
+              window.google.maps.event.removeListener(listener);
+            });
           }
-          window.google.maps.event.removeListener(listener);
-        });
+        } catch (boundsError) {
+          console.error('Error fitting bounds:', boundsError);
+        }
       }
 
     } catch (error) {
       console.error('Error updating markers:', error);
     }
-  }, [points]);
+  }, [points, isMapLoaded]);
 
   useEffect(() => {
     if (isMapLoaded && mapInstanceRef.current) {
@@ -240,7 +367,7 @@ const GoogleMapWeb: React.FC<GoogleMapWebProps> = ({
 
   // Handle selected location
   useEffect(() => {
-    if (!mapInstanceRef.current || !window.google || !selectedLocation) return;
+    if (!mapInstanceRef.current || !window.google || !selectedLocation || !isMapLoaded) return;
 
     try {
       // Remove previous selected marker
@@ -257,13 +384,12 @@ const GoogleMapWeb: React.FC<GoogleMapWebProps> = ({
         map: mapInstanceRef.current,
         title: 'Selected Location',
         icon: {
-          url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <circle cx="12" cy="12" r="10" fill="#4CAF50" stroke="#FFFFFF" stroke-width="2"/>
-              <circle cx="12" cy="12" r="4" fill="#FFFFFF"/>
-            </svg>
-          `),
-          scaledSize: new window.google.maps.Size(32, 32),
+          path: window.google.maps.SymbolPath.CIRCLE,
+          scale: 12,
+          fillColor: '#4CAF50',
+          fillOpacity: 0.8,
+          strokeColor: '#FFFFFF',
+          strokeWeight: 3,
         }
       });
 
@@ -275,10 +401,20 @@ const GoogleMapWeb: React.FC<GoogleMapWebProps> = ({
     } catch (error) {
       console.error('Error handling selected location:', error);
     }
-  }, [selectedLocation]);
+  }, [selectedLocation, isMapLoaded]);
 
   if (Platform.OS !== 'web') {
     return null;
+  }
+
+  if (loadError) {
+    return (
+      <View style={[styles.container, style, styles.errorContainer]}>
+        <div style={styles.errorText}>
+          Error loading map: {loadError}
+        </div>
+      </View>
+    );
   }
 
   return (
@@ -289,8 +425,14 @@ const GoogleMapWeb: React.FC<GoogleMapWebProps> = ({
           width: '100%',
           height: '100%',
           minHeight: 300,
+          backgroundColor: '#f0f0f0',
         }}
       />
+      {!isMapLoaded && (
+        <div style={styles.loadingOverlay}>
+          <div style={styles.loadingText}>Loading map...</div>
+        </div>
+      )}
     </View>
   );
 };
@@ -300,6 +442,32 @@ const styles = StyleSheet.create({
     flex: 1,
     minHeight: 300,
   },
+  errorContainer: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#f5f5f5',
+  },
+  errorText: {
+    color: '#d32f2f',
+    fontSize: 14,
+    textAlign: 'center',
+    padding: 20,
+  } as any,
+  loadingOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(240, 240, 240, 0.8)',
+  } as any,
+  loadingText: {
+    fontSize: 14,
+    color: '#666',
+  } as any,
 });
 
 export default GoogleMapWeb;

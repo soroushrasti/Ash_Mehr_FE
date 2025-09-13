@@ -17,15 +17,24 @@ const getEnvVar = (name: string, defaultValue?: string): string => {
 };
 
 export const Config = {
+    GOOGLE_MAPS_API_KEY: process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY || 'AIzaSyCx8-7Y3c7sPHyDfltKMvBitIAmdUwvLFk',
+
+    // Environment
+    NODE_ENV: process.env.NODE_ENV || 'development',
+
+    // Default map region (Tehran, Iran)
+    DEFAULT_MAP_REGION: {
+        latitude: 35.6892,
+        longitude: 51.3890,
+        latitudeDelta: 0.1,
+        longitudeDelta: 0.1,
+    },
   // API Configuration
     /// for DEV http://localhost:8000
-    //  API_BASE_URL: getEnvVar('API_BASE_URL', 'http://localhost:8080'),
+     API_BASE_URL: getEnvVar('API_BASE_URL', 'http://localhost:8080'),
     // / for prod https://ashmehr-production.up.railway.app
-  API_BASE_URL: getEnvVar('API_BASE_URL', 'https://ashmehr-production.up.railway.app'),
-  API_TOKEN: getEnvVar('API_TOKEN', 'abd5ae82bad3dba4288914aeee0f6215fda2eb66490c72fdb5c1f080bb9dc441'),
-
-  // Google Maps
-  GOOGLE_MAPS_API_KEY: getEnvVar('GOOGLE_MAPS_API_KEY', 'AIzaSyCx8-7Y3c7sPHyDfltKMvBitIAmdUwvLFk'),
+  // API_BASE_URL: getEnvVar('API_BASE_URL', 'https://ashmehr-production.up.railway.app'),
+  // API_TOKEN: getEnvVar('API_TOKEN', 'abd5ae82bad3dba4288914aeee0f6215fda2eb66490c72fdb5c1f080bb9dc441'),
 
   // App Settings
   APP_ENV: getEnvVar('APP_ENV', 'development'),

@@ -7,7 +7,8 @@ import { ThemedText } from '@/components/ThemedText';
 import { Button } from '@/components/Button';
 import UniversalMap from '@/components/UniversalMap';
 import { useThemeColor } from '@/hooks/useThemeColor';
-import { Spacing } from '@/constants/Design';
+import { Spacing, BorderRadius } from '@/constants/Design';
+import { Config } from '@/constants/Config';
 import { withOpacity } from '@/utils/colorUtils';
 import AppHeader from '@/components/AppHeader';
 import * as Location from 'expo-location';
@@ -98,6 +99,34 @@ export default function AdminRegisterMap() {
     </View>
   );
 
+  const [selectedLocation, setSelectedLocation] = useState<{ latitude: number; longitude: number } | null>(null);
+
+  const handleLocationSelect = (location: { latitude: number; longitude: number }) => {
+    setSelectedLocation(location);
+    setLocation(location);
+    setError('');
+  };
+
+  const handleConfirm = () => {
+    if (!selectedLocation) {
+      Alert.alert('خطا', 'لطفاً موقعیت خود را روی نقشه انتخاب کنید');
+      return;
+    }
+
+    // Navigate back to admin registration with selected coordinates
+    router.push({
+      pathname: '/admin/register/admin-user',
+      params: {
+        latitude: selectedLocation.latitude,
+        longitude: selectedLocation.longitude,
+      },
+    });
+  };
+
+  const handleSkip = () => {
+    router.push('/admin/register/admin-user');
+  };
+
   return (
     <ThemedView type="container" style={styles.container}>
       <AppHeader title="انتخاب موقعیت جغرافیایی" subtitle={`برای ${roleTitle}`} />
@@ -151,10 +180,7 @@ export default function AdminRegisterMap() {
           <View style={styles.mapContainer} onStartShouldSetResponderCapture={() => true}>
             <UniversalMap
               location={location}
-              onLocationSelect={(loc) => {
-                setLocation(loc);
-                setError('');
-              }}
+              onLocationSelect={handleLocationSelect}
               mapType="standard"
               zoom={0.01}
               showControls={true}
@@ -296,4 +322,56 @@ const styles = StyleSheet.create({
   buttonContainer: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: Spacing['4xl'] },
   backButton: { flex: 0.45 },
   continueButton: { flex: 0.45 },
+  content: {
+    flex: 1,
+    padding: Spacing.lg,
+  },
+  instructions: {
+    marginBottom: Spacing.md,
+  },
+  instructionTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: Spacing.xs,
+    textAlign: 'center',
+  },
+  instructionText: {
+    fontSize: 14,
+    opacity: 0.8,
+    textAlign: 'center',
+  },
+  mapContainer: {
+    flex: 1,
+    borderRadius: BorderRadius.lg,
+    overflow: 'hidden',
+    marginBottom: Spacing.md,
+  },
+  map: {
+    flex: 1,
+  },
+  locationInfo: {
+    padding: Spacing.md,
+    backgroundColor: 'rgba(76, 175, 80, 0.1)',
+    borderRadius: BorderRadius.md,
+    marginBottom: Spacing.md,
+  },
+  locationTitle: {
+    fontWeight: 'bold',
+    marginBottom: Spacing.xs,
+    color: '#4CAF50',
+  },
+  locationText: {
+    fontSize: 14,
+    opacity: 0.8,
+  },
+  footer: {
+    padding: Spacing.lg,
+    gap: Spacing.md,
+  },
+  confirmButton: {
+    marginBottom: Spacing.sm,
+  },
+  skipButton: {
+    marginBottom: Spacing.sm,
+  },
 });

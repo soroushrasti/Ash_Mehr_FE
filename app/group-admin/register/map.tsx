@@ -7,7 +7,8 @@ import { ThemedText } from '@/components/ThemedText';
 import { Button } from '@/components/Button';
 import UniversalMap from '@/components/UniversalMap';
 import { useThemeColor } from '@/hooks/useThemeColor';
-import { Spacing } from '@/constants/Design';
+import { Spacing, BorderRadius } from '@/constants/Design';
+import { Config } from '@/constants/Config';
 import { withOpacity } from '@/utils/colorUtils';
 import AppHeader from '@/components/AppHeader';
 import * as Location from 'expo-location';
@@ -66,6 +67,11 @@ export default function GroupAdminRegisterMap() {
       });
       setLoading(false);
     }, 500);
+  };
+
+  const handleLocationSelect = (loc: { latitude: number; longitude: number }) => {
+    setLocation(loc);
+    setError('');
   };
 
   const ProgressBar = () => (
@@ -150,10 +156,7 @@ export default function GroupAdminRegisterMap() {
           <View style={styles.mapContainer} onStartShouldSetResponderCapture={() => true}>
             <UniversalMap
               location={location}
-              onLocationSelect={(loc) => {
-                setLocation(loc);
-                setError('');
-              }}
+              onLocationSelect={handleLocationSelect}
               mapType="standard"
               zoom={0.01}
               showControls={true}

@@ -1,8 +1,6 @@
 import React, { useEffect, useMemo, useState, useRef } from 'react';
 import { View, Button, Text, Platform, StyleSheet } from 'react-native';
 import Constants from 'expo-constants';
-import MapView, { Marker, PROVIDER_GOOGLE, Region } from 'react-native-maps';
-import MapViewClustering from 'react-native-map-clustering';
 
 interface MapPoint {
   id: string;
@@ -39,30 +37,32 @@ export default function UniversalMap({
   style,
   showCurrentLocation = false,
 }: UniversalMapProps) {
-  const [region, setRegion] = useState<Region>(initialRegion);
-  const mapRef = useRef<MapView>(null);
-  const [MapsMod, setMapsMod] = useState<any>(null);
+  const [region, setRegion] = useState(initialRegion);
+  const mapRef = useRef<any>(null);
+  const [MapView, setMapView] = useState<any>(null);
+  const [Marker, setMarker] = useState<any>(null);
   const [mapsError, setMapsError] = useState<string | null>(null);
 
   const onLayout = () => {
     // no-op layout handler
   };
 
-  const safeMapType = Platform.OS === 'ios' && 'terrain' ? 'standard' : 'standard';
-
   useEffect(() => {
     const isExpoGo = Constants?.appOwnership === 'expo';
     if (isExpoGo) {
-      setMapsMod(null);
       setMapsError('react-native-maps is not available in Expo Go');
       return;
     }
+
+    // Try to load react-native-maps without clustering to avoid RNMapsAirModule error
     try {
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
-      const mod = require('react-native-maps');
-      setMapsMod(mod);
-    } catch {
-      setMapsError('react-native-maps load failed');
+      const mapModule = require('react-native-maps');
+      setMapView(() => mapModule.default);
+      setMarker(() => mapModule.Marker);
+      setMapsError(null);
+    } catch (error) {
+      console.error('react-native-maps load failed:', error);
+      setMapsError('react-native-maps load failed. Please run expo prebuild and rebuild your app.');
     }
   }, []);
 
@@ -76,19 +76,23 @@ export default function UniversalMap({
       !isNaN(point.lng)
     );
 
-    if (validPoints.length > 0 && mapRef.current) {
+    if (validPoints.length > 0 && mapRef.current && MapView) {
       // Fit map to show all points
       const coordinates = validPoints.map(point => ({
         latitude: point.lat,
         longitude: point.lng,
       }));
 
-      mapRef.current.fitToCoordinates(coordinates, {
-        edgePadding: { top: 50, right: 50, bottom: 50, left: 50 },
-        animated: true,
-      });
+      try {
+        mapRef.current.fitToCoordinates(coordinates, {
+          edgePadding: { top: 50, right: 50, bottom: 50, left: 50 },
+          animated: true,
+        });
+      } catch (error) {
+        console.error('Error fitting to coordinates:', error);
+      }
     }
-  }, [points]);
+  }, [points, MapView]);
 
   const handleMapPress = (event: any) => {
     if (onLocationSelect) {
@@ -97,7 +101,7 @@ export default function UniversalMap({
     }
   };
 
-  const handleRegionChange = (newRegion: Region) => {
+  const handleRegionChange = (newRegion: any) => {
     setRegion(newRegion);
   };
 
@@ -114,70 +118,61 @@ export default function UniversalMap({
     point.lng <= 180
   );
 
-  if (!MapsMod) {
+  if (!MapView || !Marker || mapsError) {
     return (
-      <View onLayout={onLayout} style={{ width: '100%', height: 300, borderRadius: 12, marginBottom: 16, alignItems: 'center', justifyContent: 'center', backgroundColor: '#f2f2f2', padding: 12 }}>
-        <Text style={{ textAlign: 'center' }}>نمایش نقشه در این نسخه در دسترس نیست.</Text>
-        <Text style={{ textAlign: 'center', marginTop: 6, opacity: 0.8 }}>
-          برای استفاده از نقشه، یک Development Client بسازید یا پکیج react-native-maps را در بیلد نیتیو اضافه کنید.
-        </Text>
-        {!!mapsError && (
-          <Text style={{ textAlign: 'center', marginTop: 6, fontSize: 12, color: '#666' }}>{mapsError}</Text>
-        )}
+      <View onLayout={onLayout} style={[styles.container, style]}>
+        <View style={styles.fallbackContainer}>
+          <Text style={styles.fallbackTitle}>نمایش نقشه در این نسخه در دسترس نیست</Text>
+          <Text style={styles.fallbackMessage}>
+            {mapsError || 'در حال بارگذاری نقشه...'}
+          </Text>
+          <Text style={styles.fallbackSubtext}>
+            برای استفاده از نقشه، لطفاً دستورات زیر را اجرا کنید:{'\n'}
+            1. npx expo prebuild --clean{'\n'}
+            2. npx expo run:android
+          </Text>
+        </View>
       </View>
     );
   }
 
   return (
     <View onLayout={onLayout} style={[styles.container, style]}>
-      {validPoints.length > 0 && (
-        <MapViewClustering
-          ref={mapRef}
-          style={styles.map}
-          provider={PROVIDER_GOOGLE}
-          initialRegion={region}
-          onRegionChangeComplete={handleRegionChange}
-          onPress={handleMapPress}
-          showsUserLocation={showCurrentLocation}
-          showsMyLocationButton={showCurrentLocation}
-          clusterColor="#FF4444"
-          clusterTextColor="#FFFFFF"
-          clusterFontFamily={Platform.OS === 'ios' ? 'Arial' : 'Roboto'}
-          radius={50}
-          extent={512}
-          nodeSize={64}
-          animationEnabled={true}
-          layoutAnimationConf={{
-            type: 'spring',
-            springDamping: 0.8,
-            springSpeed: 0.5,
-          }}
-        >
-          {validPoints.map((point) => (
-            <Marker
-              key={point.id}
-              coordinate={{
-                latitude: point.lat,
-                longitude: point.lng
-              }}
-              title={point.name || `Location ${point.id}`}
-              description={point.info}
-              pinColor="#FF4444"
-            />
-          ))}
+      {/* Use regular MapView without clustering to avoid RNMapsAirModule error */}
+      <MapView
+        ref={mapRef}
+        style={styles.map}
+        provider={Platform.OS === 'android' ? 'google' : undefined}
+        initialRegion={region}
+        onRegionChangeComplete={handleRegionChange}
+        onPress={handleMapPress}
+        showsUserLocation={showCurrentLocation}
+        showsMyLocationButton={showCurrentLocation}
+      >
+        {validPoints.map((point) => (
+          <Marker
+            key={point.id}
+            coordinate={{
+              latitude: point.lat,
+              longitude: point.lng
+            }}
+            title={point.name || `Location ${point.id}`}
+            description={point.info}
+            pinColor="#FF4444"
+          />
+        ))}
 
-          {selectedLocation && (
-            <Marker
-              coordinate={{
-                latitude: selectedLocation.latitude,
-                longitude: selectedLocation.longitude,
-              }}
-              title="Selected Location"
-              pinColor="#4CAF50"
-            />
-          )}
-        </MapViewClustering>
-      )}
+        {selectedLocation && (
+          <Marker
+            coordinate={{
+              latitude: selectedLocation.latitude,
+              longitude: selectedLocation.longitude,
+            }}
+            title="Selected Location"
+            pinColor="#4CAF50"
+          />
+        )}
+      </MapView>
     </View>
   );
 }
@@ -190,5 +185,31 @@ const styles = StyleSheet.create({
   map: {
     flex: 1,
     minHeight: 300,
+  },
+  fallbackContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#f2f2f2',
+    padding: 16,
+  },
+  fallbackTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#333',
+    textAlign: 'center',
+    marginBottom: 12,
+  },
+  fallbackMessage: {
+    fontSize: 14,
+    color: '#666',
+    textAlign: 'center',
+    marginBottom: 16,
+  },
+  fallbackSubtext: {
+    fontSize: 12,
+    color: '#999',
+    textAlign: 'center',
+    lineHeight: 18,
   },
 });

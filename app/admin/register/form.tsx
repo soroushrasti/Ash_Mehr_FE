@@ -418,7 +418,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
     fontSize: 16,
     fontFamily: 'Arial',
-    direction: 'rtl',
+    writingDirection: 'rtl',
   },
   errorText: {
     marginTop: Spacing.xs,

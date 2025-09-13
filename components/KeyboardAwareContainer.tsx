@@ -1,31 +1,64 @@
-import React, { PropsWithChildren } from 'react';
-import { KeyboardAvoidingView, Platform, ScrollView, StyleProp, ViewStyle, Keyboard } from 'react-native';
+import React from 'react';
+import {
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  ViewStyle
+} from 'react-native';
 
-export type KeyboardAwareContainerProps = PropsWithChildren<{
-  contentContainerStyle?: StyleProp<ViewStyle>;
-  extraKeyboardOffset?: number;
-  testID?: string;
-}>;
+interface KeyboardAwareContainerProps {
+  children: React.ReactNode;
+  style?: ViewStyle;
+  scrollEnabled?: boolean;
+}
 
-export default function KeyboardAwareContainer({ children, contentContainerStyle, extraKeyboardOffset = 0, testID }: KeyboardAwareContainerProps) {
+export function KeyboardAwareContainer({
+  children,
+  style,
+  scrollEnabled = true
+}: KeyboardAwareContainerProps) {
   const behavior = Platform.OS === 'ios' ? 'padding' : 'height';
-  const keyboardVerticalOffset = Platform.OS === 'ios' ? 80 + extraKeyboardOffset : 0;
+
+  if (!scrollEnabled) {
+    return (
+      <KeyboardAvoidingView
+        style={[styles.container, style]}
+        behavior={behavior}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 80 : 0}
+      >
+        {children}
+      </KeyboardAvoidingView>
+    );
+  }
 
   return (
-    <KeyboardAvoidingView style={{ flex: 1 }} behavior={behavior} keyboardVerticalOffset={keyboardVerticalOffset} testID={testID}>
+    <KeyboardAvoidingView
+      style={[styles.container, style]}
+      behavior={behavior}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 80 : 0}
+    >
       <ScrollView
-        style={{ flex: 1 }}
+        style={styles.scrollView}
+        contentContainerStyle={styles.contentContainer}
         keyboardShouldPersistTaps="handled"
-        keyboardDismissMode={Platform.OS === 'ios' ? 'on-drag' : 'none'}
-        onScrollBeginDrag={() => Keyboard.dismiss()}
-        contentInsetAdjustmentBehavior="always"
-        nestedScrollEnabled
-        overScrollMode={Platform.OS === 'android' ? 'always' : undefined}
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={[{ paddingBottom: 48 }, contentContainerStyle]}
       >
         {children}
       </ScrollView>
     </KeyboardAvoidingView>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  scrollView: {
+    flex: 1,
+  },
+  contentContainer: {
+    flexGrow: 1,
+    paddingBottom: 48,
+  },
+});

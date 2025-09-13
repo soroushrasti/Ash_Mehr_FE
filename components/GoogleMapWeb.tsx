@@ -307,12 +307,25 @@ const GoogleMapWeb: React.FC<GoogleMapWebProps> = ({
                 map: mapInstanceRef.current,
                 algorithm: {
                   calculate: (markers: any) => {
-                    // Custom algorithm to prevent the 'II' property error
-                    return markers.map((marker: any, index: number) => ({
-                      position: marker.getPosition(),
-                      marker,
-                      clusterId: `cluster_${index}`,
-                    }));
+                    // Ensure markers is an array before calling map
+                    if (!Array.isArray(markers)) {
+                      console.warn('Markers is not an array:', markers);
+                      return [];
+                    }
+
+                    // Custom algorithm to prevent clustering errors
+                    return markers.map((marker: any, index: number) => {
+                      try {
+                        return {
+                          position: marker.getPosition(),
+                          marker,
+                          clusterId: `cluster_${index}`,
+                        };
+                      } catch (error) {
+                        console.error('Error processing marker in clustering:', error);
+                        return null;
+                      }
+                    }).filter(Boolean);
                   }
                 },
               });

@@ -1,26 +1,118 @@
 /**
- * Color utility functions for React Native Web compatibility
+ * Color utility functions for the app
  */
 
 /**
- * Convert hex color to rgba with alpha transparency
- * @param hex - Hex color string (e.g., '#FF0000')
- * @param alpha - Alpha value between 0 and 1 (e.g., 0.2 for 20% opacity)
- * @returns RGBA color string
+ * Adds opacity to a color string
+ * @param color - The color in hex format (e.g., '#FF0000' or 'red')
+ * @param opacity - Opacity value from 0-100 (e.g., 20 for 20% opacity)
+ * @returns Color with opacity applied
  */
-export function hexToRgba(hex: string, alpha: number): string {
-  const r = parseInt(hex.slice(1, 3), 16);
-  const g = parseInt(hex.slice(3, 5), 16);
-  const b = parseInt(hex.slice(5, 7), 16);
-  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+export function withOpacity(color: string, opacity: number): string {
+  // Normalize opacity to 0-1 range
+  const normalizedOpacity = Math.max(0, Math.min(100, opacity)) / 100;
+
+  // If color is already in hex format
+  if (color.startsWith('#')) {
+    // Convert hex to RGBA
+    const hex = color.replace('#', '');
+    const r = parseInt(hex.substring(0, 2), 16);
+    const g = parseInt(hex.substring(2, 4), 16);
+    const b = parseInt(hex.substring(4, 6), 16);
+
+    return `rgba(${r}, ${g}, ${b}, ${normalizedOpacity})`;
+  }
+
+  // If color is a named color or already in rgb format
+  if (color.startsWith('rgb(')) {
+    // Extract RGB values and convert to RGBA
+    const values = color.match(/\d+/g);
+    if (values && values.length >= 3) {
+      return `rgba(${values[0]}, ${values[1]}, ${values[2]}, ${normalizedOpacity})`;
+    }
+  }
+
+  if (color.startsWith('rgba(')) {
+    // Replace existing alpha value
+    return color.replace(/,\s*[\d.]+\)$/, `, ${normalizedOpacity})`);
+  }
+
+  // For named colors, return as is with some common mappings
+  const namedColors: Record<string, string> = {
+    'red': '#FF0000',
+    'green': '#00FF00',
+    'blue': '#0000FF',
+    'black': '#000000',
+    'white': '#FFFFFF',
+    'transparent': 'rgba(0, 0, 0, 0)',
+  };
+
+  const hexColor = namedColors[color.toLowerCase()];
+  if (hexColor) {
+    return withOpacity(hexColor, opacity);
+  }
+
+  // Fallback: return color with opacity as a filter or rgba approximation
+  return `rgba(128, 128, 128, ${normalizedOpacity})`; // Default gray with opacity
 }
 
 /**
- * Create a transparent version of a color
- * @param color - Hex color string
- * @param opacity - Opacity percentage (10 = 10%, 20 = 20%)
- * @returns RGBA color string
+ * Converts a hex color to RGB values
+ * @param hex - Hex color string (e.g., '#FF0000')
+ * @returns Object with r, g, b values
  */
-export function withOpacity(color: string, opacity: number): string {
-  return hexToRgba(color, opacity / 100);
+export function hexToRgb(hex: string): { r: number; g: number; b: number } | null {
+  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+  return result ? {
+    r: parseInt(result[1], 16),
+    g: parseInt(result[2], 16),
+    b: parseInt(result[3], 16)
+  } : null;
+}
+
+/**
+ * Converts RGB values to hex color
+ * @param r - Red value (0-255)
+ * @param g - Green value (0-255)
+ * @param b - Blue value (0-255)
+ * @returns Hex color string
+ */
+export function rgbToHex(r: number, g: number, b: number): string {
+  return "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
+}
+
+/**
+ * Lightens a color by a percentage
+ * @param color - Color in hex format
+ * @param percent - Percentage to lighten (0-100)
+ * @returns Lightened color in hex format
+ */
+export function lightenColor(color: string, percent: number): string {
+  const rgb = hexToRgb(color);
+  if (!rgb) return color;
+
+  const factor = 1 + (percent / 100);
+  const r = Math.min(255, Math.round(rgb.r * factor));
+  const g = Math.min(255, Math.round(rgb.g * factor));
+  const b = Math.min(255, Math.round(rgb.b * factor));
+
+  return rgbToHex(r, g, b);
+}
+
+/**
+ * Darkens a color by a percentage
+ * @param color - Color in hex format
+ * @param percent - Percentage to darken (0-100)
+ * @returns Darkened color in hex format
+ */
+export function darkenColor(color: string, percent: number): string {
+  const rgb = hexToRgb(color);
+  if (!rgb) return color;
+
+  const factor = 1 - (percent / 100);
+  const r = Math.max(0, Math.round(rgb.r * factor));
+  const g = Math.max(0, Math.round(rgb.g * factor));
+  const b = Math.max(0, Math.round(rgb.b * factor));
+
+  return rgbToHex(r, g, b);
 }

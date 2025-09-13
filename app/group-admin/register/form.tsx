@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { /* ScrollView, */ StyleSheet, View, Platform } from 'react-native';
+import { StyleSheet, View, Alert, ScrollView } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { ThemedView } from '@/components/ThemedView';
 import { ThemedText } from '@/components/ThemedText';
@@ -9,139 +9,148 @@ import { useThemeColor } from '@/hooks/useThemeColor';
 import { Spacing, BorderRadius } from '@/constants/Design';
 import { withOpacity } from '@/utils/colorUtils';
 import AppHeader from '@/components/AppHeader';
-import KeyboardAwareContainer from '@/components/KeyboardAwareContainer';
+import { KeyboardAwareContainer } from '@/components/KeyboardAwareContainer';
+import { apiService } from '@/services/apiService';
+import { AdminCreate } from '@/types/api';
 
-// Same field definitions as admin form but with Group Admin context
-const baseFields = [
+// Types
+interface FieldOption {
+  label: string;
+  value: string;
+}
+
+interface FieldDef {
+  key: string;
+  label: string;
+  placeholder?: string;
+  required: boolean;
+  type?: 'phone' | 'number' | 'email' | 'select' | 'password';
+  secure?: boolean;
+  multiline?: boolean;
+  options?: FieldOption[];
+}
+
+type FormState = Record<string, string>;
+
+// Field definitions for Group Admin registration
+const groupAdminFields: FieldDef[] = [
   { key: 'firstName', label: 'نام', placeholder: 'نام خود را وارد کنید', required: true },
   { key: 'lastName', label: 'نام خانوادگی', placeholder: 'نام خانوادگی خود را وارد کنید', required: true },
   { key: 'phone', label: 'شماره تلفن', placeholder: '09xxxxxxxxx', required: true, type: 'phone' },
   { key: 'nationalId', label: 'کد ملی', placeholder: 'کد ملی ۱۰ رقمی', required: true, type: 'number' },
   { key: 'email', label: 'ایمیل', placeholder: 'example@email.com', required: false, type: 'email' },
-  { key: 'province', label: 'استان', placeholder: 'استان محل سکونت', required: true },
-  { key: 'city', label: 'شهر', placeholder: 'شهر محل سکونت', required: true },
-  { key: 'street', label: 'آدرس', placeholder: 'آدرس کامل', required: true, multiline: true },
+  { key: 'password', label: 'رمز عبور', placeholder: 'حداقل ۶ کاراکتر', required: true, type: 'password', secure: true },
+  { key: 'province', label: 'استان', placeholder: 'استان تحت پوشش گروه', required: true },
+  { key: 'city', label: 'شهر', placeholder: 'شهر تحت پوشش گروه', required: true },
+  { key: 'street', label: 'آدرس مقر گروه', placeholder: 'آدرس کامل مقر گروه', required: true, multiline: true },
+  { key: 'groupName', label: 'نام گروه', placeholder: 'نام گروه یا تشکل خیریه', required: false },
+  { key: 'groupDescription', label: 'توضیحات گروه', placeholder: 'توضیحی درباره فعالیت‌های گروه', required: false, multiline: true },
 ];
-
-// Group Admin can only register needy families, so all use these fields
-const needyFamilyFields = [
-  { key: 'age', label: 'سن', placeholder: 'سن به سال', required: false, type: 'number' },
-  { key: 'region', label: 'منطقه', placeholder: 'منطقه شهری', required: false },
-  { key: 'gender', label: 'جنسیت', required: false, type: 'select', options: [
-    { label: 'مرد', value: 'Male' },
-    { label: 'زن', value: 'Female' }
-  ]},
-  { key: 'housebandFirstName', label: 'نام همسر', placeholder: 'نام همسر', required: false },
-  { key: 'housebandLastName', label: 'نام خانوادگی همسر', placeholder: 'نام خانوادگی همسر', required: false },
-  { key: 'reasonMissingHouseband', label: 'دلیل غیبت همسر', placeholder: 'در صورت عدم حضور همسر', required: false },
-  { key: 'underOrganizationName', label: 'نام سازمان حامی', placeholder: 'نام سازمان یا موسسه حامی', required: false },
-  { key: 'educationLevel', label: 'سطح تحصیلات', required: false, type: 'select', options: [
-    { label: 'بی‌سواد', value: 'None' },
-    { label: 'ابتدایی', value: 'Primary' },
-    { label: 'راهنمایی', value: 'Secondary' },
-    { label: 'دبیرستان', value: 'High School' },
-    { label: 'دیپلم', value: 'Diploma' },
-    { label: 'فوق‌دیپلم', value: 'Associate Degree' },
-    { label: 'لیسانس', value: 'Bachelor' },
-    { label: 'فوق‌لیسانس', value: 'Master' },
-    { label: 'دکتری', value: 'PhD' },
-  ]},
-  { key: 'incomeAmount', label: 'میزان درآمد ماهانه', placeholder: 'درآمد به تومان', required: false, type: 'number' },
-];
-
-function validateField(field, value) {
-  if (field.required && (!value || value.trim() === '')) return `${field.label} الزامی است`;
-  if (field.type === 'email' && value && !/^\S+@\S+\.\S+$/.test(value)) return 'فرمت ایمیل نادرست است';
-  if (field.type === 'phone' && value && !/^09\d{9}$/.test(value)) return 'شماره تلفن باید با ۰۹ شروع شود و ۱۱ رقم باشد';
-  if (field.type === 'number' && value && isNaN(Number(value))) return `${field.label} باید عدد باشد`;
-  if (field.key === 'nationalId' && value && (!/^\d{10}$/.test(value) || !isValidNationalId(value))) return 'کد ملی نادرست است';
-  return '';
-}
-
-function isValidNationalId(nationalId) {
-  if (nationalId.length !== 10) return false;
-  const check = parseInt(nationalId[9]);
-  const sum = nationalId.split('').slice(0, 9).reduce((acc, digit, index) => acc + parseInt(digit) * (10 - index), 0);
-  const remainder = sum % 11;
-  return (remainder < 2 && check === remainder) || (remainder >= 2 && check === 11 - remainder);
-}
 
 export default function GroupAdminRegisterForm() {
   const router = useRouter();
-  const { role } = useLocalSearchParams();
-  const [form, setForm] = useState({});
-  const [errors, setErrors] = useState({});
+  const params = useLocalSearchParams();
+
+  const [formData, setFormData] = useState<FormState>(() => {
+    const initialData: FormState = {};
+    groupAdminFields.forEach(field => {
+      initialData[field.key] = '';
+    });
+    return initialData;
+  });
+
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
 
   const primaryColor = useThemeColor({}, 'primary');
   const successColor = useThemeColor({}, 'success');
-  const textColor = useThemeColor({}, 'textPrimary');
   const errorColor = useThemeColor({}, 'error');
 
-  // Group Admin always registers needy families with full details
-  const fields = [...baseFields, ...needyFamilyFields];
+  const validateForm = (): boolean => {
+    const newErrors: Record<string, string> = {};
 
-  let roleTitle = '';
-  let roleIcon = '';
+    groupAdminFields.forEach(field => {
+      if (field.required && !formData[field.key]?.trim()) {
+        newErrors[field.key] = `${field.label} الزامی است`;
+      }
+    });
 
-  switch (role) {
-    case 'NeedyFamily':
-      roleTitle = 'خانواده مددجو';
-      roleIcon = '🏠';
-      break;
-    case 'Child':
-      roleTitle = 'کودک مددجو';
-      roleIcon = '👶';
-      break;
-    case 'Elderly':
-      roleTitle = 'سالمند مددجو';
-      roleIcon = '👴';
-      break;
-    case 'Volunteer':
-      roleTitle = 'داوطلب محلی';
-      roleIcon = '🤝';
-      break;
-    default:
-      roleTitle = 'مددجو';
-      roleIcon = '👤';
-  }
-
-  const handleChange = (key, value) => {
-    setForm({ ...form, [key]: value });
-    if (errors[key]) {
-      const field = fields.find(f => f.key === key);
-      setErrors({ ...errors, [key]: validateField(field, value) });
+    // Specific validations
+    if (formData.phone && !/^09\d{9}$/.test(formData.phone)) {
+      newErrors.phone = 'شماره تلفن باید با ۰۹ شروع شده و ۱۱ رقم باشد';
     }
-  };
 
-  const handleNext = () => {
-    let valid = true;
-    const newErrors = {};
+    if (formData.nationalId && !/^\d{10}$/.test(formData.nationalId)) {
+      newErrors.nationalId = 'کد ملی باید ۱۰ رقم باشد';
+    }
 
-    for (const field of fields) {
-      const err = validateField(field, form[field.key]);
-      if (err) valid = false;
-      newErrors[field.key] = err;
+    if (formData.email && formData.email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      newErrors.email = 'فرمت ایمیل صحیح نیست';
+    }
+
+    if (formData.password && formData.password.length < 6) {
+      newErrors.password = 'رمز عبور باید حداقل ۶ کاراکتر باشد';
     }
 
     setErrors(newErrors);
-    if (!valid) return;
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleInputChange = (key: string, value: string) => {
+    setFormData(prev => ({ ...prev, [key]: value }));
+
+    // Clear error when user starts typing
+    if (errors[key]) {
+      setErrors(prev => ({ ...prev, [key]: '' }));
+    }
+  };
+
+  const handleSubmit = async () => {
+    if (!validateForm()) {
+      Alert.alert('خطا', 'لطفاً فیلدهای الزامی را پر کنید');
+      return;
+    }
 
     setLoading(true);
+    try {
+      // Prepare data for API
+      const adminData: AdminCreate = {
+        FirstName: formData.firstName,
+        LastName: formData.lastName,
+        Phone: formData.phone,
+        Email: formData.email,
+        Password: formData.password,
+        City: formData.city,
+        Province: formData.province,
+        Street: formData.street,
+        NationalID: formData.nationalId,
+        UserRole: 'GroupAdmin', // Set as GroupAdmin role
+        Latitude: params.latitude ? String(params.latitude) : '',
+        Longitude: params.longitude ? String(params.longitude) : '',
+      };
 
-    // Navigate to map page with form data
-    setTimeout(() => {
-      router.push({
-        pathname: '/group-admin/register/map',
-        params: {
-          formData: JSON.stringify(form),
-          role: role as string,
-          roleTitle,
-          roleIcon
-        },
-      });
+      const response = await apiService.createAdmin(adminData);
+
+      if (response.success) {
+        Alert.alert(
+          'موفق',
+          'اطلاعات مدیر گروه با موفقیت ثبت شد',
+          [
+            {
+              text: 'تایید',
+              onPress: () => router.push('/group-admin/register/confirm')
+            }
+          ]
+        );
+      } else {
+        Alert.alert('خطا', response.error || 'خطا در ثبت اطلاعات');
+      }
+    } catch (error) {
+      Alert.alert('خطا', 'خطا در اتصال به سرور');
+      console.error('Group Admin registration error:', error);
+    } finally {
       setLoading(false);
-    }, 500);
+    }
   };
 
   const ProgressBar = () => (
@@ -153,171 +162,123 @@ export default function GroupAdminRegisterForm() {
       <View style={[styles.progressStep, { backgroundColor: primaryColor }]}>
         <ThemedText style={styles.progressText}>۲</ThemedText>
       </View>
-      <View style={[styles.progressLine, { backgroundColor: '#E0E0E0' }]} />
-      <View style={[styles.progressStep, { backgroundColor: '#E0E0E0' }]}>
-        <ThemedText style={[styles.progressText, { color: '#757575' }]}>۳</ThemedText>
+      <View style={[styles.progressLine, { backgroundColor: '#ddd' }]} />
+      <View style={[styles.progressStep, { backgroundColor: '#ddd' }]}>
+        <ThemedText style={styles.progressText}>۳</ThemedText>
       </View>
     </View>
   );
 
-  const renderSelectField = (field) => {
-    if (Platform.OS === 'web') {
-      return (
-        <View style={styles.selectContainer}>
-          <ThemedText type="caption" weight="medium" style={styles.selectLabel}>
-            {field.label}
-          </ThemedText>
-          <select
-            style={{
-              borderWidth: 1,
-              borderColor: '#E0E0E0',
-              borderRadius: BorderRadius.lg,
-              padding: Spacing.md,
-              backgroundColor: 'white',
-              fontSize: 16,
-              fontFamily: 'Arial',
-                writingDirection: 'rtl',
-              color: textColor as any,
-            }}
-            value={form[field.key] || ''}
-            onChange={(e) => handleChange(field.key, (e.target as HTMLSelectElement).value)}
-          >
-            <option value="">انتخاب کنید</option>
-            {field.options?.map(opt => (
-              <option key={opt.value} value={opt.value}>{opt.label}</option>
-            ))}
-          </select>
-          {errors[field.key] && (
-            <ThemedText type="caption" style={[styles.errorText, { color: errorColor }]}>
-              {errors[field.key]}
-            </ThemedText>
-          )}
-        </View>
-      );
-    } else {
-      return (
-        <InputField
-          label={field.label}
-          placeholder="انتخاب کنید"
-          value={form[field.key] || ''}
-          onChangeText={(value) => handleChange(field.key, value)}
-          error={errors[field.key]}
-        />
-      );
-    }
-  };
-
-  // Group fields explicitly instead of using index slices
-  const personalKeys = ['firstName','lastName','phone','nationalId','email'];
-  const addressKeys = ['province','city','street'];
-  const personalFields = fields.filter(f => personalKeys.includes(f.key));
-  const addressFields = fields.filter(f => addressKeys.includes(f.key));
-  const additionalFields = fields.filter(f => !personalKeys.includes(f.key) && !addressKeys.includes(f.key));
-
   return (
-    <ThemedView type="container" style={styles.container}>
-      <AppHeader title={`ثبت‌نام ${roleTitle}`} subtitle="توسط نماینده گروه" />
-      <KeyboardAwareContainer contentContainerStyle={{ padding: Spacing.xl }}>
-        {/* Progress Bar */}
-        <ProgressBar />
+    <ThemedView style={styles.container}>
+      <AppHeader title="ثبت اطلاعات مدیر گروه" showBackButton />
 
-        {/* Header with Role Badge */}
-        <View style={styles.header}>
-          <View style={[styles.roleIconContainer, { backgroundColor: withOpacity(primaryColor, 20) }]}>
-            <ThemedText style={styles.roleIcon}>{roleIcon}</ThemedText>
-          </View>
-          <ThemedText type="heading2" center style={styles.title}>
-            ثبت‌نام {roleTitle}
-          </ThemedText>
-          <ThemedText type="body" center style={styles.subtitle}>
-            ثبت‌نام توسط مدیر گروه
-          </ThemedText>
-        </View>
+      <KeyboardAwareContainer>
+        <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+          {/* Progress Bar */}
+          <ProgressBar />
 
-        {/* Group Admin Badge */}
-        <ThemedView type="card" style={[styles.badgeCard, { backgroundColor: withOpacity(primaryColor, 10) }]}>
-          <View style={styles.badgeContent}>
-            <ThemedText style={styles.badgeIcon}>👥</ThemedText>
-            <View>
-              <ThemedText type="body" weight="medium" style={[styles.badgeTitle, { color: primaryColor }]}>
-                ثبت‌نام توسط نماینده گروه
-              </ThemedText>
-              <ThemedText type="caption" style={styles.badgeSubtitle}>
-                این فرد تحت پوشش گروه شما قرار خواهد گرفت
-              </ThemedText>
+          {/* Header */}
+          <View style={styles.header}>
+            <View style={[styles.roleIconContainer, { backgroundColor: withOpacity(primaryColor, 20) }]}>
+              <ThemedText style={styles.roleIcon}>👥</ThemedText>
             </View>
+            <ThemedText style={styles.title}>
+              ثبت اطلاعات مدیر گروه
+            </ThemedText>
+            <ThemedText style={styles.subtitle}>
+              اطلاعات مدیر گروه خیریه را وارد کنید
+            </ThemedText>
           </View>
-        </ThemedView>
 
-        {/* Form Fields - Same structure as admin form */}
-        <ThemedView type="card" style={styles.formCard}>
-          <ThemedText type="heading3" style={styles.formTitle}>
-            اطلاعات شخصی
-          </ThemedText>
+          {/* Group Info Badge */}
+          <View style={[styles.infoBadge, { backgroundColor: withOpacity(primaryColor, 10), borderColor: withOpacity(primaryColor, 20) }]}>
+            <ThemedText style={styles.infoBadgeIcon}>ℹ️</ThemedText>
+            <ThemedText style={styles.infoBadgeText}>
+              مدیران گروه مسئول مدیریت و نظارت بر فعالیت‌های خیریه در منطقه تحت پوشش خود هستند
+            </ThemedText>
+          </View>
 
-          {personalFields.map(field => (
-            field.type === 'select' ? renderSelectField(field) : (
+          <View style={styles.form}>
+            {/* Personal Information Section */}
+            <ThemedText style={styles.sectionTitle}>اطلاعات شخصی</ThemedText>
+
+            {groupAdminFields.slice(0, 6).map((field) => (
               <InputField
                 key={field.key}
                 label={field.label}
                 placeholder={field.placeholder}
-                value={form[field.key] || ''}
-                onChangeText={(value) => handleChange(field.key, value)}
+                value={formData[field.key]}
+                onChangeText={(value) => handleInputChange(field.key, value)}
+                keyboardType={field.type === 'phone' ? 'phone-pad' : field.type === 'number' ? 'numeric' : field.type === 'email' ? 'email-address' : 'default'}
                 secureTextEntry={field.secure}
-                keyboardType={field.type === 'phone' ? 'phone-pad' : field.type === 'email' ? 'email-address' : field.type === 'number' ? 'numeric' : 'default'}
                 multiline={field.multiline}
                 error={errors[field.key]}
+                required={field.required}
               />
-            )
-          ))}
-        </ThemedView>
+            ))}
 
-        <ThemedView type="card" style={styles.formCard}>
-          <ThemedText type="heading3" style={styles.formTitle}>
-            اطلاعات آدرس
-          </ThemedText>
+            {/* Location Information Section */}
+            <ThemedText style={styles.sectionTitle}>اطلاعات منطقه تحت پوشش</ThemedText>
 
-          {addressFields.map(field => (
-            <InputField
-              key={field.key}
-              label={field.label}
-              placeholder={field.placeholder}
-              value={form[field.key] || ''}
-              onChangeText={(value) => handleChange(field.key, value)}
-              multiline={field.multiline}
-              error={errors[field.key]}
-            />
-          ))}
-        </ThemedView>
-
-        <ThemedView type="card" style={styles.formCard}>
-          <ThemedText type="heading3" style={styles.formTitle}>
-            اطلاعات تکمیلی
-          </ThemedText>
-
-          {additionalFields.map(field => (
-            field.type === 'select' ? renderSelectField(field) : (
+            {groupAdminFields.slice(6, 9).map((field) => (
               <InputField
                 key={field.key}
                 label={field.label}
                 placeholder={field.placeholder}
-                value={form[field.key] || ''}
-                onChangeText={(value) => handleChange(field.key, value)}
-                keyboardType={field.type === 'number' ? 'numeric' : 'default'}
+                value={formData[field.key]}
+                onChangeText={(value) => handleInputChange(field.key, value)}
                 multiline={field.multiline}
                 error={errors[field.key]}
+                required={field.required}
               />
-            )
-          ))}
-        </ThemedView>
+            ))}
 
-        <View style={styles.buttonContainer}>
+            {/* Group Information Section */}
+            <ThemedText style={styles.sectionTitle}>اطلاعات گروه (اختیاری)</ThemedText>
+
+            {groupAdminFields.slice(9).map((field) => (
+              <InputField
+                key={field.key}
+                label={field.label}
+                placeholder={field.placeholder}
+                value={formData[field.key]}
+                onChangeText={(value) => handleInputChange(field.key, value)}
+                multiline={field.multiline}
+                error={errors[field.key]}
+                required={field.required}
+              />
+            ))}
+
+            {/* Location Selection */}
+            {params.latitude && params.longitude && (
+              <View style={[styles.locationInfo, { backgroundColor: withOpacity(successColor, 10) }]}>
+                <ThemedText style={styles.locationLabel}>موقعیت انتخاب شده:</ThemedText>
+                <ThemedText style={styles.locationText}>
+                  عرض جغرافیایی: {params.latitude}
+                </ThemedText>
+                <ThemedText style={styles.locationText}>
+                  طول جغرافیایی: {params.longitude}
+                </ThemedText>
+              </View>
+            )}
+          </View>
+        </ScrollView>
+
+        {/* Action Buttons */}
+        <View style={styles.footer}>
           <Button
-            title="مرحله بعد: انتخاب موقعیت"
-            onPress={handleNext}
-            loading={loading}
-            fullWidth
-            icon={<ThemedText>📍</ThemedText>}
+            title={loading ? 'در حال ثبت...' : 'ثبت اطلاعات'}
+            onPress={handleSubmit}
+            disabled={loading}
+            style={styles.submitButton}
+          />
+
+          <Button
+            title="انتخاب موقعیت در نقشه"
+            onPress={() => router.push('/group-admin/register/map')}
+            variant="outline"
+            style={styles.mapButton}
           />
         </View>
       </KeyboardAwareContainer>
@@ -329,12 +290,15 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
+  scrollView: {
+    flex: 1,
+  },
   progressContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: Spacing['3xl'],
-    paddingHorizontal: Spacing.xl,
+    marginBottom: Spacing.xl,
+    paddingHorizontal: Spacing.lg,
   },
   progressStep: {
     width: 40,
@@ -355,6 +319,7 @@ const styles = StyleSheet.create({
   header: {
     alignItems: 'center',
     marginBottom: Spacing.xl,
+    paddingHorizontal: Spacing.lg,
   },
   roleIconContainer: {
     width: 80,
@@ -368,49 +333,65 @@ const styles = StyleSheet.create({
     fontSize: 36,
   },
   title: {
+    fontSize: 24,
+    fontWeight: 'bold',
     marginBottom: Spacing.sm,
+    textAlign: 'center',
   },
   subtitle: {
+    fontSize: 16,
     opacity: 0.7,
     textAlign: 'center',
   },
-  badgeCard: {
-    marginBottom: Spacing.xl,
-    borderWidth: 1,
-    borderColor: 'transparent', // replaced dynamically with themed color
-  },
-  badgeContent: {
+  infoBadge: {
     flexDirection: 'row',
-    alignItems: 'center',
-  },
-  badgeIcon: {
-    fontSize: 28,
-    marginLeft: Spacing.md,
-  },
-  badgeTitle: {
-    marginBottom: Spacing.xs,
-  },
-  badgeSubtitle: {
-    opacity: 0.7,
-  },
-  formCard: {
+    padding: Spacing.md,
+    marginHorizontal: Spacing.lg,
     marginBottom: Spacing.xl,
+    borderRadius: BorderRadius.md,
+    borderWidth: 1,
   },
-  formTitle: {
-    marginBottom: Spacing.lg,
+  infoBadgeIcon: {
+    fontSize: 20,
+    marginLeft: Spacing.sm,
   },
-  selectContainer: {
+  infoBadgeText: {
+    flex: 1,
+    fontSize: 14,
+    lineHeight: 20,
+  },
+  form: {
+    padding: Spacing.lg,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginTop: Spacing.lg,
     marginBottom: Spacing.md,
+    color: '#2E7D32',
   },
-  selectLabel: {
+  locationInfo: {
+    padding: Spacing.md,
+    borderRadius: BorderRadius.md,
+    marginTop: Spacing.md,
+  },
+  locationLabel: {
+    fontWeight: 'bold',
+    marginBottom: Spacing.xs,
+    color: '#4CAF50',
+  },
+  locationText: {
+    fontSize: 14,
+    opacity: 0.8,
+  },
+  footer: {
+    padding: Spacing.lg,
+    gap: Spacing.md,
+  },
+  submitButton: {
     marginBottom: Spacing.sm,
   },
-  errorText: {
-    marginTop: Spacing.xs,
-    fontSize: 12,
-  },
-  buttonContainer: {
-    marginTop: Spacing.xl,
-    marginBottom: Spacing['4xl'],
+  mapButton: {
+    marginBottom: Spacing.sm,
   },
 });

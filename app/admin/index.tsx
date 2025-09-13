@@ -252,13 +252,48 @@ export default function AdminHome() {
           </ThemedText>
 
           <View style={styles.actionGrid}>
+            {/* Registration Actions */}
+            <TouchableOpacity
+              style={[styles.actionCard, styles.registrationCard, { backgroundColor: primaryColor, borderColor: primaryColor }]}
+              onPress={() => router.push('/admin/register/form')}
+            >
+              <View style={styles.actionCardHeader}>
+                <ThemedText style={styles.registrationIcon}>👨‍👩‍👧‍👦</ThemedText>
+                <ThemedText style={[styles.actionTitle, { color: '#FFFFFF' }]}>
+                  ثبت خانواده نیازمند
+                </ThemedText>
+              </View>
+              <ThemedText style={[styles.actionDescription, { color: '#FFFFFF', opacity: 0.9 }]}>
+                افزودن خانواده نیازمند جدید به سیستم
+              </ThemedText>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.actionCard, styles.registrationCard, { backgroundColor: volunteerColor, borderColor: volunteerColor }]}
+              onPress={() => router.push('/admin/register/admin-user')}
+            >
+              <View style={styles.actionCardHeader}>
+                <ThemedText style={styles.registrationIcon}>👨‍💼</ThemedText>
+                <ThemedText style={[styles.actionTitle, { color: '#FFFFFF' }]}>
+                  ثبت مدیر جدید
+                </ThemedText>
+              </View>
+              <ThemedText style={[styles.actionDescription, { color: '#FFFFFF', opacity: 0.9 }]}>
+                افزودن مدیر یا مدیر گروه جدید
+              </ThemedText>
+            </TouchableOpacity>
+
+            {/* Management Actions */}
             <TouchableOpacity
               style={[styles.actionCard, { backgroundColor: surfaceColor, borderColor }]}
               onPress={() => router.push('/admin/volunteer-management')}
             >
-              <ThemedText style={[styles.actionTitle, { color: primaryColor }]}>
-                مدیریت نیازمندان
-              </ThemedText>
+              <View style={styles.actionCardHeader}>
+                <ThemedText style={styles.managementIcon}>📋</ThemedText>
+                <ThemedText style={[styles.actionTitle, { color: primaryColor }]}>
+                  مدیریت نیازمندان
+                </ThemedText>
+              </View>
               <ThemedText style={[styles.actionDescription, { color: textColor, opacity: 0.7 }]}>
                 مشاهده و مدیریت خانواده‌های نیازمند
               </ThemedText>
@@ -268,9 +303,12 @@ export default function AdminHome() {
               style={[styles.actionCard, { backgroundColor: surfaceColor, borderColor }]}
               onPress={() => router.push('/admin/admin-management')}
             >
-              <ThemedText style={[styles.actionTitle, { color: volunteerColor }]}>
-                مدیریت کاربران
-              </ThemedText>
+              <View style={styles.actionCardHeader}>
+                <ThemedText style={styles.managementIcon}>⚙️</ThemedText>
+                <ThemedText style={[styles.actionTitle, { color: volunteerColor }]}>
+                  مدیریت کاربران
+                </ThemedText>
+              </View>
               <ThemedText style={[styles.actionDescription, { color: textColor, opacity: 0.7 }]}>
                 مدیریت مدیران و مدیران گروه
               </ThemedText>
@@ -280,9 +318,12 @@ export default function AdminHome() {
               style={[styles.actionCard, { backgroundColor: surfaceColor, borderColor }]}
               onPress={() => router.push('/admin/reports')}
             >
-              <ThemedText style={[styles.actionTitle, { color: donationColor }]}>
-                گزارش‌گیری
-              </ThemedText>
+              <View style={styles.actionCardHeader}>
+                <ThemedText style={styles.managementIcon}>📊</ThemedText>
+                <ThemedText style={[styles.actionTitle, { color: donationColor }]}>
+                  گزارش‌گیری
+                </ThemedText>
+              </View>
               <ThemedText style={[styles.actionDescription, { color: textColor, opacity: 0.7 }]}>
                 مشاهده گزارش‌ها و آمار
               </ThemedText>
@@ -385,6 +426,26 @@ const styles = StyleSheet.create({
     borderRadius: BorderRadius.lg,
     borderWidth: 1,
     ...Shadows.small,
+  },
+  registrationCard: {
+    flexDirection: 'column',
+    justifyContent: 'center',
+    alignItems: 'flex-start',
+  },
+  actionCardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: Spacing.xs,
+  },
+  registrationIcon: {
+    fontSize: 24,
+    marginLeft: Spacing.xs,
+    marginRight: Spacing.sm,
+  },
+  managementIcon: {
+    fontSize: 20,
+    marginLeft: Spacing.xs,
+    marginRight: Spacing.sm,
   },
   actionTitle: {
     fontSize: Typography.sizes.md,

@@ -19,6 +19,7 @@ interface InputFieldProps {
   rightIcon?: React.ReactNode;
   leftIcon?: React.ReactNode;
   rtl?: boolean;
+  required?: boolean;
 }
 
 export function InputField({
@@ -35,13 +36,14 @@ export function InputField({
   rightIcon,
   leftIcon,
   rtl = true,
+  required = false,
 }: InputFieldProps) {
   const [isFocused, setIsFocused] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
+  const textColor = useThemeColor({}, 'text');
   const backgroundColor = useThemeColor({}, 'surface');
   const borderColor = useThemeColor({}, 'border');
-  const textColor = useThemeColor({}, 'textPrimary');
   const placeholderColor = useThemeColor({}, 'textTertiary');
   const primaryColor = useThemeColor({}, 'primary');
   const errorColor = useThemeColor({}, 'error');
@@ -57,6 +59,7 @@ export function InputField({
       {label && (
         <ThemedText type="caption" weight="medium" style={styles.label} rtl={rtl}>
           {label}
+          {required && <ThemedText style={[styles.required, { color: errorColor }]}> *</ThemedText>}
         </ThemedText>
       )}
 
@@ -119,13 +122,16 @@ const styles = StyleSheet.create({
   label: {
     marginBottom: Spacing.sm,
   },
+  required: {
+    fontSize: Typography.sizes.sm,
+  },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     borderWidth: 1,
     borderRadius: BorderRadius.lg,
     paddingHorizontal: Spacing.md,
-    minHeight: Layout.inputHeight,
+    minHeight: 48,
   },
   multilineContainer: {
     minHeight: 80,
@@ -141,7 +147,8 @@ const styles = StyleSheet.create({
     textAlignVertical: 'top',
   },
   rtlInput: {
-    writingDirection: 'rtl',
+    // Removed invalid writingDirection property
+    // RTL is handled by textAlign prop instead
   },
   leftIcon: {
     marginRight: Spacing.sm,

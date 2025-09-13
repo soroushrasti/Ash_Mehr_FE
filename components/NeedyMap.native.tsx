@@ -1,127 +1,217 @@
-import React, { useMemo, useState, useRef } from 'react';
-import { View, StyleSheet, Text, LayoutChangeEvent, Platform } from 'react-native';
-import Constants from 'expo-constants';
+import React, { useState, useRef, useEffect } from 'react';
+import { View, StyleSheet, Platform, Text } from 'react-native';
+import MapView, { Marker, PROVIDER_GOOGLE, Region } from 'react-native-maps';
+import MapViewClustering from 'react-native-map-clustering';
 
-export type NeedyPoint = {
+interface MapPoint {
   id: string;
   lat: number;
   lng: number;
   name?: string;
   info?: string;
-};
-
-interface NeedyMapProps {
-  points: NeedyPoint[];
-  initialRegion?: any; // keep loose to avoid importing Region type from react-native-maps at module scope
 }
 
-export default function NeedyMap({ points, initialRegion }: NeedyMapProps) {
-  const [region, setRegion] = useState<any | undefined>(initialRegion);
-  const containerSize = useRef<{ w: number; h: number }>({ w: 0, h: 0 });
+interface NeedyMapProps {
+  points: MapPoint[];
+  onLocationSelect?: (location: { latitude: number; longitude: number }) => void;
+  selectedLocation?: { latitude: number; longitude: number } | null;
+  initialRegion?: {
+    latitude: number;
+    longitude: number;
+    latitudeDelta: number;
+    longitudeDelta: number;
+  };
+  style?: any;
+  showCurrentLocation?: boolean;
+}
 
-  const onLayout = (e: LayoutChangeEvent) => {
-    const { width, height } = e.nativeEvent.layout;
-    containerSize.current = { w: width, h: height };
+export default function NeedyMap({
+  points = [],
+  initialRegion = {
+    latitude: 35.6892,
+    longitude: 51.3890,
+    latitudeDelta: 0.1,
+    longitudeDelta: 0.1,
+  },
+  onLocationSelect,
+  selectedLocation,
+  style,
+  showCurrentLocation = false,
+}: NeedyMapProps) {
+  const [region, setRegion] = useState<Region>(initialRegion);
+  const [debugLogs, setDebugLogs] = useState<string[]>([]);
+  const mapRef = useRef<MapView>(null);
+
+  const addLog = (message: string) => {
+    console.log('[NeedyMap]', message);
+    setDebugLogs(prev => [...prev.slice(-4), `${new Date().toLocaleTimeString()}: ${message}`]);
   };
 
-  const defaultRegion: any = useMemo(() => ({
-    latitude: initialRegion?.latitude ?? (points[0]?.lat || 35.6892),
-    longitude: initialRegion?.longitude ?? (points[0]?.lng || 51.389),
-    latitudeDelta: initialRegion?.latitudeDelta ?? 0.2,
-    longitudeDelta: initialRegion?.longitudeDelta ?? 0.2,
-  }), [initialRegion, points]);
+  useEffect(() => {
+    addLog(`Received ${points.length} points`);
 
-  const isExpoGo = Constants?.appOwnership === 'expo';
+    // Validate points data
+    const validPoints = points.filter(point =>
+      point &&
+      typeof point.lat === 'number' &&
+      typeof point.lng === 'number' &&
+      !isNaN(point.lat) &&
+      !isNaN(point.lng)
+    );
 
-  const mapsModule = React.useMemo(() => {
-    if (isExpoGo) return null;
-    try {
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
-      return require('react-native-maps');
-    } catch {
-      return null;
+    addLog(`${validPoints.length} valid points after filtering`);
+
+    if (validPoints.length > 0 && mapRef.current) {
+      // Fit map to show all points
+      const coordinates = validPoints.map(point => ({
+        latitude: point.lat,
+        longitude: point.lng,
+      }));
+
+      mapRef.current.fitToCoordinates(coordinates, {
+        edgePadding: { top: 50, right: 50, bottom: 50, left: 50 },
+        animated: true,
+      });
     }
-  }, [isExpoGo]);
+  }, [points]);
 
-  if (!mapsModule) {
+  const handleMapPress = (event: any) => {
+    if (onLocationSelect) {
+      const { latitude, longitude } = event.nativeEvent.coordinate;
+      addLog(`Location selected: ${latitude.toFixed(6)}, ${longitude.toFixed(6)}`);
+      onLocationSelect({ latitude, longitude });
+    }
+  };
+
+  const handleRegionChange = (newRegion: Region) => {
+    setRegion(newRegion);
+  };
+
+  // Filter and validate points
+  const validPoints = points.filter(point =>
+    point &&
+    typeof point.lat === 'number' &&
+    typeof point.lng === 'number' &&
+    !isNaN(point.lat) &&
+    !isNaN(point.lng) &&
+    point.lat >= -90 &&
+    point.lat <= 90 &&
+    point.lng >= -180 &&
+    point.lng <= 180
+  );
+
+  if (Platform.OS === 'web') {
     return (
-      <View onLayout={onLayout} style={[styles.container, { alignItems: 'center', justifyContent: 'center', backgroundColor: '#f2f2f2' }]}>
-        <Text>نمایش نقشه در این نسخه در دسترس نیست.</Text>
-        <Text style={{ marginTop: 6, opacity: 0.8, fontSize: 12 }}>برای مشاهده نقشه، اپلیکیشن را با پکیج react-native-maps بیلد کنید.</Text>
+      <View style={[styles.container, style]}>
+        <Text style={styles.webFallback}>
+          Map view is not available on web platform. Please use a mobile device.
+        </Text>
       </View>
     );
   }
 
-  const MapView = (mapsModule.default || mapsModule.MapView) as any;
-  const Marker = mapsModule.Marker as any;
-  const Callout = mapsModule.Callout as any;
-
-  // Choose clustering component without using hooks (avoid conditional hook after early return)
-  const ClusterComponent: any = (() => {
-    try {
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
-      const mod = require('react-native-map-clustering');
-      const DefaultExport = mod && (mod.default || mod);
-      if (typeof DefaultExport === 'function') {
-        return DefaultExport;
-      }
-    } catch {}
-    return MapView;
-  })();
-
-  const isZoomedIn = (reg: any | undefined) => {
-    if (!reg) return false;
-    return reg.latitudeDelta < 0.05; // threshold for showing labels
-  };
-
   return (
-    <View style={styles.container} onLayout={onLayout}>
-      <ClusterComponent
+    <View style={[styles.container, style]}>
+      <MapViewClustering
+        ref={mapRef}
         style={styles.map}
-        provider={Platform.OS === 'android' ? mapsModule.PROVIDER_GOOGLE : undefined}
-        initialRegion={defaultRegion}
-        region={region}
-        onRegionChangeComplete={(r: any) => setRegion(r)}
+        provider={PROVIDER_GOOGLE}
+        initialRegion={region}
+        onRegionChangeComplete={handleRegionChange}
+        onPress={handleMapPress}
+        showsUserLocation={showCurrentLocation}
+        showsMyLocationButton={showCurrentLocation}
+        clusterColor="#FF4444"
+        clusterTextColor="#FFFFFF"
+        clusterFontFamily={Platform.OS === 'ios' ? 'Arial' : 'Roboto'}
+        radius={50}
+        extent={512}
+        nodeSize={64}
+        animationEnabled={true}
+        layoutAnimationConf={{
+          type: 'spring',
+          springDamping: 0.8,
+          springSpeed: 0.5,
+        }}
       >
-        {points.map((p) => (
-          <Marker key={p.id} coordinate={{ latitude: p.lat, longitude: p.lng }}>
-            <View style={styles.redDot} />
-            {isZoomedIn(region) && (
-              <View style={styles.labelBubble}>
-                <Text style={styles.labelText} numberOfLines={1}>{p.name || 'مددجو'}</Text>
-              </View>
-            )}
-            <Callout>
-              <View style={{ maxWidth: 220 }}>
-                <Text style={{ fontWeight: '700', marginBottom: 4 }}>{p.name || 'مددجو'}</Text>
-                <Text>{p.info || 'اطلاعات بیشتر در دسترس نیست'}</Text>
-              </View>
-            </Callout>
-          </Marker>
+        {validPoints.map((point) => (
+          <Marker
+            key={point.id}
+            coordinate={{
+              latitude: point.lat,
+              longitude: point.lng
+            }}
+            title={point.name || `Location ${point.id}`}
+            description={point.info}
+            pinColor="#FF4444"
+          />
         ))}
-      </ClusterComponent>
+
+        {selectedLocation && (
+          <Marker
+            coordinate={{
+              latitude: selectedLocation.latitude,
+              longitude: selectedLocation.longitude,
+            }}
+            title="Selected Location"
+            pinColor="#4CAF50"
+          />
+        )}
+      </MapViewClustering>
+
+      {__DEV__ && (
+        <View style={styles.debugContainer}>
+          <Text style={styles.debugTitle}>Debug Info:</Text>
+          <Text style={styles.debugText}>Points: {validPoints.length}/{points.length}</Text>
+          <Text style={styles.debugText}>
+            Region: {region.latitude.toFixed(4)}, {region.longitude.toFixed(4)}
+          </Text>
+          {debugLogs.map((log, index) => (
+            <Text key={index} style={styles.debugText} numberOfLines={1}>
+              {log}
+            </Text>
+          ))}
+        </View>
+      )}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { width: '100%', height: 300, borderRadius: 12, overflow: 'hidden' },
-  map: { width: '100%', height: '100%' },
-  redDot: {
-    width: 14,
-    height: 14,
-    borderRadius: 7,
-    backgroundColor: '#ef4444',
-    borderWidth: 2,
-    borderColor: 'white',
+  container: {
+    flex: 1,
+    minHeight: 300,
   },
-  labelBubble: {
+  map: {
+    flex: 1,
+    minHeight: 300,
+  },
+  webFallback: {
+    flex: 1,
+    textAlign: 'center',
+    textAlignVertical: 'center',
+    fontSize: 16,
+    color: '#666',
+    padding: 20,
+  },
+  debugContainer: {
     position: 'absolute',
-    bottom: 18,
-    backgroundColor: 'rgba(0,0,0,0.7)',
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 6,
+    top: 10,
+    right: 10,
+    backgroundColor: 'rgba(0,0,0,0.8)',
+    padding: 8,
+    borderRadius: 4,
+    maxWidth: 200,
   },
-  labelText: { color: '#fff', fontSize: 11 },
+  debugTitle: {
+    color: '#FFF',
+    fontSize: 12,
+    fontWeight: 'bold',
+    marginBottom: 4,
+  },
+  debugText: {
+    color: '#FFF',
+    fontSize: 10,
+    lineHeight: 12,
+  },
 });

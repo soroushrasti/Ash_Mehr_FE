@@ -1,15 +1,12 @@
-import { StyleSheet, Text, type TextProps } from 'react-native';
-
+import { Text, type TextProps, StyleSheet } from 'react-native';
 import { useThemeColor } from '@/hooks/useThemeColor';
-import { Typography, Spacing } from '@/constants/Design';
+import { Typography } from '@/constants/Design';
 
 export type ThemedTextProps = TextProps & {
   lightColor?: string;
   darkColor?: string;
-  type?: 'default' | 'title' | 'subtitle' | 'body' | 'caption' | 'button' | 'heading1' | 'heading2' | 'heading3';
-  weight?: 'light' | 'regular' | 'medium' | 'bold';
-  center?: boolean;
-  rtl?: boolean;
+  type?: 'default' | 'title' | 'defaultSemiBold' | 'subtitle' | 'link' | 'heading1' | 'heading2' | 'body' | 'caption';
+  weight?: 'light' | 'normal' | 'medium' | 'semibold' | 'bold' | 'extrabold';
 };
 
 export function ThemedText({
@@ -17,34 +14,28 @@ export function ThemedText({
   lightColor,
   darkColor,
   type = 'default',
-  weight = 'regular',
-  center = false,
-  rtl = true, // Default to RTL for Farsi
+  weight,
   ...rest
 }: ThemedTextProps) {
-  const color = useThemeColor({ light: lightColor, dark: darkColor }, 'textPrimary');
+  const color = useThemeColor({ light: lightColor, dark: darkColor }, 'text');
 
   return (
     <Text
       style={[
-        { color },
         styles.base,
         type === 'default' ? styles.default : undefined,
         type === 'title' ? styles.title : undefined,
+        type === 'defaultSemiBold' ? styles.defaultSemiBold : undefined,
         type === 'subtitle' ? styles.subtitle : undefined,
-        type === 'body' ? styles.body : undefined,
-        type === 'caption' ? styles.caption : undefined,
-        type === 'button' ? styles.button : undefined,
+        type === 'link' ? styles.link : undefined,
         type === 'heading1' ? styles.heading1 : undefined,
         type === 'heading2' ? styles.heading2 : undefined,
-        type === 'heading3' ? styles.heading3 : undefined,
-        weight === 'light' ? styles.light : undefined,
-        weight === 'medium' ? styles.medium : undefined,
-        weight === 'bold' ? styles.bold : undefined,
-        center ? styles.center : undefined,
-        rtl ? styles.rtl : styles.ltr,
+        type === 'body' ? styles.body : undefined,
+        type === 'caption' ? styles.caption : undefined,
+        weight ? { fontWeight: Typography.weights[weight] as any } : undefined,
+        { color },
         style,
-      ].filter(Boolean)} // <-- Filter out undefined, false, null
+      ]}
       {...rest}
     />
   );
@@ -61,12 +52,32 @@ const styles = StyleSheet.create({
   title: {
     fontSize: Typography.fontSize['4xl'],
     lineHeight: Typography.fontSize['4xl'] * Typography.lineHeight.tight,
-    fontFamily: Typography.fontFamily.bold,
+    fontWeight: Typography.weights.bold as any,
+  },
+  defaultSemiBold: {
+    fontSize: Typography.fontSize.base,
+    lineHeight: Typography.fontSize.base * Typography.lineHeight.normal,
+    fontWeight: Typography.weights.semibold as any,
   },
   subtitle: {
     fontSize: Typography.fontSize.xl,
-    lineHeight: Typography.fontSize.xl * Typography.lineHeight.snug,
-    fontFamily: Typography.fontFamily.medium,
+    lineHeight: Typography.fontSize.xl * Typography.lineHeight.normal,
+    fontWeight: Typography.weights.medium as any,
+  },
+  link: {
+    fontSize: Typography.fontSize.base,
+    lineHeight: Typography.fontSize.base * Typography.lineHeight.normal,
+    color: '#0a7ea4',
+  },
+  heading1: {
+    fontSize: Typography.fontSize['5xl'],
+    lineHeight: Typography.fontSize['5xl'] * Typography.lineHeight.tight,
+    fontWeight: Typography.weights.bold as any,
+  },
+  heading2: {
+    fontSize: Typography.fontSize['3xl'],
+    lineHeight: Typography.fontSize['3xl'] * Typography.lineHeight.tight,
+    fontWeight: Typography.weights.semibold as any,
   },
   body: {
     fontSize: Typography.fontSize.base,
@@ -75,45 +86,6 @@ const styles = StyleSheet.create({
   caption: {
     fontSize: Typography.fontSize.sm,
     lineHeight: Typography.fontSize.sm * Typography.lineHeight.normal,
-  },
-  button: {
-    fontSize: Typography.fontSize.base,
-    lineHeight: Typography.fontSize.base * Typography.lineHeight.tight,
-    fontFamily: Typography.fontFamily.medium,
-  },
-  heading1: {
-    fontSize: Typography.fontSize['5xl'],
-    lineHeight: Typography.fontSize['5xl'] * Typography.lineHeight.tight,
-    fontFamily: Typography.fontFamily.bold,
-  },
-  heading2: {
-    fontSize: Typography.fontSize['3xl'],
-    lineHeight: Typography.fontSize['3xl'] * Typography.lineHeight.tight,
-    fontFamily: Typography.fontFamily.bold,
-  },
-  heading3: {
-    fontSize: Typography.fontSize['2xl'],
-    lineHeight: Typography.fontSize['2xl'] * Typography.lineHeight.snug,
-    fontFamily: Typography.fontFamily.medium,
-  },
-  light: {
-    fontFamily: Typography.fontFamily.light,
-  },
-  medium: {
-    fontFamily: Typography.fontFamily.medium,
-  },
-  bold: {
-    fontFamily: Typography.fontFamily.bold,
-  },
-  center: {
-    textAlign: 'center',
-  },
-  rtl: {
-    writingDirection: 'rtl',
-    textAlign: 'right',
-  },
-  ltr: {
-    writingDirection: 'ltr',
-    textAlign: 'left',
+    opacity: 0.8,
   },
 });

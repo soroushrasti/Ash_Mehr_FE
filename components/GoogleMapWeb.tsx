@@ -1,196 +1,305 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
+import { View, StyleSheet, Platform } from 'react-native';
+import { Config } from '../constants/Config';
+
+interface MapPoint {
+  id: string;
+  lat: number;
+  lng: number;
+  name?: string;
+  info?: string;
+}
 
 interface GoogleMapWebProps {
-  onLocationSelect: (location: { latitude: number; longitude: number; address: string }) => void;
-  initialLocation?: { latitude: number; longitude: number };
-  apiKey: string;
-  city?: string; // center by city when provided
-  zoom?: number; // initial zoom level
-  showControls?: boolean; // toggle map UI controls
+  points: MapPoint[];
+  onLocationSelect?: (location: { latitude: number; longitude: number }) => void;
+  selectedLocation?: { latitude: number; longitude: number } | null;
+  initialRegion?: {
+    latitude: number;
+    longitude: number;
+    latitudeDelta: number;
+    longitudeDelta: number;
+  };
+  style?: any;
+  showCurrentLocation?: boolean;
 }
 
-export default function GoogleMapWeb({ onLocationSelect, initialLocation, apiKey, city, zoom = 13, showControls = true }: GoogleMapWebProps) {
+declare global {
+  interface Window {
+    google: any;
+    initMap: () => void;
+  }
+}
+
+const GoogleMapWeb: React.FC<GoogleMapWebProps> = ({
+  points = [],
+  onLocationSelect,
+  selectedLocation,
+  initialRegion = {
+    latitude: 35.6892,
+    longitude: 51.3890,
+    latitudeDelta: 0.1,
+    longitudeDelta: 0.1,
+  },
+  style,
+  showCurrentLocation = false,
+}) => {
   const mapRef = useRef<HTMLDivElement>(null);
-  const [address, setAddress] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [map, setMap] = useState<any>(null);
-  const [marker, setMarker] = useState<any>(null);
-  const markerRef = useRef<any>(null);
+  const mapInstanceRef = useRef<any>(null);
+  const markersRef = useRef<any[]>([]);
+  const clustererRef = useRef<any>(null);
+  const selectedMarkerRef = useRef<any>(null);
+  const [isMapLoaded, setIsMapLoaded] = useState(false);
 
+  // Load Google Maps script
   useEffect(() => {
-    if (!(window as any).google) {
-      const sExisting = document.querySelector('script[data-google-maps]') as HTMLScriptElement | null;
-      if (!sExisting) {
-        const script = document.createElement('script');
-        script.dataset.googleMaps = 'true';
-        script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places,marker&loading=async`;
-        script.async = true;
-        script.onload = () => { console.debug('[Map] Google script loaded'); initMap(); };
-        script.onerror = () => { console.error('[Map] Google script failed to load'); };
-        document.body.appendChild(script);
-      } else {
-        sExisting.onload = () => { initMap(); };
-        sExisting.onerror = () => { /* no-op */ };
-      }
-    } else {
-      initMap();
-    }
-    // eslint-disable-next-line
-  }, []);
+    if (typeof window === 'undefined' || Platform.OS !== 'web') return;
 
-  // Recenter based on city changes
-  useEffect(() => {
-    if (!map || !city || !(window as any).google) return;
-    const geocoder = new (window as any).google.maps.Geocoder();
-    geocoder.geocode({ address: city, region: 'IR' }, (results: any, status: any) => {
-      if (status === 'OK' && results && results[0]) {
-        const res = results[0];
-        if (res.geometry?.viewport) {
-          map.fitBounds(res.geometry.viewport);
-        } else if (res.geometry?.location) {
-          map.panTo(res.geometry.location);
-          map.setZoom(Math.max(11, Math.min(16, zoom)));
-        }
-      }
-    });
-  }, [city, map, zoom]);
-
-  const removeMarker = (m: any) => {
-    if (!m) return;
-    try {
-      if (typeof m.setMap === 'function') {
-        m.setMap(null);
-      } else if ('map' in m) {
-        (m as any).map = null;
-      }
-    } catch {}
-  };
-
-  const createMarker = (position: any, gMap: any, title?: string) => {
-    try {
-      if (position && typeof position.lat !== 'function') {
-        const latN = Number(position.lat);
-        const lngN = Number(position.lng);
-        position = { lat: isFinite(latN) ? latN : 0, lng: isFinite(lngN) ? lngN : 0 };
-      }
-      const adv = (window as any).google?.maps?.marker?.AdvancedMarkerElement;
-      if (adv) {
-        return new adv({ map: gMap, position, title });
-      }
-      return new (window as any).google.maps.Marker({ position, map: gMap, title });
-    } catch {
-      return null;
-    }
-  };
-
-  const initMap = () => {
-    try {
-      if (!mapRef.current || !(window as any).google?.maps) {
+    const loadGoogleMaps = () => {
+      if (window.google && window.google.maps) {
+        setIsMapLoaded(true);
         return;
       }
-      const centerRaw = initialLocation || { latitude: 35.6892, longitude: 51.389 };
-      const latN = Number((centerRaw as any).latitude);
-      const lngN = Number((centerRaw as any).longitude);
-      const center = { lat: isFinite(latN) ? latN : 35.6892, lng: isFinite(lngN) ? lngN : 51.389 };
 
-      const gMap = new (window as any).google.maps.Map(mapRef.current, {
-        center,
-        zoom: Math.max(3, Math.min(20, zoom || 13)),
-        mapTypeControl: !!showControls,
-        zoomControl: !!showControls,
-        streetViewControl: false,
-        fullscreenControl: !!showControls,
-      });
-      setMap(gMap);
+      const script = document.createElement('script');
+      script.src = `https://maps.googleapis.com/maps/api/js?key=${Config.GOOGLE_MAPS_API_KEY}&libraries=geometry,places`;
+      script.async = true;
+      script.defer = true;
+      script.onload = () => {
+        setIsMapLoaded(true);
+      };
+      document.head.appendChild(script);
+    };
 
-      // Add marker if initialLocation
-      if (initialLocation) {
-        const m = createMarker(center, gMap);
-        markerRef.current = m;
-        setMarker(m);
-      }
+    loadGoogleMaps();
+  }, []);
 
-      // Add click listener
-      gMap.addListener('click', (e: any) => {
-        placeMarker(e.latLng, gMap);
-      });
+  // Initialize map
+  useEffect(() => {
+    if (!isMapLoaded || !mapRef.current || mapInstanceRef.current) return;
 
-      // Add search box if Places library is available
-      const placesNS = (window as any).google?.maps?.places;
-      if (placesNS && placesNS.SearchBox) {
-        const input = document.createElement('input');
-        input.type = 'text';
-        input.placeholder = 'جستجوی آدرس...';
-        input.style.cssText = 'width:300px;margin:8px;padding:8px;border-radius:4px;border:1px solid #ccc;direction:rtl;';
-        gMap.controls[(window as any).google.maps.ControlPosition.TOP_LEFT].push(input);
-        const searchBox = new placesNS.SearchBox(input);
-        searchBox.addListener('places_changed', () => {
-          const places = searchBox.getPlaces();
-          if (places && places.length > 0) {
-            const place = places[0];
-            if (place.geometry && place.geometry.location) {
-              gMap.panTo(place.geometry.location);
-              gMap.setZoom(15);
-              placeMarker(place.geometry.location, gMap, place.formatted_address);
-            }
-          }
-        });
-      }
-
-      // If city was provided initially, center to it
-      if (city) {
-        const geocoder = new (window as any).google.maps.Geocoder();
-        geocoder.geocode({ address: city, region: 'IR' }, (results: any, status: any) => {
-          if (status === 'OK' && results && results[0]) {
-            const res = results[0];
-            if (res.geometry?.viewport) {
-              gMap.fitBounds(res.geometry.viewport);
-            } else if (res.geometry?.location) {
-              gMap.panTo(res.geometry.location);
-              gMap.setZoom(Math.max(11, Math.min(16, zoom)));
-            }
-          }
-        });
-      }
-    } catch {}
-  };
-
-  const placeMarker = (latLng: any, gMap: any, addr?: string) => {
     try {
-      removeMarker(markerRef.current);
-      const m = createMarker(latLng, gMap, addr);
-      markerRef.current = m;
-      setMarker(m);
-      setLoading(true);
-      const lat = typeof latLng.lat === 'function' ? latLng.lat() : latLng.lat;
-      const lng = typeof latLng.lng === 'function' ? latLng.lng() : latLng.lng;
-      console.debug('[Map] placeMarker', { lat, lng, addr });
-      // Get address from latLng
-      const geocoder = new (window as any).google.maps.Geocoder();
-      geocoder.geocode({ location: latLng }, (results: any, status: any) => {
-        setLoading(false);
-        const formatted = (status === 'OK' && results && results[0]) ? (addr || results[0].formatted_address) : '';
-        if (!formatted) console.warn('[Map] reverse geocode failed', { status });
-        setAddress(formatted);
-        onLocationSelect({ latitude: Number(lat), longitude: Number(lng), address: formatted });
-      });
-    } catch (err) {
-      setLoading(false);
-      console.error('[Map] placeMarker error', err);
+      const mapOptions = {
+        center: {
+          lat: initialRegion.latitude,
+          lng: initialRegion.longitude
+        },
+        zoom: 12,
+        mapTypeId: window.google.maps.MapTypeId.ROADMAP,
+        gestureHandling: 'cooperative',
+        zoomControl: true,
+        mapTypeControl: false,
+        streetViewControl: false,
+        fullscreenControl: true,
+      };
+
+      mapInstanceRef.current = new window.google.maps.Map(mapRef.current, mapOptions);
+
+      // Add click listener for location selection
+      if (onLocationSelect) {
+        mapInstanceRef.current.addListener('click', (event: any) => {
+          const lat = event.latLng.lat();
+          const lng = event.latLng.lng();
+          onLocationSelect({ latitude: lat, longitude: lng });
+        });
+      }
+
+      console.log('Map initialized successfully');
+    } catch (error) {
+      console.error('Error initializing map:', error);
     }
-  };
+  }, [isMapLoaded, initialRegion, onLocationSelect]);
+
+  // Update markers when points change
+  const updateMarkers = useCallback(() => {
+    if (!mapInstanceRef.current || !window.google) return;
+
+    try {
+      // Clear existing markers
+      markersRef.current.forEach(marker => {
+        if (marker && marker.setMap) {
+          marker.setMap(null);
+        }
+      });
+      markersRef.current = [];
+
+      // Clear existing clusterer
+      if (clustererRef.current && clustererRef.current.clearMarkers) {
+        clustererRef.current.clearMarkers();
+      }
+
+      // Filter valid points
+      const validPoints = points.filter(point =>
+        point &&
+        typeof point.lat === 'number' &&
+        typeof point.lng === 'number' &&
+        !isNaN(point.lat) &&
+        !isNaN(point.lng)
+      );
+
+      console.log('Valid points for markers:', validPoints.length);
+
+      if (validPoints.length === 0) return;
+
+      // Create markers
+      const markers = validPoints.map(point => {
+        try {
+          const marker = new window.google.maps.Marker({
+            position: { lat: point.lat, lng: point.lng },
+            map: mapInstanceRef.current,
+            title: point.name || `Location ${point.id}`,
+            icon: {
+              url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <circle cx="12" cy="12" r="10" fill="#FF4444" stroke="#FFFFFF" stroke-width="2"/>
+                  <circle cx="12" cy="12" r="4" fill="#FFFFFF"/>
+                </svg>
+              `),
+              scaledSize: new window.google.maps.Size(24, 24),
+            }
+          });
+
+          // Add info window
+          if (point.info || point.name) {
+            const infoWindow = new window.google.maps.InfoWindow({
+              content: `
+                <div style="padding: 8px;">
+                  <h3 style="margin: 0 0 8px 0; font-size: 14px;">${point.name || 'Location'}</h3>
+                  ${point.info ? `<p style="margin: 0; font-size: 12px;">${point.info}</p>` : ''}
+                </div>
+              `
+            });
+
+            marker.addListener('click', () => {
+              infoWindow.open(mapInstanceRef.current, marker);
+            });
+          }
+
+          return marker;
+        } catch (error) {
+          console.error('Error creating marker for point:', point, error);
+          return null;
+        }
+      }).filter(Boolean);
+
+      markersRef.current = markers;
+
+      // Setup clustering if we have multiple markers
+      if (markers.length > 1) {
+        try {
+          // Import MarkerClusterer dynamically
+          import('@googlemaps/markerclusterer').then(({ MarkerClusterer }) => {
+            if (clustererRef.current) {
+              clustererRef.current.clearMarkers();
+            }
+
+            clustererRef.current = new MarkerClusterer({
+              markers,
+              map: mapInstanceRef.current,
+              algorithm: new window.google.maps.marker.SuperClusterAlgorithm({
+                radius: 100,
+              }),
+            });
+          }).catch(error => {
+            console.error('Error loading MarkerClusterer:', error);
+          });
+        } catch (error) {
+          console.error('Error setting up clustering:', error);
+        }
+      }
+
+      // Fit bounds to show all markers
+      if (markers.length > 0) {
+        const bounds = new window.google.maps.LatLngBounds();
+        markers.forEach(marker => {
+          if (marker && marker.getPosition) {
+            bounds.extend(marker.getPosition());
+          }
+        });
+        mapInstanceRef.current.fitBounds(bounds);
+
+        // Ensure minimum zoom level
+        const listener = window.google.maps.event.addListener(mapInstanceRef.current, 'bounds_changed', () => {
+          if (mapInstanceRef.current.getZoom() > 15) {
+            mapInstanceRef.current.setZoom(15);
+          }
+          window.google.maps.event.removeListener(listener);
+        });
+      }
+
+    } catch (error) {
+      console.error('Error updating markers:', error);
+    }
+  }, [points]);
+
+  useEffect(() => {
+    if (isMapLoaded && mapInstanceRef.current) {
+      updateMarkers();
+    }
+  }, [isMapLoaded, updateMarkers]);
+
+  // Handle selected location
+  useEffect(() => {
+    if (!mapInstanceRef.current || !window.google || !selectedLocation) return;
+
+    try {
+      // Remove previous selected marker
+      if (selectedMarkerRef.current) {
+        selectedMarkerRef.current.setMap(null);
+      }
+
+      // Add new selected marker
+      selectedMarkerRef.current = new window.google.maps.Marker({
+        position: {
+          lat: selectedLocation.latitude,
+          lng: selectedLocation.longitude
+        },
+        map: mapInstanceRef.current,
+        title: 'Selected Location',
+        icon: {
+          url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="12" cy="12" r="10" fill="#4CAF50" stroke="#FFFFFF" stroke-width="2"/>
+              <circle cx="12" cy="12" r="4" fill="#FFFFFF"/>
+            </svg>
+          `),
+          scaledSize: new window.google.maps.Size(32, 32),
+        }
+      });
+
+      // Center map on selected location
+      mapInstanceRef.current.setCenter({
+        lat: selectedLocation.latitude,
+        lng: selectedLocation.longitude
+      });
+    } catch (error) {
+      console.error('Error handling selected location:', error);
+    }
+  }, [selectedLocation]);
+
+  if (Platform.OS !== 'web') {
+    return null;
+  }
 
   return (
-    <div style={{ width: '100%', height: 350, position: 'relative', borderRadius: 12, overflow: 'hidden', marginBottom: 16 }}>
-      <div ref={mapRef} style={{ width: '100%', height: '100%' }} />
-      {loading && (
-        <div style={{ position: 'absolute', top: 8, right: 8, background: '#fff', padding: 8, borderRadius: 4 }}>در حال دریافت آدرس...</div>
-      )}
-      {address && (
-        <div style={{ position: 'absolute', bottom: 8, left: 8, background: '#fff', padding: 8, borderRadius: 4, maxWidth: 300, fontSize: 14 }}>
-          آدرس انتخاب‌شده: {address}
-        </div>
-      )}
-    </div>
+    <View style={[styles.container, style]}>
+      <div
+        ref={mapRef}
+        style={{
+          width: '100%',
+          height: '100%',
+          minHeight: 300,
+        }}
+      />
+    </View>
   );
-}
+};
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    minHeight: 300,
+  },
+});
+
+export default GoogleMapWeb;

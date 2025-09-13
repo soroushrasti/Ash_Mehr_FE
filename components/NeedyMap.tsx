@@ -1,5 +1,7 @@
 import React, { useEffect, useMemo, useRef } from 'react';
 import { Config } from '@/constants/Config';
+import { Platform } from 'react-native';
+import GoogleMapWeb from './GoogleMapWeb';
 
 export type NeedyPoint = {
   id: string;
@@ -13,9 +15,19 @@ interface NeedyMapProps {
   points: NeedyPoint[];
   adminPoints?: NeedyPoint[]; // admins with different color
   initialCenter?: { lat: number; lng: number };
+  onLocationSelect?: (location: { latitude: number; longitude: number }) => void;
+  selectedLocation?: { latitude: number; longitude: number } | null;
+  initialRegion?: {
+    latitude: number;
+    longitude: number;
+    latitudeDelta: number;
+    longitudeDelta: number;
+  };
+  style?: any;
+  showCurrentLocation?: boolean;
 }
 
-export default function NeedyMap({ points, adminPoints = [], initialCenter }: NeedyMapProps) {
+export default function NeedyMap({ points, adminPoints = [], initialCenter, ...props }: NeedyMapProps) {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapObj = useRef<any>(null);
   const markersRef = useRef<any[]>([]);
@@ -101,9 +113,15 @@ export default function NeedyMap({ points, adminPoints = [], initialCenter }: Ne
       }
     };
 
-    init();
+    if (Platform.OS === 'web') {
+      init();
+    }
     return () => cleanup();
   }, [center, points, adminPoints]);
+
+  if (Platform.OS === 'web') {
+    return <GoogleMapWeb {...props} />;
+  }
 
   return (
     <div style={{ width: '100%', height: 300, borderRadius: 12, overflow: 'hidden', position: 'relative' }} ref={mapRef} />

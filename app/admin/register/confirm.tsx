@@ -108,7 +108,7 @@ export default function AdminRegisterConfirm() {
         };
         const result = await apiService.createAdmin(adminPayload as any);
         if (!result.success) {
-          Alert.alert('خطا', result.error || 'ثبت مدیر ناموفق بود');
+          Alert.alert('خطا', result.error || 'ثبت نماینده ناموفق بود');
           setLoading(false);
           return;
         }

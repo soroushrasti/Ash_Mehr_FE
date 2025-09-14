@@ -60,7 +60,7 @@ export default function AdminDetailsPage() {
       if (response.success && response.data) {
         setAdminDetails(response.data);
       } else {
-        Alert.alert('خطا', 'دریافت جزئیات مدیر با خطا مواجه شد');
+        Alert.alert('خطا', 'دریافت جزئیات نماینده با خطا مواجه شد');
         router.back();
       }
     } catch (error) {
@@ -92,7 +92,7 @@ export default function AdminDetailsPage() {
   const getRoleLabel = (role: string) => {
     switch (role?.toLowerCase()) {
       case 'admin':
-        return 'مدیر کل';
+        return 'نماینده کل';
       case 'groupadmin':
         return 'نماینده گروه';
       default:
@@ -123,7 +123,7 @@ export default function AdminDetailsPage() {
   if (loading) {
     return (
       <ThemedView style={[styles.container, { backgroundColor }]}>
-        <AppHeader title="جزئیات مدیر" subtitle="اطلاعات کامل" />
+        <AppHeader title="جزئیات نماینده" subtitle="اطلاعات کامل" />
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={primaryColor} />
           <ThemedText style={{ marginTop: Spacing.lg, color: textColor }}>
@@ -137,10 +137,10 @@ export default function AdminDetailsPage() {
   if (!adminDetails) {
     return (
       <ThemedView style={[styles.container, { backgroundColor }]}>
-        <AppHeader title="جزئیات مدیر" subtitle="اطلاعات یافت نشد" />
+        <AppHeader title="جزئیات نماینده" subtitle="اطلاعات یافت نشد" />
         <View style={styles.loadingContainer}>
           <ThemedText style={{ color: textColor }}>
-            اطلاعات مدیر یافت نشد
+            اطلاعات نماینده یافت نشد
           </ThemedText>
           <Button
             title="بازگشت"

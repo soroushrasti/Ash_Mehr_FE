@@ -44,7 +44,7 @@ export default function AdminManagementPage() {
       if (response.success && response.data) {
         setAdminRecords(response.data);
       } else {
-        Alert.alert('خطا', 'دریافت اطلاعات مدیران با خطا مواجه شد');
+        Alert.alert('خطا', 'دریافت اطلاعات نمایندگان با خطا مواجه شد');
       }
     } catch (error) {
       console.error('Error loading admin records:', error);
@@ -74,7 +74,7 @@ export default function AdminManagementPage() {
 
   const handleDelete = (record: AdminRecord) => {
     Alert.alert(
-      'حذف مدیر',
+      'حذف نماینده',
       `آیا از حذف ${record.firstName} ${record.lastName} اطمینان دارید؟`,
       [
         { text: 'انصراف', style: 'cancel' },
@@ -86,13 +86,13 @@ export default function AdminManagementPage() {
               const response = await apiService.deleteAdmin(record.register_id);
               if (response.success) {
                 setAdminRecords(prev => prev.filter(r => r.register_id !== record.register_id));
-                Alert.alert('موفقیت', 'مدیر با موفقیت حذف شد');
+                Alert.alert('موفقیت', 'نماینده با موفقیت حذف شد');
               } else {
                 Alert.alert('خطا', response.error || 'حذف با خطا مواجه شد');
               }
             } catch (error) {
               console.error('Error deleting admin:', error);
-              Alert.alert('خطا', 'خطا در حذف مدیر');
+              Alert.alert('خطا', 'خطا در حذف نماینده');
             }
           }
         }
@@ -114,7 +114,7 @@ export default function AdminManagementPage() {
   const getRoleLabel = (role: string) => {
     switch (role?.toLowerCase()) {
       case 'admin':
-        return 'مدیر کل';
+        return 'نماینده کل';
       case 'groupadmin':
         return 'نماینده گروه';
       default:
@@ -214,7 +214,7 @@ export default function AdminManagementPage() {
   if (loading) {
     return (
       <ThemedView style={[styles.container, { backgroundColor }]}>
-        <AppHeader title="مدیریت اطلاعات ادمین" subtitle="مدیریت اطلاعات مدیران و نمایندگان" />
+        <AppHeader title="مدیریت اطلاعات نماینده" subtitle="مدیریت اطلاعات مدیران و نمایندگان" />
         <View style={styles.loadingContainer}>
           <ThemedText>در حال بارگذاری...</ThemedText>
         </View>
@@ -227,7 +227,7 @@ export default function AdminManagementPage() {
 
   return (
     <ThemedView style={[styles.container, { backgroundColor }]}>
-      <AppHeader title="مدیریت اطلاعات ادمین" subtitle="مدیریت اطلاعات مدیران و نمایندگان" />
+      <AppHeader title="مدیریت اطلاعات نماینده" subtitle="مدیریت اطلاعات مدیران و نمایندگان" />
 
       <View style={styles.content}>
         {/* Statistics Section */}
@@ -238,7 +238,7 @@ export default function AdminManagementPage() {
                 {adminCount}
               </ThemedText>
               <ThemedText style={[styles.statLabel, { color: textColor }]}>
-                مدیر کل
+                نماینده کل
               </ThemedText>
             </View>
             <View style={styles.statItem}>

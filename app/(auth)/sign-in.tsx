@@ -218,7 +218,7 @@ export default function SignInScreen() {
                 <ThemedText style={styles.loginEmoji}>👨‍💼</ThemedText>
               </View>
               <ThemedText type="heading2" center style={styles.loginTitle}>
-                ورود مدیران
+                ورود نمایندگان
               </ThemedText>
               <ThemedText type="caption" center style={styles.loginSubtitle}>
                 لطفا اطلاعات خود را وارد کنید

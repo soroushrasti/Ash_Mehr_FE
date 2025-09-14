@@ -93,7 +93,7 @@ export default function EditAdminPage() {
           longitude: data.longitude?.toString() || '',
         });
       } else {
-        Alert.alert('خطا', 'دریافت اطلاعات مدیر با خطا مواجه شد');
+        Alert.alert('خطا', 'دریافت اطلاعات نماینده با خطا مواجه شد');
         router.back();
       }
     } catch (error) {
@@ -173,7 +173,7 @@ export default function EditAdminPage() {
       if (response.success) {
         Alert.alert(
           'موفقیت',
-          'اطلاعات مدیر با موفقیت به‌روزرسانی شد',
+          'اطلاعات نماینده با موفقیت به‌روزرسانی شد',
           [
             {
               text: 'تایید',
@@ -213,7 +213,7 @@ export default function EditAdminPage() {
   if (loading) {
     return (
       <ThemedView style={[styles.container, { backgroundColor }]}>
-        <AppHeader title="ویرایش مدیر" subtitle="در حال بارگذاری..." />
+        <AppHeader title="ویرایش نماینده" subtitle="در حال بارگذاری..." />
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={primaryColor} />
           <ThemedText style={{ marginTop: Spacing.lg, color: textColor }}>
@@ -343,7 +343,7 @@ export default function EditAdminPage() {
               </ThemedText>
               <View style={styles.roleButtons}>
                 <Button
-                  title="مدیر کل"
+                  title="نماینده کل"
                   onPress={() => updateFormData('role', 'Admin')}
                   variant={formData.role === 'Admin' ? 'primary' : 'outline'}
                   style={styles.roleButton}

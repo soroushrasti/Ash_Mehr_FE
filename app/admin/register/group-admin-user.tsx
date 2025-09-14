@@ -54,7 +54,7 @@ export default function GroupAdminUserRegister() {
     try {
       const response = await apiService.createAdmin(payload);
       if (response.success) {
-        Alert.alert('موفق', 'مدیر گروه با موفقیت ثبت شد', [
+        Alert.alert('موفق', 'نماینده گروه با موفقیت ثبت شد', [
           { text: 'تایید', onPress: () => router.push('/admin') }
         ]);
       } else {
@@ -70,7 +70,7 @@ export default function GroupAdminUserRegister() {
 
   return (
     <ThemedView style={styles.container}>
-      <AppHeader title="ثبت مدیر گروه" showBackButton />
+      <AppHeader title="ثبت نماینده گروه" showBackButton />
       <KeyboardAwareContainer>
         <ScrollView style={styles.scroll} showsVerticalScrollIndicator={false}>
           <View style={styles.form}>
@@ -97,7 +97,7 @@ export default function GroupAdminUserRegister() {
           </View>
         </ScrollView>
         <View style={styles.footer}>
-          <Button title={loading? 'در حال ثبت...' : 'ثبت مدیر گروه'} onPress={handleSubmit} disabled={loading} style={styles.submitButton} />
+          <Button title={loading? 'در حال ثبت...' : 'ثبت نماینده گروه'} onPress={handleSubmit} disabled={loading} style={styles.submitButton} />
           <Button title="انتخاب موقعیت در نقشه" onPress={()=>router.push('/admin/register/map')} variant="outline" style={styles.mapButton} />
         </View>
       </KeyboardAwareContainer>

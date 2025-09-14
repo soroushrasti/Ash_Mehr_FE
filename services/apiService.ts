@@ -174,7 +174,7 @@ class ApiService {
       method: 'POST',
       body: adminData,
       includeAuth: true,
-      successMessage: 'اطلاعات ادمین با موفقیت به‌روزرسانی شد',
+      successMessage: 'اطلاعات نماینده با موفقیت به‌روزرسانی شد',
       showErrorAlert: true,
     });
   }
@@ -185,7 +185,7 @@ class ApiService {
       endpoint: `${Config.ENDPOINTS.DELETE_ADMIN}/${registerId}`,
       method: 'DELETE',
       includeAuth: true,
-      successMessage: 'ادمین با موفقیت حذف شد',
+      successMessage: 'نماینده با موفقیت حذف شد',
       showErrorAlert: true,
     });
   }

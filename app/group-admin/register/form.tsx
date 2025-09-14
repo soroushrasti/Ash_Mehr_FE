@@ -142,7 +142,7 @@ export default function GroupAdminRegisterForm() {
       if (response.success) {
         Alert.alert(
           'موفق',
-          'اطلاعات مدیر گروه با موفقیت ثبت شد',
+          'اطلاعات نماینده گروه با موفقیت ثبت شد',
           [
             {
               text: 'تایید',
@@ -179,7 +179,7 @@ export default function GroupAdminRegisterForm() {
 
   return (
     <ThemedView style={styles.container}>
-      <AppHeader title="ثبت اطلاعات مدیر گروه" showBackButton />
+      <AppHeader title="ثبت اطلاعات نماینده گروه" showBackButton />
 
       <KeyboardAwareContainer>
         <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
@@ -192,10 +192,10 @@ export default function GroupAdminRegisterForm() {
               <ThemedText style={styles.roleIcon}>👥</ThemedText>
             </View>
             <ThemedText style={styles.title}>
-              ثبت اطلاعات مدیر گروه
+              ثبت اطلاعات نماینده گروه
             </ThemedText>
             <ThemedText style={styles.subtitle}>
-              اطلاعات مدیر گروه خیریه را وارد کنید
+              اطلاعات نماینده گروه خیریه را وارد کنید
             </ThemedText>
           </View>
 
@@ -203,7 +203,7 @@ export default function GroupAdminRegisterForm() {
           <View style={[styles.infoBadge, { backgroundColor: withOpacity(primaryColor, 10), borderColor: withOpacity(primaryColor, 20) }]}>
             <ThemedText style={styles.infoBadgeIcon}>ℹ️</ThemedText>
             <ThemedText style={styles.infoBadgeText}>
-              مدیران گروه مسئول مدیریت و نظارت بر فعالیت‌های خیریه در منطقه تحت پوشش خود هستند
+              نمایندگان گروه مسئول مدیریت و نظارت بر فعالیت‌های خیریه در منطقه تحت پوشش خود هستند
             </ThemedText>
           </View>
 

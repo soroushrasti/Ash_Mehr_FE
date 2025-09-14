@@ -59,7 +59,7 @@ export default function AdminUserRegister() {
       if (response.success) {
         Alert.alert(
           'موفق',
-          'اطلاعات مدیر با موفقیت ثبت شد',
+          'اطلاعات نماینده با موفقیت ثبت شد',
           [
             {
               text: 'تایید',
@@ -80,7 +80,7 @@ export default function AdminUserRegister() {
 
   return (
     <ThemedView style={styles.container}>
-      <AppHeader title="ثبت اطلاعات مدیر" showBackButton />
+      <AppHeader title="ثبت اطلاعات نماینده" showBackButton />
 
       <KeyboardAwareContainer>
         <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>

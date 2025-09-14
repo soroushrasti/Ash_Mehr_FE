@@ -140,10 +140,10 @@ export default function AdminHome() {
           <View style={styles.headerContent}>
             <View>
               <ThemedText style={[styles.greeting, { color: textColor }]}>
-                سلام، {userName || 'مدیر'}
+                سلام، {userName || 'نماینده'}
               </ThemedText>
               <ThemedText style={[styles.subtitle, { color: textColor, opacity: 0.7 }]}>
-                پنل مدیریت آشیانه مهر
+                پنل مدیریت کانون ایتام مهر راستی
               </ThemedText>
             </View>
             <SignOutButton />
@@ -169,7 +169,7 @@ export default function AdminHome() {
               style={styles.cardGradient}
             >
               <ThemedText style={styles.statNumber}>{needyCount}</ThemedText>
-              <ThemedText style={styles.statLabel}>خانواده نیازمند</ThemedText>
+              <ThemedText style={styles.statLabel}>خانواده مددجو</ThemedText>
             </LinearGradient>
           </TouchableOpacity>
 
@@ -184,7 +184,7 @@ export default function AdminHome() {
               <ThemedText style={styles.statNumber}>
                 {adminInfo?.numberAdminPersons || 0}
               </ThemedText>
-              <ThemedText style={styles.statLabel}>مدیر</ThemedText>
+              <ThemedText style={styles.statLabel}>نماینده</ThemedText>
             </LinearGradient>
           </TouchableOpacity>
 
@@ -199,7 +199,7 @@ export default function AdminHome() {
               <ThemedText style={styles.statNumber}>
                 {adminInfo?.numberGroupAdminPersons || 0}
               </ThemedText>
-              <ThemedText style={styles.statLabel}>مدیر گروه</ThemedText>
+              <ThemedText style={styles.statLabel}>نماینده گروه</ThemedText>
             </LinearGradient>
           </TouchableOpacity>
         </Animated.View>
@@ -217,10 +217,10 @@ export default function AdminHome() {
           ]}
         >
           <ThemedText style={[styles.sectionTitle, { color: textColor }]}>
-            نقشه خانواده‌های نیازمند
+            نقشه خانواده‌های مددجو
           </ThemedText>
           <ThemedText style={[styles.sectionSubtitle, { color: textColor, opacity: 0.7 }]}>
-            موقعیت جغرافیایی خانواده‌ها و مدیران
+            موقعیت جغرافیایی خانواده‌ها و نمایندگان
           </ThemedText>
 
           <View style={styles.mapContainer}>
@@ -260,11 +260,11 @@ export default function AdminHome() {
               <View style={styles.actionCardHeader}>
                 <ThemedText style={styles.registrationIcon}>👨‍👩‍👧‍👦</ThemedText>
                 <ThemedText style={[styles.actionTitle, { color: '#FFFFFF' }]}>
-                  ثبت خانواده نیازمند
+                  ثبت خانواده مددجو
                 </ThemedText>
               </View>
               <ThemedText style={[styles.actionDescription, { color: '#FFFFFF', opacity: 0.9 }]}>
-                افزودن خانواده نیازمند جدید به سیستم
+                افزودن خانواده مددجو جدید به سیستم
               </ThemedText>
             </TouchableOpacity>
 
@@ -275,11 +275,11 @@ export default function AdminHome() {
               <View style={styles.actionCardHeader}>
                 <ThemedText style={styles.registrationIcon}>👨‍💼</ThemedText>
                 <ThemedText style={[styles.actionTitle, { color: '#FFFFFF' }]}>
-                  ثبت مدیر جدید
+                  ثبت نماینده جدید
                 </ThemedText>
               </View>
               <ThemedText style={[styles.actionDescription, { color: '#FFFFFF', opacity: 0.9 }]}>
-                افزودن مدیر یا مدیر گروه جدید
+                افزودن نماینده یا نماینده گروه جدید
               </ThemedText>
             </TouchableOpacity>
 
@@ -289,9 +289,9 @@ export default function AdminHome() {
             >
               <View style={styles.actionCardHeader}>
                 <ThemedText style={styles.registrationIcon}>👥</ThemedText>
-                <ThemedText style={[styles.actionTitle, { color: '#FFFFFF' }]}>ثبت مدیر گروه</ThemedText>
+                <ThemedText style={[styles.actionTitle, { color: '#FFFFFF' }]}>ثبت نماینده گروه</ThemedText>
               </View>
-              <ThemedText style={[styles.actionDescription, { color: '#FFFFFF', opacity: 0.9 }]}>افزودن مدیر گروه جدید</ThemedText>
+              <ThemedText style={[styles.actionDescription, { color: '#FFFFFF', opacity: 0.9 }]}>افزودن نماینده گروه جدید</ThemedText>
             </TouchableOpacity>
 
             {/* Management Actions */}
@@ -302,11 +302,11 @@ export default function AdminHome() {
               <View style={styles.actionCardHeader}>
                 <ThemedText style={styles.managementIcon}>📋</ThemedText>
                 <ThemedText style={[styles.actionTitle, { color: primaryColor }]}>
-                  مدیریت نیازمندان
+                  مدیریت مددجویان
                 </ThemedText>
               </View>
               <ThemedText style={[styles.actionDescription, { color: textColor, opacity: 0.7 }]}>
-                مشاهده و مدیریت خانواده‌های نیازمند
+                مشاهده و مدیریت خانواده‌های مددجو
               </ThemedText>
             </TouchableOpacity>
 
@@ -321,7 +321,7 @@ export default function AdminHome() {
                 </ThemedText>
               </View>
               <ThemedText style={[styles.actionDescription, { color: textColor, opacity: 0.7 }]}>
-                مدیریت مدیران و مدیران گروه
+                مدیریت نمایندگان و نمایندگان گروه
               </ThemedText>
             </TouchableOpacity>
 

@@ -12,6 +12,7 @@ import AppHeader from '@/components/AppHeader';
 import { KeyboardAwareContainer } from '@/components/KeyboardAwareContainer';
 import { apiService } from '@/services/apiService';
 import { AdminCreate } from '@/types/api';
+import { useAuth } from '@/components/AuthContext';
 
 // Types
 interface FieldOption {
@@ -50,6 +51,7 @@ const groupAdminFields: FieldDef[] = [
 export default function GroupAdminRegisterForm() {
   const router = useRouter();
   const params = useLocalSearchParams();
+  const { userId } = useAuth();
 
   const [formData, setFormData] = useState<FormState>(() => {
     const initialData: FormState = {};
@@ -111,6 +113,11 @@ export default function GroupAdminRegisterForm() {
       return;
     }
 
+    if (!userId) {
+      Alert.alert('خطا', 'شناسه کاربر ثبت‌کننده یافت نشد. لطفاً دوباره وارد شوید.');
+      return;
+    }
+
     setLoading(true);
     try {
       // Prepare data for API
@@ -127,6 +134,7 @@ export default function GroupAdminRegisterForm() {
         UserRole: 'GroupAdmin', // Set as GroupAdmin role
         Latitude: params.latitude ? String(params.latitude) : '',
         Longitude: params.longitude ? String(params.longitude) : '',
+        CreatedBy: Number(userId),
       };
 
       const response = await apiService.createAdmin(adminData);

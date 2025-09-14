@@ -283,6 +283,17 @@ export default function AdminHome() {
               </ThemedText>
             </TouchableOpacity>
 
+            <TouchableOpacity
+              style={[styles.actionCard, styles.registrationCard, { backgroundColor: donationColor, borderColor: donationColor }]}
+              onPress={() => router.push('/admin/register/group-admin-user')}
+            >
+              <View style={styles.actionCardHeader}>
+                <ThemedText style={styles.registrationIcon}>👥</ThemedText>
+                <ThemedText style={[styles.actionTitle, { color: '#FFFFFF' }]}>ثبت مدیر گروه</ThemedText>
+              </View>
+              <ThemedText style={[styles.actionDescription, { color: '#FFFFFF', opacity: 0.9 }]}>افزودن مدیر گروه جدید</ThemedText>
+            </TouchableOpacity>
+
             {/* Management Actions */}
             <TouchableOpacity
               style={[styles.actionCard, { backgroundColor: surfaceColor, borderColor }]}

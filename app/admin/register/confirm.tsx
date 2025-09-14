@@ -14,7 +14,8 @@ import { NeedyCreateWithChildren } from '@/types/api';
 
 export default function AdminRegisterConfirm() {
   const router = useRouter();
-  const { formData, roleTitle, roleIcon, location } = useLocalSearchParams();
+  const { formData, roleTitle, roleIcon, location, role } = useLocalSearchParams();
+  const roleParam = Array.isArray(role) ? role[0] : role;
   const { userId, userType } = useAuth();
   const [loading, setLoading] = useState(false);
 
@@ -74,10 +75,51 @@ export default function AdminRegisterConfirm() {
   };
 
   const handleSubmit = async () => {
+    if (!userId) {
+      Alert.alert('خطا', 'شناسه کاربر ثبت‌کننده موجود نیست. لطفاً دوباره وارد شوید.');
+      return;
+    }
     setLoading(true);
 
     try {
-      // Map form data to RegisterCreateWithChildren schema
+      const isAdminRole = roleParam === 'Admin' || roleParam === 'GroupAdmin';
+
+      if (isAdminRole) {
+        // Validate password
+        if (!parsedFormData.password || parsedFormData.password.length < 6) {
+          Alert.alert('خطا', 'رمز عبور معتبر وارد نشده است.');
+          setLoading(false);
+          return;
+        }
+        const adminPayload = {
+          FirstName: parsedFormData.firstName || '',
+          LastName: parsedFormData.lastName || '',
+            Phone: parsedFormData.phone || undefined,
+            Email: parsedFormData.email || undefined,
+            Password: parsedFormData.password,
+            City: parsedFormData.city || undefined,
+            Province: parsedFormData.province || undefined,
+            Street: parsedFormData.street || undefined,
+            NationalID: parsedFormData.nationalId || undefined,
+            UserRole: roleParam === 'GroupAdmin' ? 'GroupAdmin' : 'Admin',
+            Latitude: parsedLocation.latitude?.toString() || undefined,
+            Longitude: parsedLocation.longitude?.toString() || undefined,
+            CreatedBy: Number(userId),
+        };
+        const result = await apiService.createAdmin(adminPayload as any);
+        if (!result.success) {
+          Alert.alert('خطا', result.error || 'ثبت مدیر ناموفق بود');
+          setLoading(false);
+          return;
+        }
+        Alert.alert('موفق', `${roleTitle} با موفقیت ثبت شد`, [
+          { text: 'تأیید', onPress: () => router.replace('/admin') }
+        ]);
+        setLoading(false);
+        return;
+      }
+
+      // Needy / other roles flow
       const registerData: NeedyCreateWithChildren = {
         FirstName: parsedFormData.firstName || '',
         LastName: parsedFormData.lastName || '',
@@ -88,7 +130,7 @@ export default function AdminRegisterConfirm() {
         Street: parsedFormData.street || undefined,
         NameFather: parsedFormData.nameFather || undefined,
         NationalID: parsedFormData.nationalId || undefined,
-        CreatedBy: userId,
+        CreatedBy: Number(userId),
         Age: parsedFormData.age ? Number(parsedFormData.age) : undefined,
         Region: parsedFormData.region || undefined,
         Gender: parsedFormData.gender || undefined,
@@ -106,6 +148,7 @@ export default function AdminRegisterConfirm() {
 
       if (!result.success) {
         Alert.alert('خطا', result.error || 'در ثبت‌نام خطایی رخ داد.');
+        setLoading(false);
         return;
       }
 
@@ -116,12 +159,9 @@ export default function AdminRegisterConfirm() {
           {
             text: 'تأیید',
             onPress: () => {
-              // Navigate back to appropriate dashboard
-              if (userType === 'Admin') {
-                router.replace('/admin');
-              } else if (userType === 'GroupAdmin') {
-                router.replace('/group-admin');
-              }
+              if (userType === 'Admin') router.replace('/admin');
+              else if (userType === 'GroupAdmin') router.replace('/group-admin');
+              else router.replace('/');
             }
           }
         ]

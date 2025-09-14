@@ -15,7 +15,8 @@ import * as Location from 'expo-location';
 
 export default function AdminRegisterMap() {
   const router = useRouter();
-  const { formData, role, roleTitle, roleIcon } = useLocalSearchParams();
+  const { formData, role, roleTitle, roleIcon, next } = useLocalSearchParams();
+  const targetForm = Array.isArray(next) ? next[0] : (next || 'admin-user');
   const roleIconSafe = typeof roleIcon === 'string' ? roleIcon : Array.isArray(roleIcon) ? roleIcon[0] : '📍';
   const [location, setLocation] = useState<{ latitude: number; longitude: number; address?: string } | null>(null);
   const [loading, setLoading] = useState(false);
@@ -113,9 +114,8 @@ export default function AdminRegisterMap() {
       return;
     }
 
-    // Navigate back to admin registration with selected coordinates
     router.push({
-      pathname: '/admin/register/admin-user',
+      pathname: `/admin/register/${targetForm}`,
       params: {
         latitude: selectedLocation.latitude,
         longitude: selectedLocation.longitude,
@@ -179,12 +179,16 @@ export default function AdminRegisterMap() {
 
           <View style={styles.mapContainer} onStartShouldSetResponderCapture={() => true}>
             <UniversalMap
-              location={location}
+              points={[]}
               onLocationSelect={handleLocationSelect}
-              mapType="standard"
-              zoom={0.01}
-              showControls={true}
-              city={city}
+              selectedLocation={selectedLocation}
+              initialRegion={location ? {
+                latitude: location.latitude,
+                longitude: location.longitude,
+                latitudeDelta: 0.05,
+                longitudeDelta: 0.05,
+              } : undefined}
+              style={{ flex: 1 }}
             />
           </View>
 

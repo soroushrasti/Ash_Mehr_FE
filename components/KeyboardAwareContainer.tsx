@@ -50,6 +50,9 @@ export function KeyboardAwareContainer({
   );
 }
 
+// Add default export to support both import styles
+export default KeyboardAwareContainer;
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,

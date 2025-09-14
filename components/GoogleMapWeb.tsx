@@ -165,12 +165,13 @@ const GoogleMapWeb: React.FC<GoogleMapWebProps> = ({
 
       mapInstanceRef.current = new window.google.maps.Map(mapRef.current, mapOptions);
 
-      // Add click listener for location selection
+      // Add click listener for location selection with better handling
       if (onLocationSelect) {
         mapInstanceRef.current.addListener('click', (event: any) => {
           try {
             const lat = event.latLng.lat();
             const lng = event.latLng.lng();
+            console.log('Map clicked at:', { lat, lng });
             onLocationSelect({ latitude: lat, longitude: lng });
           } catch (error) {
             console.error('Error handling map click:', error);
@@ -178,7 +179,7 @@ const GoogleMapWeb: React.FC<GoogleMapWebProps> = ({
         });
       }
 
-      console.log('Google Maps initialized successfully');
+      console.log('Google Maps initialized successfully with click listener');
       setLoadError(null);
     } catch (error) {
       console.error('Error initializing map:', error);
@@ -297,64 +298,48 @@ const GoogleMapWeb: React.FC<GoogleMapWebProps> = ({
 
       markersRef.current = markers;
 
-      // Setup clustering with error handling
-      if (markers.length > 1) {
+      // --- Clustering (standard) -------------------------------------------------
+      // Clear any existing clusterer safely
+      if (clustererRef.current) {
         try {
-          import('@googlemaps/markerclusterer').then(({ MarkerClusterer }) => {
-            try {
-              clustererRef.current = new MarkerClusterer({
-                markers,
-                map: mapInstanceRef.current,
-                algorithm: {
-                  calculate: (markers: any) => {
-                    // Ensure markers is an array before calling map
-                    if (!Array.isArray(markers)) {
-                      console.warn('Markers is not an array:', markers);
-                      return [];
-                    }
-
-                    // Custom algorithm to prevent clustering errors
-                    return markers.map((marker: any, index: number) => {
-                      try {
-                        return {
-                          position: marker.getPosition(),
-                          marker,
-                          clusterId: `cluster_${index}`,
-                        };
-                      } catch (error) {
-                        console.error('Error processing marker in clustering:', error);
-                        return null;
-                      }
-                    }).filter(Boolean);
-                  }
-                },
-              });
-            } catch (clusterError) {
-              console.error('Error creating MarkerClusterer:', clusterError);
-              // Continue without clustering
-            }
-          }).catch(error => {
-            console.error('Error loading MarkerClusterer:', error);
-          });
-        } catch (error) {
-          console.error('Error setting up clustering:', error);
+          clustererRef.current.clearMarkers();
+        } catch (e) {
+          console.warn('Failed clearing previous clusterer', e);
         }
+        clustererRef.current = null;
       }
 
-      // Fit bounds to show all markers
+      // Only cluster if we have more than one data marker
+      if (markers.length > 1) {
+        import('@googlemaps/markerclusterer')
+          .then(({ MarkerClusterer, SuperClusterAlgorithm }) => {
+            try {
+              clustererRef.current = new MarkerClusterer({
+                map: mapInstanceRef.current,
+                markers,
+                // SuperClusterAlgorithm gives nice collapsing / expanding behavior
+                algorithm: new SuperClusterAlgorithm({
+                  radius: 80, // tweak if clusters look too dense / too sparse
+                  maxZoom: 19,
+                })
+              });
+            } catch (clusterErr) {
+              console.error('Error creating clusterer', clusterErr);
+            }
+          })
+          .catch(err => console.error('Error loading markerclusterer lib', err));
+      }
+      // ---------------------------------------------------------------------------
+
+      // Fit bounds to show all markers (skip if none)
       if (markers.length > 0) {
         try {
           const bounds = new window.google.maps.LatLngBounds();
           markers.forEach(marker => {
-            if (marker && marker.getPosition) {
-              bounds.extend(marker.getPosition());
-            }
+            if (marker && marker.getPosition) bounds.extend(marker.getPosition());
           });
-
           if (!bounds.isEmpty()) {
             mapInstanceRef.current.fitBounds(bounds);
-
-            // Ensure minimum zoom level
             const listener = window.google.maps.event.addListener(mapInstanceRef.current, 'bounds_changed', () => {
               if (mapInstanceRef.current.getZoom() > 15) {
                 mapInstanceRef.current.setZoom(15);
@@ -386,9 +371,10 @@ const GoogleMapWeb: React.FC<GoogleMapWebProps> = ({
       // Remove previous selected marker
       if (selectedMarkerRef.current) {
         selectedMarkerRef.current.setMap(null);
+        selectedMarkerRef.current = null;
       }
 
-      // Add new selected marker
+      // Create a more visible selected marker with custom icon
       selectedMarkerRef.current = new window.google.maps.Marker({
         position: {
           lat: selectedLocation.latitude,
@@ -396,21 +382,51 @@ const GoogleMapWeb: React.FC<GoogleMapWebProps> = ({
         },
         map: mapInstanceRef.current,
         title: 'Selected Location',
+        // Use a more visible icon for selected location
         icon: {
-          path: window.google.maps.SymbolPath.CIRCLE,
-          scale: 12,
-          fillColor: '#4CAF50',
-          fillOpacity: 0.8,
-          strokeColor: '#FFFFFF',
-          strokeWeight: 3,
-        }
+          url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
+            <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="20" cy="20" r="18" fill="#4CAF50" stroke="#FFFFFF" stroke-width="4"/>
+              <circle cx="20" cy="20" r="8" fill="#FFFFFF"/>
+              <circle cx="20" cy="20" r="4" fill="#4CAF50"/>
+            </svg>
+          `),
+          scaledSize: new window.google.maps.Size(40, 40),
+          anchor: new window.google.maps.Point(20, 20),
+        },
+        zIndex: 1000, // Make sure it appears above other markers
       });
 
-      // Center map on selected location
+      // Add info window for selected location
+      const infoWindow = new window.google.maps.InfoWindow({
+        content: `
+          <div style="padding: 8px; font-family: Arial, sans-serif; direction: rtl;">
+            <h3 style="margin: 0 0 8px 0; font-size: 14px; color: #4CAF50;">📍 موقعیت انتخاب شده</h3>
+            <p style="margin: 0; font-size: 12px; color: #666;">
+              عرض جغرافیایی: ${selectedLocation.latitude.toFixed(6)}<br/>
+              طول جغرافیایی: ${selectedLocation.longitude.toFixed(6)}
+            </p>
+          </div>
+        `
+      });
+
+      // Show info window when marker is clicked
+      selectedMarkerRef.current.addListener('click', () => {
+        infoWindow.open(mapInstanceRef.current, selectedMarkerRef.current);
+      });
+
+      // Center map on selected location with slight zoom
       mapInstanceRef.current.setCenter({
         lat: selectedLocation.latitude,
         lng: selectedLocation.longitude
       });
+
+      // Set appropriate zoom level
+      if (mapInstanceRef.current.getZoom() < 15) {
+        mapInstanceRef.current.setZoom(15);
+      }
+
+      console.log('Selected location marker created:', selectedLocation);
     } catch (error) {
       console.error('Error handling selected location:', error);
     }

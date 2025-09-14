@@ -67,15 +67,14 @@ function validateField(field: FieldDef, value: string): string {
   if (field.required && (!value || value.trim() === '')) return `${field.label} الزامی است`;
   if (field.type === 'email' && value && !/^\S+@\S+\.\S+$/.test(value)) return 'فرمت ایمیل نادرست است';
   if (field.type === 'phone' && value && !/^(۰۹|09)[۰-۹0-9]{9}$/.test(value.replace(/[^۰-۹0-9]/g, ''))) {
-      return 'شماره تلفن باید با ۰۹ یا 09 شروع شود و ۱۱ رقم باشد';
+    return 'شماره تلفن باید با ۰۹ یا 09 شروع شود و ۱۱ رقم باشد';
   }
   if (field.type === 'number' && value && !/^[۰-۹0-9]+$/.test(value)) {
-      return `${field.label} باید عدد باشد`;
+    return `${field.label} باید عدد باشد`;
   }
-  if (field.key === 'nationalId' && value && (!/^(?:d{10}|[۰-۹]{10})$/.test(value) || !isValidNationalId(value))) {
-    return 'کد ملی نادرست است';
+  return '';
 }
-return '';
+
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 function isValidNationalId(nationalId: string): boolean {
   // تبدیل کد ملی به اعداد انگلیسی
@@ -90,7 +89,7 @@ function isValidNationalId(nationalId: string): boolean {
   const remainder = sum % 11;
   return (remainder < 2 && check === remainder) || (remainder >= 2 && check === 11 - remainder);
 }
-}
+
 export default function AdminRegisterForm() {
   const router = useRouter();
   const { role } = useLocalSearchParams();
@@ -294,7 +293,7 @@ export default function AdminRegisterForm() {
 
         <ThemedView type="card" style={styles.formCard}>
           <ThemedText type="heading3" style={styles.formTitle}>
-            اطلاعات آدرس
+            اطلاعات آدرسx
           </ThemedText>
 
           {addressFields.map(field => (

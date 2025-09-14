@@ -116,4 +116,5 @@ export const Layout = {
     paddingHorizontal: Spacing.lg,
     borderRadius: BorderRadius.md,
   },
+  inputHeight: 48,
 };

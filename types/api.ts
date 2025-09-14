@@ -16,6 +16,7 @@ export interface AdminCreate {
   Password: string;
   Latitude?: string;
   Longitude?: string;
+  CreatedBy?: number;
 }
 
 export interface NeedyPersonCreate {

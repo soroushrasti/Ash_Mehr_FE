@@ -10,10 +10,12 @@ import { Spacing, BorderRadius } from '@/constants/Design';
 import { apiService } from '@/services/apiService';
 import { AdminCreate } from '@/types/api';
 import { KeyboardAwareContainer } from '@/components/KeyboardAwareContainer';
+import { useAuth } from '@/components/AuthContext';
 
 export default function AdminUserRegister() {
   const router = useRouter();
   const params = useLocalSearchParams();
+  const { userId } = useAuth();
 
   const [formData, setFormData] = useState<AdminCreate>({
     FirstName: '',
@@ -44,9 +46,16 @@ export default function AdminUserRegister() {
       return;
     }
 
+    if (!userId) {
+      Alert.alert('خطا', 'شناسه کاربر ثبت‌کننده یافت نشد. لطفاً دوباره وارد شوید.');
+      return;
+    }
+
+    const payload = { ...formData, CreatedBy: Number(userId) };
+
     setLoading(true);
     try {
-      const response = await apiService.createAdmin(formData);
+      const response = await apiService.createAdmin(payload);
       if (response.success) {
         Alert.alert(
           'موفق',

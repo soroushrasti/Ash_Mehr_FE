@@ -1,19 +1,18 @@
 import React from 'react';
-import { TouchableOpacity, StyleSheet, ActivityIndicator, StyleProp, ViewStyle } from 'react-native';
-import { ThemedText } from './ThemedText';
+import { TouchableOpacity, Text, StyleSheet, ActivityIndicator, ViewStyle, TextStyle } from 'react-native';
 import { useThemeColor } from '@/hooks/useThemeColor';
-import { BorderRadius, Spacing, Layout } from '@/constants/Design';
+import { Spacing, BorderRadius, Typography } from '@/constants/Design';
 
 interface ButtonProps {
   title: string;
   onPress: () => void;
-  variant?: 'primary' | 'secondary' | 'outline' | 'ghost' | 'success' | 'warning' | 'error';
+  variant?: 'primary' | 'secondary' | 'outline' | 'success' | 'danger';
   size?: 'small' | 'medium' | 'large';
   disabled?: boolean;
   loading?: boolean;
-  fullWidth?: boolean;
+  style?: ViewStyle;
+  textStyle?: TextStyle;
   icon?: React.ReactNode;
-  style?: StyleProp<ViewStyle>;
 }
 
 export function Button({
@@ -23,103 +22,151 @@ export function Button({
   size = 'medium',
   disabled = false,
   loading = false,
-  fullWidth = false,
-  icon,
   style,
+  textStyle,
+  icon,
 }: ButtonProps) {
   const primaryColor = useThemeColor({}, 'primary');
-  const secondaryColor = useThemeColor({}, 'secondary');
+  const textColor = useThemeColor({}, 'text');
   const surfaceColor = useThemeColor({}, 'surface');
-  const textColor = useThemeColor({}, 'textPrimary');
-  const borderColor = useThemeColor({}, 'border');
+  const successColor = useThemeColor({}, 'success');
+  const errorColor = useThemeColor({}, 'error');
 
-  const getButtonStyle = () => {
-    const baseStyle = [styles.button, styles[size]];
-
-    if (fullWidth) baseStyle.push(styles.fullWidth);
-    if (disabled) baseStyle.push(styles.disabled);
+  const getBackgroundColor = () => {
+    if (disabled) return '#cccccc';
 
     switch (variant) {
       case 'primary':
-        return [...baseStyle, { backgroundColor: primaryColor }];
+        return primaryColor;
       case 'secondary':
-        return [...baseStyle, { backgroundColor: secondaryColor }];
+        return surfaceColor;
       case 'outline':
-        return [...baseStyle, styles.outline, { borderColor: primaryColor, backgroundColor: 'transparent' }];
-      case 'ghost':
-        return [...baseStyle, { backgroundColor: 'transparent' }];
+        return 'transparent';
       case 'success':
-        return [...baseStyle, { backgroundColor: useThemeColor({}, 'success') }];
-      case 'warning':
-        return [...baseStyle, { backgroundColor: useThemeColor({}, 'warning') }];
-      case 'error':
-        return [...baseStyle, { backgroundColor: useThemeColor({}, 'error') }];
+        return successColor || '#4CAF50';
+      case 'danger':
+        return errorColor || '#f44336';
       default:
-        return [...baseStyle, { backgroundColor: primaryColor }];
+        return primaryColor;
     }
   };
 
   const getTextColor = () => {
-    if (variant === 'outline' || variant === 'ghost') {
-      return primaryColor;
+    if (disabled) return '#999999';
+
+    switch (variant) {
+      case 'primary':
+      case 'success':
+      case 'danger':
+        return '#FFFFFF';
+      case 'secondary':
+        return textColor;
+      case 'outline':
+        return primaryColor;
+      default:
+        return '#FFFFFF';
     }
-    return '#FFFFFF';
   };
+
+  const getBorderColor = () => {
+    if (variant === 'outline') {
+      return disabled ? '#cccccc' : primaryColor;
+    }
+    return 'transparent';
+  };
+
+  const getSizeStyles = () => {
+    switch (size) {
+      case 'small':
+        return {
+          paddingVertical: Spacing.sm,
+          paddingHorizontal: Spacing.md,
+          fontSize: Typography.sizes.sm,
+        };
+      case 'large':
+        return {
+          paddingVertical: Spacing.lg,
+          paddingHorizontal: Spacing.xl,
+          fontSize: Typography.sizes.lg,
+        };
+      default: // medium
+        return {
+          paddingVertical: Spacing.md,
+          paddingHorizontal: Spacing.lg,
+          fontSize: Typography.sizes.md,
+        };
+    }
+  };
+
+  const sizeStyles = getSizeStyles();
 
   return (
     <TouchableOpacity
-      style={[...getButtonStyle().filter(Boolean), style].filter(Boolean)}
+      style={[
+        styles.button,
+        {
+          backgroundColor: getBackgroundColor(),
+          borderColor: getBorderColor(),
+          paddingVertical: sizeStyles.paddingVertical,
+          paddingHorizontal: sizeStyles.paddingHorizontal,
+        },
+        variant === 'outline' && styles.outline,
+        disabled && styles.disabled,
+        style,
+      ]}
       onPress={onPress}
       disabled={disabled || loading}
-      activeOpacity={0.8}
+      activeOpacity={0.7}
     >
       {loading ? (
-        <ActivityIndicator color={getTextColor()} size="small" />
+        <ActivityIndicator
+          size="small"
+          color={getTextColor()}
+          style={styles.loader}
+        />
       ) : (
         <>
-          {icon && icon}
-          <ThemedText
-            type="button"
-            style={[{ color: getTextColor() }, icon && styles.textWithIcon].filter(Boolean)}
-            center
+          {icon && <>{icon}</>}
+          <Text
+            style={[
+              styles.text,
+              {
+                color: getTextColor(),
+                fontSize: sizeStyles.fontSize,
+              },
+              textStyle,
+            ]}
           >
             {title}
-          </ThemedText>
+          </Text>
         </>
       )}
     </TouchableOpacity>
   );
 }
 
+export default Button;
+
 const styles = StyleSheet.create({
   button: {
-    borderRadius: BorderRadius.lg,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: Spacing.lg,
-  },
-  small: {
-    height: 36,
-    paddingHorizontal: Spacing.md,
-  },
-  medium: {
-    height: Layout.buttonHeight,
-  },
-  large: {
-    height: 56,
-    paddingHorizontal: Spacing.xl,
-  },
-  fullWidth: {
-    width: '100%',
-  },
-  disabled: {
-    opacity: 0.5,
+    borderRadius: BorderRadius.md,
+    borderWidth: 1,
+    borderColor: 'transparent',
   },
   outline: {
     borderWidth: 1,
   },
-  textWithIcon: {
-    marginLeft: Spacing.sm,
+  disabled: {
+    opacity: 0.6,
+  },
+  text: {
+    fontWeight: Typography.weights.semibold as any,
+    textAlign: 'center',
+  },
+  loader: {
+    marginRight: Spacing.xs,
   },
 });

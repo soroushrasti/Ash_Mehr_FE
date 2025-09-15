@@ -155,47 +155,47 @@ export default function AdminDetailsPage() {
   return (
     <ThemedView style={[styles.container, { backgroundColor }]}>
       <AppHeader
-        title={`${adminDetails.firstName} ${adminDetails.lastName}`}
-        subtitle="جزئیات مدیر"
+        title={`${adminDetails.FirstName} ${adminDetails.LastName}`}
+        subtitle="جزئیات نماینده"
       />
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         {/* Role Badge */}
         <View style={[styles.roleSection, { backgroundColor: surfaceColor, borderColor }]}>
-          <View style={[styles.roleBadge, { backgroundColor: getRoleColor(adminDetails.role) }]}>
+          <View style={[styles.roleBadge, { backgroundColor: getRoleColor(adminDetails.UserRole) }]}>
             <ThemedText style={styles.roleText}>
-              {getRoleLabel(adminDetails.role)}
+              {getRoleLabel(adminDetails.UserRole)}
             </ThemedText>
           </View>
         </View>
 
         {/* Personal Information */}
         <DetailSection title="اطلاعات شخصی">
-          <DetailRow label="نام" value={adminDetails.firstName} />
-          <DetailRow label="نام خانوادگی" value={adminDetails.lastName} />
-          <DetailRow label="کد ملی" value={adminDetails.nationalId} />
-          <DetailRow label="شماره تلفن" value={adminDetails.phone} />
-          <DetailRow label="ایمیل" value={adminDetails.email} />
+          <DetailRow label="نام" value={adminDetails.FirstName} />
+          <DetailRow label="نام خانوادگی" value={adminDetails.LastName} />
+          <DetailRow label="کد ملی" value={adminDetails.NationalID} />
+          <DetailRow label="شماره تلفن" value={adminDetails.Phone} />
+          <DetailRow label="ایمیل" value={adminDetails.Email} />
           <DetailRow label="تاریخ تولد" value={adminDetails.birthDate} />
         </DetailSection>
 
         {/* Address Information */}
         <DetailSection title="اطلاعات آدرس">
-          <DetailRow label="استان" value={adminDetails.province} />
-          <DetailRow label="شهر" value={adminDetails.city} />
+          <DetailRow label="استان" value={adminDetails.Province} />
+          <DetailRow label="شهر" value={adminDetails.City} />
           <DetailRow label="آدرس" value={adminDetails.address} />
-          <DetailRow label="کد پستی" value={adminDetails.postalCode} />
-          {adminDetails.latitude && adminDetails.longitude && (
+          <DetailRow label="کد پستی" value={adminDetails.PostCode} />
+          {adminDetails.Latitude && adminDetails.Longitude && (
             <>
-              <DetailRow label="عرض جغرافیایی" value={adminDetails.latitude.toString()} />
-              <DetailRow label="طول جغرافیایی" value={adminDetails.longitude.toString()} />
+              <DetailRow label="عرض جغرافیایی" value={adminDetails.Latitude.toString()} />
+              <DetailRow label="طول جغرافیایی" value={adminDetails.Longitude.toString()} />
             </>
           )}
         </DetailSection>
 
         {/* Administrative Information */}
         <DetailSection title="اطلاعات اداری">
-          <DetailRow label="نقش" value={getRoleLabel(adminDetails.role)} />
+          <DetailRow label="نقش" value={getRoleLabel(adminDetails.UserRole)} />
           <DetailRow label="دپارتمان" value={adminDetails.department} />
           {adminDetails.permissions && adminDetails.permissions.length > 0 && (
             <View style={styles.permissionsContainer}>
@@ -223,9 +223,9 @@ export default function AdminDetailsPage() {
 
         {/* System Information */}
         <DetailSection title="اطلاعات سیستم">
-          <DetailRow label="شناسه ثبت" value={adminDetails.admin_id} />
-          <DetailRow label="تاریخ ثبت" value={adminDetails.createdAt} />
-          <DetailRow label="آخرین به‌روزرسانی" value={adminDetails.updatedAt} />
+          <DetailRow label="شناسه ثبت" value={adminDetails.AdminID} />
+          <DetailRow label="تاریخ ثبت" value={adminDetails.CreatedDate} />
+          <DetailRow label="آخرین به‌روزرسانی" value={adminDetails.UpdatedDate} />
           <DetailRow label="آخرین ورود" value={adminDetails.lastLogin} />
         </DetailSection>
 
@@ -234,7 +234,7 @@ export default function AdminDetailsPage() {
           <Button
             title="ویرایش اطلاعات"
             onPress={handleEdit}
-            style={[styles.actionButton, { backgroundColor: getRoleColor(adminDetails.role) }]}
+            style={[styles.actionButton, { backgroundColor: getRoleColor(adminDetails.UserRole) }]}
           />
           <Button
             title="بازگشت"

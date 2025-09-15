@@ -137,35 +137,36 @@ export default function NeedyDetailsPage() {
   }
 
   return (
+
     <ThemedView style={[styles.container, { backgroundColor }]}>
       <AppHeader
-        title={`${needyDetails.firstName} ${needyDetails.lastName}`}
+       title={`${needyDetails.FirstName} ${needyDetails.LastName}`}
         subtitle="جزئیات مددجو"
       />
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         {/* Personal Information */}
         <DetailSection title="اطلاعات شخصی">
-          <DetailRow label="نام" value={needyDetails.firstName} />
-          <DetailRow label="نام خانوادگی" value={needyDetails.lastName} />
-          <DetailRow label="کد ملی" value={needyDetails.nationalId} />
-          <DetailRow label="شماره تلفن" value={needyDetails.phone} />
-          <DetailRow label="ایمیل" value={needyDetails.email} />
+          <DetailRow label="نام" value={needyDetails.FirstName} />
+          <DetailRow label="نام خانوادگی" value={needyDetails.LastName} />
+          <DetailRow label="کد ملی" value={needyDetails.NationalID} />
+          <DetailRow label="شماره تلفن" value={needyDetails.Phone} />
+          <DetailRow label="ایمیل" value={needyDetails.Email} />
           <DetailRow label="تاریخ تولد" value={needyDetails.birthDate} />
           <DetailRow label="وضعیت تأهل" value={needyDetails.maritalStatus} />
-          <DetailRow label="تعداد فرزندان" value={needyDetails.numberOfChildren} />
+          <DetailRow label="تعداد فرزندان" value={needyDetails.NumberOfChildren} />
         </DetailSection>
 
         {/* Address Information */}
         <DetailSection title="اطلاعات آدرس">
-          <DetailRow label="استان" value={needyDetails.province} />
-          <DetailRow label="شهر" value={needyDetails.city} />
-          <DetailRow label="آدرس" value={needyDetails.address} />
-          <DetailRow label="کد پستی" value={needyDetails.postalCode} />
+          <DetailRow label="استان" value={needyDetails.Province} />
+          <DetailRow label="شهر" value={needyDetails.City} />
+          <DetailRow label="آدرس" value={needyDetails.Address} />
+          <DetailRow label="کد پستی" value={needyDetails.PostalCode} />
           {needyDetails.latitude && needyDetails.longitude && (
             <>
-              <DetailRow label="عرض جغرافیایی" value={needyDetails.latitude.toString()} />
-              <DetailRow label="طول جغرافیایی" value={needyDetails.longitude.toString()} />
+              <DetailRow label="عرض جغرافیایی" value={needyDetails.Latitude.toString()} />
+              <DetailRow label="طول جغرافیایی" value={needyDetails.Longitude.toString()} />
             </>
           )}
         </DetailSection>
@@ -210,9 +211,9 @@ export default function NeedyDetailsPage() {
 
         {/* System Information */}
         <DetailSection title="اطلاعات سیستم">
-          <DetailRow label="شناسه ثبت" value={needyDetails.register_id} />
-          <DetailRow label="تاریخ ثبت" value={needyDetails.createdAt} />
-          <DetailRow label="آخرین به‌روزرسانی" value={needyDetails.updatedAt} />
+          <DetailRow label="شناسه ثبت" value={needyDetails.RegisterID} />
+          <DetailRow label="تاریخ ثبت" value={needyDetails.CreatedDate} />
+          <DetailRow label="آخرین به‌روزرسانی" value={needyDetails.UpdatedDate} />
         </DetailSection>
 
         {/* Action Buttons */}

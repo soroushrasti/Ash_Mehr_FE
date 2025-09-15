@@ -75,22 +75,22 @@ export default function EditAdminPage() {
       if (response.success && response.data) {
         const data = response.data;
         setFormData({
-          firstName: data.firstName || '',
-          lastName: data.lastName || '',
-          nationalId: data.nationalId || '',
-          phone: data.phone || '',
-          email: data.email || '',
+          firstName: data.FirstName || '',
+          lastName: data.LastName || '',
+          nationalId: data.NationalID || '',
+          phone: data.Phone || '',
+          email: data.Email || '',
           address: data.address || '',
-          city: data.city || '',
-          province: data.province || '',
-          postalCode: data.postalCode || '',
+          city: data.City || '',
+          province: data.Province || '',
+          postalCode: data.PostCode || '',
           birthDate: data.birthDate || '',
-          role: data.role || '',
+          role: data.UserRole || '',
           department: data.department || '',
           emergencyContact: data.emergencyContact || '',
           emergencyPhone: data.emergencyPhone || '',
-          latitude: data.latitude?.toString() || '',
-          longitude: data.longitude?.toString() || '',
+          latitude: data.Latitude?.toString() || '',
+          longitude: data.Longitude?.toString() || '',
         });
       } else {
         Alert.alert('خطا', 'دریافت اطلاعات نماینده با خطا مواجه شد');
@@ -226,7 +226,7 @@ export default function EditAdminPage() {
 
   return (
     <ThemedView style={[styles.container, { backgroundColor }]}>
-      <AppHeader title="ویرایش مدیر" subtitle="ویرایش اطلاعات مدیر" />
+      <AppHeader title="ویرایش نماینده" subtitle="ویرایش اطلاعات نماینده" />
 
       <KeyboardAwareContainer>
         <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
@@ -241,7 +241,7 @@ export default function EditAdminPage() {
               value={formData.firstName}
               onChangeText={(value) => updateFormData('firstName', value)}
               error={errors.firstName}
-              placeholder="نام"
+              placeholder={formData.firstName}
             />
 
             <InputField
@@ -249,7 +249,7 @@ export default function EditAdminPage() {
               value={formData.lastName}
               onChangeText={(value) => updateFormData('lastName', value)}
               error={errors.lastName}
-              placeholder="نام خانوادگی"
+              placeholder={formData.lastName}
             />
 
             <InputField
@@ -257,7 +257,7 @@ export default function EditAdminPage() {
               value={formData.nationalId}
               onChangeText={(value) => updateFormData('nationalId', value)}
               error={errors.nationalId}
-              placeholder="کد ملی ۱۰ رقمی"
+              placeholder={formData.nationalId}
               keyboardType="numeric"
               maxLength={10}
             />
@@ -267,7 +267,7 @@ export default function EditAdminPage() {
               value={formData.phone}
               onChangeText={(value) => updateFormData('phone', value)}
               error={errors.phone}
-              placeholder="09xxxxxxxxx"
+              placeholder={formData.phone}
               keyboardType="phone-pad"
               maxLength={11}
             />
@@ -277,7 +277,7 @@ export default function EditAdminPage() {
               value={formData.email}
               onChangeText={(value) => updateFormData('email', value)}
               error={errors.email}
-              placeholder="example@email.com"
+              placeholder={formData.email}
               keyboardType="email-address"
             />
 
@@ -285,7 +285,7 @@ export default function EditAdminPage() {
               label="تاریخ تولد"
               value={formData.birthDate}
               onChangeText={(value) => updateFormData('birthDate', value)}
-              placeholder="1370/01/01"
+              placeholder={formData.birthDate}
             />
           </View>
 
@@ -300,7 +300,7 @@ export default function EditAdminPage() {
               value={formData.province}
               onChangeText={(value) => updateFormData('province', value)}
               error={errors.province}
-              placeholder="استان"
+              placeholder={formData.province}
             />
 
             <InputField
@@ -308,7 +308,7 @@ export default function EditAdminPage() {
               value={formData.city}
               onChangeText={(value) => updateFormData('city', value)}
               error={errors.city}
-              placeholder="شهر"
+              placeholder={formData.city}
             />
 
             <InputField
@@ -316,7 +316,7 @@ export default function EditAdminPage() {
               value={formData.address}
               onChangeText={(value) => updateFormData('address', value)}
               error={errors.address}
-              placeholder="آدرس کامل"
+              placeholder={formData.address}
               multiline
               numberOfLines={3}
             />
@@ -325,7 +325,7 @@ export default function EditAdminPage() {
               label="کد پستی"
               value={formData.postalCode}
               onChangeText={(value) => updateFormData('postalCode', value)}
-              placeholder="کد پستی ۱۰ رقمی"
+              placeholder={formData.postalCode}
               keyboardType="numeric"
               maxLength={10}
             />
@@ -364,7 +364,7 @@ export default function EditAdminPage() {
               label="دپارتمان"
               value={formData.department}
               onChangeText={(value) => updateFormData('department', value)}
-              placeholder="نام دپارتمان"
+              placeholder={formData.department}
             />
           </View>
 
@@ -378,14 +378,14 @@ export default function EditAdminPage() {
               label="نام مخاطب اضطراری"
               value={formData.emergencyContact}
               onChangeText={(value) => updateFormData('emergencyContact', value)}
-              placeholder="نام و نام خانوادگی"
+              placeholder={formData.emergencyContact}
             />
 
             <InputField
               label="شماره تلفن اضطراری"
               value={formData.emergencyPhone}
               onChangeText={(value) => updateFormData('emergencyPhone', value)}
-              placeholder="09xxxxxxxxx"
+              placeholder={formData.emergencyPhone}
               keyboardType="phone-pad"
               maxLength={11}
             />
@@ -401,7 +401,7 @@ export default function EditAdminPage() {
               label="عرض جغرافیایی"
               value={formData.latitude}
               onChangeText={(value) => updateFormData('latitude', value)}
-              placeholder="35.7219"
+              placeholder={formData.latitude}
               keyboardType="numeric"
             />
 
@@ -409,7 +409,7 @@ export default function EditAdminPage() {
               label="طول جغرافیایی"
               value={formData.longitude}
               onChangeText={(value) => updateFormData('longitude', value)}
-              placeholder="51.3347"
+              placeholder={formData.longitude}
               keyboardType="numeric"
             />
           </View>

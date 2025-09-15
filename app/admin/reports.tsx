@@ -67,7 +67,7 @@ export default function ReportsPage() {
   const handleDelete = (record: NeedyRecord) => {
     Alert.alert(
       'حذف مددجو',
-      `آیا از حذف ${record.name} ${record.lastName} اطمینان دارید؟`,
+      `آیا از حذف ${record.FirstName} ${record.LastName} اطمینان دارید؟`,
       [
         { text: 'انصراف', style: 'cancel' },
         {
@@ -75,9 +75,9 @@ export default function ReportsPage() {
           style: 'destructive',
           onPress: async () => {
             try {
-              const response = await apiService.deleteNeedy(record.id);
+              const response = await apiService.deleteNeedy(record.RegisterID);
               if (response.success) {
-                setNeedyRecords(prev => prev.filter(r => r.id !== record.id));
+                setNeedyRecords(prev => prev.filter(r => r.id !== record.RegisterID));
                 Alert.alert('موفقیت', 'مددجو با موفقیت حذف شد');
               } else {
                 Alert.alert('خطا', response.error || 'حذف با خطا مواجه شد');

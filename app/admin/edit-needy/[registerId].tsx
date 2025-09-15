@@ -80,15 +80,15 @@ export default function EditNeedyPage() {
       if (response.success && response.data) {
         const data = response.data;
         setFormData({
-          firstName: data.firstName || '',
-          lastName: data.lastName || '',
-          nationalId: data.nationalId || '',
-          phone: data.phone || '',
-          email: data.email || '',
-          address: data.address || '',
-          city: data.city || '',
-          province: data.province || '',
-          postalCode: data.postalCode || '',
+          firstName: data.FirstName || '',
+          lastName: data.LastName || '',
+          nationalId: data.NationalID || '',
+          phone: data.Phone || '',
+          email: data.Email || '',
+          address: data.Address || '',
+          city: data.City || '',
+          province: data.Province || '',
+          postalCode: data.PostalCode || '',
           birthDate: data.birthDate || '',
           maritalStatus: data.maritalStatus || '',
           numberOfChildren: data.numberOfChildren?.toString() || '',
@@ -97,8 +97,8 @@ export default function EditNeedyPage() {
           description: data.description || '',
           emergencyContact: data.emergencyContact || '',
           emergencyPhone: data.emergencyPhone || '',
-          latitude: data.latitude?.toString() || '',
-          longitude: data.longitude?.toString() || '',
+          latitude: data.Latitude?.toString() || '',
+          longitude: data.Longitude?.toString() || '',
         });
       } else {
         Alert.alert('خطا', 'دریافت اطلاعات مددجو با خطا مواجه شد');
@@ -238,7 +238,7 @@ export default function EditNeedyPage() {
               value={formData.firstName}
               onChangeText={(value) => updateFormData('firstName', value)}
               error={errors.firstName}
-              placeholder="نام"
+              placeholder={formData.firstName}
             />
 
             <InputField
@@ -246,7 +246,7 @@ export default function EditNeedyPage() {
               value={formData.lastName}
               onChangeText={(value) => updateFormData('lastName', value)}
               error={errors.lastName}
-              placeholder="نام خانوادگی"
+              placeholder={formData.lastName}
             />
 
             <InputField
@@ -254,7 +254,7 @@ export default function EditNeedyPage() {
               value={formData.nationalId}
               onChangeText={(value) => updateFormData('nationalId', value)}
               error={errors.nationalId}
-              placeholder="کد ملی ۱۰ رقمی"
+              placeholder={formData.nationalId}
               keyboardType="numeric"
               maxLength={10}
             />
@@ -264,7 +264,7 @@ export default function EditNeedyPage() {
               value={formData.phone}
               onChangeText={(value) => updateFormData('phone', value)}
               error={errors.phone}
-              placeholder="09xxxxxxxxx"
+              placeholder={formData.phone}
               keyboardType="phone-pad"
               maxLength={11}
             />
@@ -274,7 +274,7 @@ export default function EditNeedyPage() {
               value={formData.email}
               onChangeText={(value) => updateFormData('email', value)}
               error={errors.email}
-              placeholder="example@email.com"
+              placeholder={formData.email}
               keyboardType="email-address"
             />
 
@@ -282,21 +282,21 @@ export default function EditNeedyPage() {
               label="تاریخ تولد"
               value={formData.birthDate}
               onChangeText={(value) => updateFormData('birthDate', value)}
-              placeholder="1370/01/01"
+              placeholder={formData.birthDate}
             />
 
             <InputField
               label="وضعیت تأهل"
               value={formData.maritalStatus}
               onChangeText={(value) => updateFormData('maritalStatus', value)}
-              placeholder="مجرد/متأهل"
+              placeholder={formData.maritalStatus}
             />
 
             <InputField
               label="تعداد فرزندان"
               value={formData.numberOfChildren}
               onChangeText={(value) => updateFormData('numberOfChildren', value)}
-              placeholder="0"
+              placeholder={formData.numberOfChildren}
               keyboardType="numeric"
             />
           </View>
@@ -312,7 +312,7 @@ export default function EditNeedyPage() {
               value={formData.province}
               onChangeText={(value) => updateFormData('province', value)}
               error={errors.province}
-              placeholder="استان"
+              placeholder={formData.province}
             />
 
             <InputField
@@ -320,7 +320,7 @@ export default function EditNeedyPage() {
               value={formData.city}
               onChangeText={(value) => updateFormData('city', value)}
               error={errors.city}
-              placeholder="شهر"
+              placeholder={formData.city}
             />
 
             <InputField
@@ -328,7 +328,7 @@ export default function EditNeedyPage() {
               value={formData.address}
               onChangeText={(value) => updateFormData('address', value)}
               error={errors.address}
-              placeholder="آدرس کامل"
+              placeholder={formData.address}
               multiline
               numberOfLines={3}
             />
@@ -337,7 +337,7 @@ export default function EditNeedyPage() {
               label="کد پستی"
               value={formData.postalCode}
               onChangeText={(value) => updateFormData('postalCode', value)}
-              placeholder="کد پستی ۱۰ رقمی"
+              placeholder={formData.postalCode}
               keyboardType="numeric"
               maxLength={10}
             />
@@ -353,14 +353,14 @@ export default function EditNeedyPage() {
               label="وضعیت شغلی"
               value={formData.jobStatus}
               onChangeText={(value) => updateFormData('jobStatus', value)}
-              placeholder="بیکار/شاغل/بازنشسته/..."
+              placeholder={formData.jobStatus}
             />
 
             <InputField
               label="درآمد ماهانه (تومان)"
               value={formData.income}
               onChangeText={(value) => updateFormData('income', value)}
-              placeholder="0"
+              placeholder={formData.income}
               keyboardType="numeric"
             />
           </View>
@@ -375,14 +375,14 @@ export default function EditNeedyPage() {
               label="نام مخاطب اضطراری"
               value={formData.emergencyContact}
               onChangeText={(value) => updateFormData('emergencyContact', value)}
-              placeholder="نام و نام خانوادگی"
+              placeholder={formData.emergencyContact}
             />
 
             <InputField
               label="شماره تلفن اضطراری"
               value={formData.emergencyPhone}
               onChangeText={(value) => updateFormData('emergencyPhone', value)}
-              placeholder="09xxxxxxxxx"
+              placeholder={formData.emergencyPhone}
               keyboardType="phone-pad"
               maxLength={11}
             />
@@ -398,7 +398,7 @@ export default function EditNeedyPage() {
               label="عرض جغرافیایی"
               value={formData.latitude}
               onChangeText={(value) => updateFormData('latitude', value)}
-              placeholder="35.7219"
+              placeholder={formData.latitude}
               keyboardType="numeric"
             />
 
@@ -406,7 +406,7 @@ export default function EditNeedyPage() {
               label="طول جغرافیایی"
               value={formData.longitude}
               onChangeText={(value) => updateFormData('longitude', value)}
-              placeholder="51.3347"
+              placeholder={formData.longitude}
               keyboardType="numeric"
             />
           </View>
@@ -421,7 +421,7 @@ export default function EditNeedyPage() {
               label="توضیحات"
               value={formData.description}
               onChangeText={(value) => updateFormData('description', value)}
-              placeholder="توضیحات اضافی..."
+              placeholder={formData.description}
               multiline
               numberOfLines={4}
             />

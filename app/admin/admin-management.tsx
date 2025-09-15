@@ -69,13 +69,13 @@ export default function AdminManagementPage() {
   };
 
   const handleEdit = (record: AdminRecord) => {
-    router.push(`/admin/edit-admin/${record.register_id}`);
+    router.push(`/admin/edit-admin/${record.id}`);
   };
 
   const handleDelete = (record: AdminRecord) => {
     Alert.alert(
       'حذف نماینده',
-      `آیا از حذف ${record.firstName} ${record.lastName} اطمینان دارید؟`,
+      `آیا از حذف ${record.FirstName} ${record.LastName} اطمینان دارید؟`,
       [
         { text: 'انصراف', style: 'cancel' },
         {
@@ -170,7 +170,7 @@ export default function AdminManagementPage() {
           ]}
           numberOfLines={isHeader ? 1 : 2}
         >
-          {isHeader ? 'ادرس' : record.info}
+          {isHeader ? 'آدرس' : record.info}
         </ThemedText>
       </View>
 

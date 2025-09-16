@@ -143,7 +143,7 @@ export default function AdminHome() {
                 سلام، {userName || 'نماینده'}
               </ThemedText>
               <ThemedText style={[styles.subtitle, { color: textColor, opacity: 0.7 }]}>
-                پنل مدیریت کانون ایتام مهر راستی
+                پنل مدیریت کامر
               </ThemedText>
             </View>
             <SignOutButton />

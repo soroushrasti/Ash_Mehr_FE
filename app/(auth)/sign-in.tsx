@@ -121,7 +121,7 @@ export default function SignInScreen() {
   if (mode === 'select') {
     return (
       <ThemedView type="container" style={styles.container}>
-        <AppHeader title="کانون ایتام مهر راستی" subtitle="خیریه‌ای برای همه" />
+        <AppHeader title="کامر" subtitle="خیریه‌ای برای همه" />
 
         <ScrollView
           showsVerticalScrollIndicator={false}
@@ -195,7 +195,7 @@ export default function SignInScreen() {
   if (mode === 'admin') {
     return (
       <ThemedView type="container" style={styles.container}>
-        <AppHeader title="کانون ایتام مهر راستی" subtitle="ورود مدیران و نمایندگان" />
+        <AppHeader title="کامر" subtitle="ورود مدیران و نمایندگان" />
 
         <KeyboardAvoidingView
           style={{ flex: 1 }}
@@ -263,7 +263,7 @@ export default function SignInScreen() {
   if (mode === 'needy') {
     return (
       <ThemedView type="container" style={styles.container}>
-        <AppHeader title="کانون ایتام مهر راستی" subtitle="ورود مددجویان" />
+        <AppHeader title="کامر" subtitle="ورود مددجویان" />
 
         <KeyboardAvoidingView
           style={{ flex: 1 }}

@@ -52,7 +52,7 @@ export default function HomeScreen() {
   return (
     <ThemedView type="container" style={styles.container}>
       <AppHeader
-        title="کانون ایتام مهر راستی 🏠"
+        title="کامر 🏠"
         subtitle="جایی برای مهربانی و امید"
         rightAction={<SignOutButton />}
       />

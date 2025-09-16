@@ -95,7 +95,7 @@ export default function GroupAdminSelectRole() {
             نیاز به راهنمایی دارید؟ 🤔
           </ThemedText>
           <ThemedText type="caption" center style={styles.helpText}>
-            برای سوالات مربوط به ثبت‌نام یا تعیین نوع مددجو، با نماینده کل تماس بگیرید
+            برای سوالات مربوط به ثبت‌نام یا تعیین نوع مددجو، با مدیر تماس بگیرید
           </ThemedText>
           <ThemedText type="caption" center style={[styles.contactInfo, { color: primaryColor }]}>
             تلفن: ۰۲۱-۱۲۳۴۵۶۷۸

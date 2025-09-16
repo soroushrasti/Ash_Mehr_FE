@@ -110,7 +110,7 @@ export default function AdminRegisterForm() {
 
   switch (roleParam) {
     case 'Admin':
-      roleTitle = 'نماینده کل';
+      roleTitle = 'مدیر';
       roleIcon = '👨‍💼';
       break;
     case 'GroupAdmin':

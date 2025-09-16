@@ -343,7 +343,7 @@ export default function EditAdminPage() {
               </ThemedText>
               <View style={styles.roleButtons}>
                 <Button
-                  title="نماینده کل"
+                  title="مدیر"
                   onPress={() => updateFormData('role', 'Admin')}
                   variant={formData.role === 'Admin' ? 'primary' : 'outline'}
                   style={styles.roleButton}

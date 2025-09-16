@@ -35,7 +35,7 @@ export function InputField({
   disabled = false,
   rightIcon,
   leftIcon,
-  rtl = true,
+  rtl = true, // Default to RTL for Farsi
   required = false,
 }: InputFieldProps) {
   const [isFocused, setIsFocused] = useState(false);
@@ -55,11 +55,11 @@ export function InputField({
   };
 
   return (
-    <ThemedView style={styles.container}>
+    <ThemedView style={styles.container} rtl={rtl}>
       {label && (
         <ThemedText type="caption" weight="medium" style={styles.label} rtl={rtl}>
           {label}
-          {required && <ThemedText style={[styles.required, { color: errorColor }]}> *</ThemedText>}
+          {required && <ThemedText style={[styles.required, { color: errorColor }]} rtl={rtl}> *</ThemedText>}
         </ThemedText>
       )}
 
@@ -68,8 +68,10 @@ export function InputField({
         { backgroundColor, borderColor: getBorderColor() },
         multiline && styles.multilineContainer,
         disabled && styles.disabled,
-      ].filter(Boolean)}>
-        {leftIcon && <View style={styles.leftIcon}>{leftIcon}</View>}
+        rtl && styles.rtlInputContainer,
+      ]}>
+        {rtl && rightIcon && <View style={styles.rightIcon}>{rightIcon}</View>}
+        {!rtl && leftIcon && <View style={styles.leftIcon}>{leftIcon}</View>}
 
         <TextInput
           style={[
@@ -77,7 +79,7 @@ export function InputField({
             { color: textColor },
             multiline && styles.multilineInput,
             rtl && styles.rtlInput,
-          ].filter(Boolean)}
+          ]}
           value={value}
           onChangeText={onChangeText}
           placeholder={placeholder}
@@ -86,28 +88,29 @@ export function InputField({
           keyboardType={keyboardType}
           multiline={multiline}
           numberOfLines={numberOfLines}
+          editable={!disabled}
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
-          editable={!disabled}
           textAlign={rtl ? 'right' : 'left'}
         />
 
         {secureTextEntry && (
           <TouchableOpacity
-            style={styles.eyeIcon}
+            style={rtl ? styles.leftIcon : styles.rightIcon}
             onPress={() => setShowPassword(!showPassword)}
           >
-            <ThemedText style={{ color: placeholderColor }}>
-              {showPassword ? '👁️' : '👁️‍🗨️'}
+            <ThemedText style={styles.eyeIcon}>
+              {showPassword ? '🙈' : '👁️'}
             </ThemedText>
           </TouchableOpacity>
         )}
 
-        {rightIcon && <View style={styles.rightIcon}>{rightIcon}</View>}
+        {rtl && leftIcon && <View style={styles.leftIcon}>{leftIcon}</View>}
+        {!rtl && rightIcon && <View style={styles.rightIcon}>{rightIcon}</View>}
       </View>
 
       {error && (
-        <ThemedText type="caption" style={[styles.error, { color: errorColor }]} rtl={rtl}>
+        <ThemedText type="caption" style={[styles.errorText, { color: errorColor }]} rtl={rtl}>
           {error}
         </ThemedText>
       )}
@@ -120,7 +123,7 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.md,
   },
   label: {
-    marginBottom: Spacing.sm,
+    marginBottom: Spacing.xs,
   },
   required: {
     fontSize: Typography.sizes.sm,
@@ -129,26 +132,30 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     borderWidth: 1,
-    borderRadius: BorderRadius.lg,
+    borderRadius: BorderRadius.md,
     paddingHorizontal: Spacing.md,
-    minHeight: 48,
+    minHeight: Layout.inputHeight,
   },
-  multilineContainer: {
-    minHeight: 80,
-    alignItems: 'flex-start',
-    paddingVertical: Spacing.md,
+  rtlInputContainer: {
+    flexDirection: 'row-reverse',
   },
   input: {
     flex: 1,
-    fontSize: Typography.fontSize.base,
-    fontFamily: Typography.fontFamily.regular,
+    fontSize: Typography.sizes.md,
+    paddingVertical: Spacing.sm,
+  },
+  rtlInput: {
+    textAlign: 'right',
+    writingDirection: 'rtl',
+  },
+  multilineContainer: {
+    minHeight: Layout.inputHeight * 2,
+    alignItems: 'flex-start',
+    paddingVertical: Spacing.sm,
   },
   multilineInput: {
     textAlignVertical: 'top',
-  },
-  rtlInput: {
-    // Removed invalid writingDirection property
-    // RTL is handled by textAlign prop instead
+    minHeight: Layout.inputHeight,
   },
   leftIcon: {
     marginRight: Spacing.sm,
@@ -157,13 +164,12 @@ const styles = StyleSheet.create({
     marginLeft: Spacing.sm,
   },
   eyeIcon: {
-    marginLeft: Spacing.sm,
-    padding: Spacing.xs,
+    fontSize: 18,
   },
-  error: {
+  errorText: {
     marginTop: Spacing.xs,
   },
   disabled: {
-    opacity: 0.5,
+    opacity: 0.6,
   },
 });

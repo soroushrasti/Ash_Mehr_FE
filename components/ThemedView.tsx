@@ -14,6 +14,7 @@ export type ThemedViewProps = ViewProps & {
   rounded?: keyof typeof BorderRadius;
   shadow?: keyof typeof Shadows;
   center?: boolean;
+  rtl?: boolean;
 };
 
 export function ThemedView({
@@ -26,6 +27,7 @@ export function ThemedView({
   rounded,
   shadow,
   center = false,
+  rtl = true, // Default to RTL for Farsi support
   children,
   ...otherProps
 }: ThemedViewProps) {
@@ -53,16 +55,17 @@ export function ThemedView({
     <View
       style={[
         { backgroundColor },
-        type === 'container' ? styles.container : undefined,
-        type === 'card' ? styles.card : undefined,
-        type === 'section' ? styles.section : undefined,
-        padding ? { padding: Spacing[padding] } : undefined,
-        margin ? { margin: Spacing[margin] } : undefined,
-        rounded ? { borderRadius: BorderRadius[rounded] } : undefined,
+        type === 'card' && styles.card,
+        type === 'container' && styles.container,
+        type === 'section' && styles.section,
+        rtl && styles.rtlContainer,
+        padding && { padding: Spacing[padding] },
+        margin && { margin: Spacing[margin] },
+        rounded && { borderRadius: BorderRadius[rounded] },
+        center && styles.center,
         shadowStyle,
-        center ? styles.center : undefined,
-        style
-      ].filter(Boolean)}
+        style,
+      ]}
       {...otherProps}
     >
       {content}
@@ -71,16 +74,13 @@ export function ThemedView({
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: Spacing.lg,
-  },
   card: {
+    padding: Spacing.md,
     borderRadius: BorderRadius.lg,
+    ...Shadows.small,
+  },
+  container: {
     padding: Spacing.lg,
-    marginVertical: Spacing.sm,
-    ...Shadows.md,
-    shadowColor: '#000',
   },
   section: {
     marginVertical: Spacing.md,
@@ -88,5 +88,8 @@ const styles = StyleSheet.create({
   center: {
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  rtlContainer: {
+    direction: 'rtl' as any,
   },
 });

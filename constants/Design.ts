@@ -1,4 +1,9 @@
 // Design System Constants
+import { I18nManager } from 'react-native';
+
+// Enable RTL for the entire app
+I18nManager.allowRTL(true);
+I18nManager.forceRTL(true);
 
 export const Spacing = {
   xs: 4,
@@ -17,6 +22,13 @@ export const BorderRadius = {
   xl: 16,
   xxl: 24,
   full: 9999,
+};
+
+// RTL Support
+export const RTL = {
+  textAlign: 'right' as const,
+  writingDirection: 'rtl' as const,
+  flexDirection: 'row-reverse' as const,
 };
 
 export const Typography = {
@@ -65,6 +77,11 @@ export const Typography = {
     normal: 1.4,
     relaxed: 1.6,
     loose: 1.8,
+  },
+  // RTL text styles
+  rtl: {
+    textAlign: 'right' as const,
+    writingDirection: 'rtl' as const,
   },
 };
 

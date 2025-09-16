@@ -6,7 +6,7 @@ import { ThemedView } from '@/components/ThemedView';
 import { ThemedText } from '@/components/ThemedText';
 import { SignOutButton } from '@/components/SignOutButton';
 import { useThemeColor } from '@/hooks/useThemeColor';
-import { Spacing, BorderRadius, Shadows, Typography } from '@/constants/Design';
+import { Spacing, BorderRadius, Shadows, Typography, RTL } from '@/constants/Design';
 import NeedyMap from '@/components/NeedyMap';
 import { apiService } from '@/services/apiService';
 import type { InfoAdminResponse } from '@/types/api';
@@ -117,7 +117,7 @@ export default function AdminHome() {
   const needyCount = needyInfo?.numberNeedyPersons || mapPoints.length;
 
   return (
-    <ThemedView style={[styles.container, { backgroundColor }]}>
+    <ThemedView style={[styles.container, { backgroundColor }]} rtl={true}>
       <ScrollView
         contentContainerStyle={styles.scrollContainer}
         showsVerticalScrollIndicator={false}
@@ -129,6 +129,7 @@ export default function AdminHome() {
         <Animated.View
           style={[
             styles.header,
+            styles.rtlHeader,
             {
               backgroundColor: surfaceColor,
               borderColor,
@@ -138,12 +139,12 @@ export default function AdminHome() {
           ]}
         >
           <View style={styles.headerContent}>
-            <View>
-              <ThemedText style={[styles.greeting, { color: textColor }]}>
+            <View style={styles.rtlHeaderText}>
+              <ThemedText style={[styles.greeting, { color: textColor }]} rtl={true}>
                 سلام، {userName || 'نماینده'}
               </ThemedText>
-              <ThemedText style={[styles.subtitle, { color: textColor, opacity: 0.7 }]}>
-                پنل مدیریت کامر
+              <ThemedText style={[styles.subtitle, { color: textColor, opacity: 0.7 }]} rtl={true}>
+                پنل مدیریت آشیانه مهر
               </ThemedText>
             </View>
             <SignOutButton />
@@ -154,6 +155,7 @@ export default function AdminHome() {
         <Animated.View
           style={[
             styles.statsContainer,
+            styles.rtlStatsContainer,
             {
               opacity: fadeAnim,
               transform: [{ translateY: slideAnim }]
@@ -168,8 +170,8 @@ export default function AdminHome() {
               colors={[primaryColor, `${primaryColor}CC`]}
               style={styles.cardGradient}
             >
-              <ThemedText style={styles.statNumber}>{needyCount}</ThemedText>
-              <ThemedText style={styles.statLabel}>خانواده مددجو</ThemedText>
+              <ThemedText style={styles.statNumber} rtl={false}>{needyCount}</ThemedText>
+              <ThemedText style={styles.statLabel} rtl={true}>خانواده مددجو</ThemedText>
             </LinearGradient>
           </TouchableOpacity>
 
@@ -181,10 +183,10 @@ export default function AdminHome() {
               colors={[volunteerColor, `${volunteerColor}CC`]}
               style={styles.cardGradient}
             >
-              <ThemedText style={styles.statNumber}>
+              <ThemedText style={styles.statNumber} rtl={false}>
                 {adminInfo?.numberAdminPersons || 0}
               </ThemedText>
-              <ThemedText style={styles.statLabel}>نماینده</ThemedText>
+              <ThemedText style={styles.statLabel} rtl={true}>نماینده</ThemedText>
             </LinearGradient>
           </TouchableOpacity>
 
@@ -196,10 +198,10 @@ export default function AdminHome() {
               colors={[donationColor, `${donationColor}CC`]}
               style={styles.cardGradient}
             >
-              <ThemedText style={styles.statNumber}>
+              <ThemedText style={styles.statNumber} rtl={false}>
                 {adminInfo?.numberGroupAdminPersons || 0}
               </ThemedText>
-              <ThemedText style={styles.statLabel}>نماینده گروه</ThemedText>
+              <ThemedText style={styles.statLabel} rtl={true}>نماینده گروه</ThemedText>
             </LinearGradient>
           </TouchableOpacity>
         </Animated.View>
@@ -208,6 +210,7 @@ export default function AdminHome() {
         <Animated.View
           style={[
             styles.mapSection,
+            styles.rtlSection,
             {
               backgroundColor: surfaceColor,
               borderColor,
@@ -216,10 +219,10 @@ export default function AdminHome() {
             }
           ]}
         >
-          <ThemedText style={[styles.sectionTitle, { color: textColor }]}>
+          <ThemedText style={[styles.sectionTitle, { color: textColor }]} rtl={true}>
             نقشه خانواده‌های مددجو
           </ThemedText>
-          <ThemedText style={[styles.sectionSubtitle, { color: textColor, opacity: 0.7 }]}>
+          <ThemedText style={[styles.sectionSubtitle, { color: textColor, opacity: 0.7 }]} rtl={true}>
             موقعیت جغرافیایی خانواده‌ها و نمایندگان
           </ThemedText>
 
@@ -241,104 +244,65 @@ export default function AdminHome() {
         <Animated.View
           style={[
             styles.actionsSection,
+            styles.rtlSection,
             {
               opacity: fadeAnim,
               transform: [{ translateY: slideAnim }]
             }
           ]}
         >
-          <ThemedText style={[styles.sectionTitle, { color: textColor }]}>
+          <ThemedText style={[styles.sectionTitle, { color: textColor }]} rtl={true}>
             دسترسی سریع
           </ThemedText>
 
           <View style={styles.actionGrid}>
             {/* Registration Actions */}
             <TouchableOpacity
-              style={[styles.actionCard, styles.registrationCard, { backgroundColor: primaryColor, borderColor: primaryColor }]}
+              style={[styles.actionCard, styles.registrationCard, styles.rtlActionCard, { backgroundColor: primaryColor, borderColor: primaryColor }]}
               onPress={() => router.push('/admin/register/form')}
             >
               <View style={styles.actionCardHeader}>
                 <ThemedText style={styles.registrationIcon}>👨‍👩‍👧‍👦</ThemedText>
-                <ThemedText style={[styles.actionTitle, { color: '#FFFFFF' }]}>
+                <ThemedText style={[styles.actionTitle, { color: '#FFFFFF' }]} rtl={true}>
                   ثبت خانواده مددجو
                 </ThemedText>
               </View>
-              <ThemedText style={[styles.actionDescription, { color: '#FFFFFF', opacity: 0.9 }]}>
+              <ThemedText style={[styles.actionDescription, { color: '#FFFFFF', opacity: 0.9 }]} rtl={true}>
                 افزودن خانواده مددجو جدید به سیستم
               </ThemedText>
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={[styles.actionCard, styles.registrationCard, { backgroundColor: volunteerColor, borderColor: volunteerColor }]}
+              style={[styles.actionCard, styles.registrationCard, styles.rtlActionCard, { backgroundColor: volunteerColor, borderColor: volunteerColor }]}
               onPress={() => router.push('/admin/register/admin-user')}
             >
               <View style={styles.actionCardHeader}>
                 <ThemedText style={styles.registrationIcon}>👨‍💼</ThemedText>
-                <ThemedText style={[styles.actionTitle, { color: '#FFFFFF' }]}>
+                <ThemedText style={[styles.actionTitle, { color: '#FFFFFF' }]} rtl={true}>
                   ثبت نماینده جدید
                 </ThemedText>
               </View>
-              <ThemedText style={[styles.actionDescription, { color: '#FFFFFF', opacity: 0.9 }]}>
+              <ThemedText style={[styles.actionDescription, { color: '#FFFFFF', opacity: 0.9 }]} rtl={true}>
                 افزودن نماینده یا نماینده گروه جدید
               </ThemedText>
             </TouchableOpacity>
 
-            <TouchableOpacity
-              style={[styles.actionCard, styles.registrationCard, { backgroundColor: donationColor, borderColor: donationColor }]}
-              onPress={() => router.push('/admin/register/group-admin-user')}
-            >
-              <View style={styles.actionCardHeader}>
-                <ThemedText style={styles.registrationIcon}>👥</ThemedText>
-                <ThemedText style={[styles.actionTitle, { color: '#FFFFFF' }]}>ثبت نماینده گروه</ThemedText>
-              </View>
-              <ThemedText style={[styles.actionDescription, { color: '#FFFFFF', opacity: 0.9 }]}>افزودن نماینده گروه جدید</ThemedText>
-            </TouchableOpacity>
-
             {/* Management Actions */}
             <TouchableOpacity
-              style={[styles.actionCard, { backgroundColor: surfaceColor, borderColor }]}
+              style={[styles.actionCard, styles.rtlActionCard, { backgroundColor: surfaceColor, borderColor }]}
               onPress={() => router.push('/admin/volunteer-management')}
             >
               <View style={styles.actionCardHeader}>
                 <ThemedText style={styles.managementIcon}>📋</ThemedText>
-                <ThemedText style={[styles.actionTitle, { color: primaryColor }]}>
+                <ThemedText style={[styles.actionTitle, { color: primaryColor }]} rtl={true}>
                   مدیریت مددجویان
                 </ThemedText>
               </View>
-              <ThemedText style={[styles.actionDescription, { color: textColor, opacity: 0.7 }]}>
+              <ThemedText style={[styles.actionDescription, { color: textColor, opacity: 0.7 }]} rtl={true}>
                 مشاهده و مدیریت خانواده‌های مددجو
               </ThemedText>
             </TouchableOpacity>
 
-            <TouchableOpacity
-              style={[styles.actionCard, { backgroundColor: surfaceColor, borderColor }]}
-              onPress={() => router.push('/admin/admin-management')}
-            >
-              <View style={styles.actionCardHeader}>
-                <ThemedText style={styles.managementIcon}>⚙️</ThemedText>
-                <ThemedText style={[styles.actionTitle, { color: volunteerColor }]}>
-                  مدیریت کاربران
-                </ThemedText>
-              </View>
-              <ThemedText style={[styles.actionDescription, { color: textColor, opacity: 0.7 }]}>
-                مدیریت نمایندگان و نمایندگان گروه
-              </ThemedText>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[styles.actionCard, { backgroundColor: surfaceColor, borderColor }]}
-              onPress={() => router.push('/admin/reports')}
-            >
-              <View style={styles.actionCardHeader}>
-                <ThemedText style={styles.managementIcon}>📊</ThemedText>
-                <ThemedText style={[styles.actionTitle, { color: donationColor }]}>
-                  گزارش‌گیری
-                </ThemedText>
-              </View>
-              <ThemedText style={[styles.actionDescription, { color: textColor, opacity: 0.7 }]}>
-                مشاهده گزارش‌ها و آمار
-              </ThemedText>
-            </TouchableOpacity>
           </View>
         </Animated.View>
       </ScrollView>
@@ -361,24 +325,35 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.sm,
     ...Shadows.small,
   },
+  rtlHeader: {
+    direction: 'rtl',
+  },
   headerContent: {
-    flexDirection: 'row',
+    flexDirection: 'row-reverse',
     justifyContent: 'space-between',
     alignItems: 'center',
+  },
+  rtlHeaderText: {
+    alignItems: 'flex-end',
   },
   greeting: {
     fontSize: Typography.sizes.xl,
     fontWeight: Typography.weights.bold as any,
     marginBottom: Spacing.xs,
+    textAlign: 'right',
   },
   subtitle: {
     fontSize: Typography.sizes.sm,
+    textAlign: 'right',
   },
   statsContainer: {
-    flexDirection: 'row',
+    flexDirection: 'row-reverse',
     paddingHorizontal: Spacing.md,
     gap: Spacing.sm,
     marginBottom: Spacing.md,
+  },
+  rtlStatsContainer: {
+    writingDirection: 'rtl',
   },
   statCard: {
     flex: 1,
@@ -395,6 +370,7 @@ const styles = StyleSheet.create({
     fontWeight: Typography.weights.bold as any,
     color: '#FFFFFF',
     marginBottom: Spacing.xs,
+    textAlign: 'center',
   },
   statLabel: {
     fontSize: Typography.sizes.sm,
@@ -408,14 +384,19 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     ...Shadows.small,
   },
+  rtlSection: {
+    writingDirection: 'rtl',
+  },
   sectionTitle: {
     fontSize: Typography.sizes.lg,
     fontWeight: Typography.weights.semibold as any,
     marginBottom: Spacing.xs,
+    textAlign: 'right',
   },
   sectionSubtitle: {
     fontSize: Typography.sizes.sm,
     marginBottom: Spacing.md,
+    textAlign: 'right',
   },
   mapContainer: {
     height: 300,
@@ -438,33 +419,38 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     ...Shadows.small,
   },
+  rtlActionCard: {
+    writingDirection: 'rtl',
+  },
   registrationCard: {
     flexDirection: 'column',
     justifyContent: 'center',
-    alignItems: 'flex-start',
+    alignItems: 'flex-end',
   },
   actionCardHeader: {
-    flexDirection: 'row',
+    flexDirection: 'row-reverse',
     alignItems: 'center',
     marginBottom: Spacing.xs,
   },
   registrationIcon: {
     fontSize: 24,
-    marginLeft: Spacing.xs,
-    marginRight: Spacing.sm,
+    marginRight: Spacing.xs,
+    marginLeft: Spacing.sm,
   },
   managementIcon: {
     fontSize: 20,
-    marginLeft: Spacing.xs,
-    marginRight: Spacing.sm,
+    marginRight: Spacing.xs,
+    marginLeft: Spacing.sm,
   },
   actionTitle: {
     fontSize: Typography.sizes.md,
     fontWeight: Typography.weights.semibold as any,
     marginBottom: Spacing.xs,
+    textAlign: 'right',
   },
   actionDescription: {
     fontSize: Typography.sizes.sm,
     lineHeight: 20,
+    textAlign: 'right',
   },
 });

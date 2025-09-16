@@ -92,7 +92,7 @@ export default function AdminDetailsPage() {
   const getRoleLabel = (role: string) => {
     switch (role?.toLowerCase()) {
       case 'admin':
-        return 'نماینده کل';
+        return 'مدیر';
       case 'groupadmin':
         return 'نماینده گروه';
       default:

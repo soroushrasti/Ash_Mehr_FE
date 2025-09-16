@@ -8,6 +8,17 @@ import { useColorScheme } from '@/hooks/useColorScheme';
 import { useEffect } from 'react';
 import { Config } from '@/constants/Config';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { I18nManager, Platform } from 'react-native';
+
+// Enable RTL globally for the entire app
+if (!I18nManager.isRTL) {
+  I18nManager.allowRTL(true);
+  I18nManager.forceRTL(true);
+  if (Platform.OS !== 'web') {
+    // Reload the app to apply RTL changes on mobile
+    I18nManager.swapLeftAndRightInRTL(true);
+  }
+}
 
 function setupFetchLogger() {
   if (!Config.DEBUG_MODE) return;

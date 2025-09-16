@@ -166,7 +166,7 @@ export default function ReportsPage() {
   if (loading) {
     return (
       <ThemedView style={[styles.container, { backgroundColor }]}>
-        <AppHeader title="گزارش‌گیری" subtitle="مدیریت اطلاعات مددجویان" />
+        <AppHeader title="گزارش‌گیری" subtitle="گزارش‌گیری" />
         <View style={styles.loadingContainer}>
           <ThemedText>در حال بارگذاری...</ThemedText>
         </View>

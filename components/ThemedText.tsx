@@ -1,12 +1,13 @@
 import { Text, type TextProps, StyleSheet } from 'react-native';
 import { useThemeColor } from '@/hooks/useThemeColor';
-import { Typography } from '@/constants/Design';
+import { Typography, RTL } from '@/constants/Design';
 
 export type ThemedTextProps = TextProps & {
   lightColor?: string;
   darkColor?: string;
   type?: 'default' | 'title' | 'defaultSemiBold' | 'subtitle' | 'link' | 'heading1' | 'heading2' | 'body' | 'caption';
   weight?: 'light' | 'normal' | 'medium' | 'semibold' | 'bold' | 'extrabold';
+  rtl?: boolean;
 };
 
 export function ThemedText({
@@ -15,6 +16,7 @@ export function ThemedText({
   darkColor,
   type = 'default',
   weight,
+  rtl = true, // Default to RTL for Farsi
   ...rest
 }: ThemedTextProps) {
   const color = useThemeColor({ light: lightColor, dark: darkColor }, 'text');
@@ -23,6 +25,7 @@ export function ThemedText({
     <Text
       style={[
         styles.base,
+        rtl && styles.rtlText,
         type === 'default' ? styles.default : undefined,
         type === 'title' ? styles.title : undefined,
         type === 'defaultSemiBold' ? styles.defaultSemiBold : undefined,
@@ -44,6 +47,10 @@ export function ThemedText({
 const styles = StyleSheet.create({
   base: {
     fontFamily: Typography.fontFamily.regular,
+  },
+  rtlText: {
+    textAlign: RTL.textAlign,
+    writingDirection: RTL.writingDirection,
   },
   default: {
     fontSize: Typography.fontSize.base,
@@ -81,11 +88,11 @@ const styles = StyleSheet.create({
   },
   body: {
     fontSize: Typography.fontSize.base,
-    lineHeight: Typography.fontSize.base * Typography.lineHeight.relaxed,
+    lineHeight: Typography.fontSize.base * Typography.lineHeight.normal,
   },
   caption: {
     fontSize: Typography.fontSize.sm,
     lineHeight: Typography.fontSize.sm * Typography.lineHeight.normal,
-    opacity: 0.8,
+    fontWeight: Typography.weights.light as any,
   },
 });

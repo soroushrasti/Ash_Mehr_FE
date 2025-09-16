@@ -17,18 +17,22 @@ interface NeedyEditData {
   nationalId: string;
   phone: string;
   email: string;
-  address: string;
+  street: string;
   city: string;
   province: string;
-  postalCode: string;
+  age: string;
+  region:string;
+  gender: string;
+  nameFather: string;
+  husbandFirstName: string;
+  husbandLastName: string;
+  reasonMissingHusband: string;
+  underOrganizationName: string;
+  educationLevel: string;
+  postCode: string;
   birthDate: string;
-  maritalStatus: string;
-  numberOfChildren: string;
-  jobStatus: string;
-  income: string;
-  description: string;
-  emergencyContact: string;
-  emergencyPhone: string;
+  incomeForm: string;
+  underWhichAdmin: string;
   latitude: string;
   longitude: string;
 }
@@ -41,18 +45,22 @@ export default function EditNeedyPage() {
     nationalId: '',
     phone: '',
     email: '',
-    address: '',
+    street: '',
     city: '',
     province: '',
-    postalCode: '',
+    age: '',
+    region:'',
+    gender: '',
+    nameFather: '',
+    husbandFirstName: '',
+    husbandLastName: '',
+    reasonMissingHusband: '',
+    underOrganizationName: '',
+    educationLevel: '',
+    postCode: '',
     birthDate: '',
-    maritalStatus: '',
-    numberOfChildren: '',
-    jobStatus: '',
-    income: '',
-    description: '',
-    emergencyContact: '',
-    emergencyPhone: '',
+    incomeForm: '',
+    underWhichAdmin: '',
     latitude: '',
     longitude: '',
   });
@@ -85,18 +93,22 @@ export default function EditNeedyPage() {
           nationalId: data.NationalID || '',
           phone: data.Phone || '',
           email: data.Email || '',
-          address: data.Address || '',
+          street: data.Street || '',
           city: data.City || '',
           province: data.Province || '',
-          postalCode: data.PostalCode || '',
+          age: data.Age || '',
+          region:data.Region || '',
+          gender: data.Gender || '',
+          nameFather: data.NameFather || '',
+          husbandFirstName: data.HusbandFirstName || '',
+          husbandLastName: data.HusbandLastName || '',
+          reasonMissingHusband: data.ReasonMissingHusband || '',
+          underOrganizationName: data.UnderOrganizationName || '',
+          educationLevel: data.EducationLevel || '',
+          postCode: data.PostCode || '',
           birthDate: data.birthDate || '',
-          maritalStatus: data.maritalStatus || '',
-          numberOfChildren: data.numberOfChildren?.toString() || '',
-          jobStatus: data.jobStatus || '',
-          income: data.income?.toString() || '',
-          description: data.description || '',
-          emergencyContact: data.emergencyContact || '',
-          emergencyPhone: data.emergencyPhone || '',
+          incomeForm: data.income?.toString() || '',
+          underWhichAdmin: data.UnderWhichAdmin || '',
           latitude: data.Latitude?.toString() || '',
           longitude: data.Longitude?.toString() || '',
         });
@@ -161,18 +173,22 @@ export default function EditNeedyPage() {
         nationalId: formData.nationalId.trim(),
         phone: formData.phone.trim(),
         email: formData.email.trim() || undefined,
-        address: formData.address.trim(),
+        street: formData.address.trim(),
         city: formData.city.trim(),
         province: formData.province.trim(),
-        postalCode: formData.postalCode.trim() || undefined,
+        age: formData.age.trim(),
+        region:formData.region.trim(),
+        gender: formData.gender.trim(),
+        nameFather: formData.nameFather.trim(),
+        husbandFirstName: formData.husbandFirstName.trim(),
+        husbandLastName: formData.husbandLastName.trim(),
+        reasonMissingHusband: formData.reasonMissingHusband.trim(),
+        underOrganizationName: formData.underOrganizationName.trim(),
+        educationLevel: formData.educationLevel.trim(),
+        postCode: formData.postCode.trim() || undefined,
         birthDate: formData.birthDate.trim() || undefined,
-        maritalStatus: formData.maritalStatus.trim() || undefined,
-        numberOfChildren: formData.numberOfChildren ? parseInt(formData.numberOfChildren) : undefined,
-        jobStatus: formData.jobStatus.trim() || undefined,
-        income: formData.income ? parseFloat(formData.income) : undefined,
-        description: formData.description.trim() || undefined,
-        emergencyContact: formData.emergencyContact.trim() || undefined,
-        emergencyPhone: formData.emergencyPhone.trim() || undefined,
+        incomeForm: formData.income ? parseFloat(formData.income) : undefined,
+        underWhichAdmin: formData.underWhichAdmin.trim(),
         latitude: formData.latitude ? parseFloat(formData.latitude) : undefined,
         longitude: formData.longitude ? parseFloat(formData.longitude) : undefined,
       };
@@ -286,19 +302,54 @@ export default function EditNeedyPage() {
             />
 
             <InputField
-              label="وضعیت تأهل"
-              value={formData.maritalStatus}
-              onChangeText={(value) => updateFormData('maritalStatus', value)}
-              placeholder={formData.maritalStatus}
+              label="سن"
+              value={formData.age}
+              onChangeText={(value) => updateFormData('age', value)}
+              placeholder={formData.age}
             />
 
             <InputField
-              label="تعداد فرزندان"
-              value={formData.numberOfChildren}
-              onChangeText={(value) => updateFormData('numberOfChildren', value)}
-              placeholder={formData.numberOfChildren}
-              keyboardType="numeric"
+              label="جنسیت"
+              value={formData.gender}
+              onChangeText={(value) => updateFormData('gender', value)}
+              placeholder={formData.gender}
             />
+
+            <InputField
+              label="نام همسر"
+              value={formData.husbandFirstName}
+              onChangeText={(value) => updateFormData('HusbandFirstName', value)}
+              placeholder={formData.husbandFirstName}
+            />
+
+            <InputField
+              label="نام خانوادگی همسر"
+              value={formData.husbandLastName}
+              onChangeText={(value) => updateFormData('husbandLastName', value)}
+              placeholder={formData.husbandLastName}
+            />
+
+             <InputField
+               label="علت نبود همسر"
+               value={formData.reasonMissingHusband}
+               onChangeText={(value) => updateFormData('reasonMissingHusband', value)}
+               placeholder={formData.reasonMissingHusband}
+             />
+
+             <InputField
+               label="نام سازمان تحت حمایت"
+               value={formData.underOrganizationName}
+               onChangeText={(value) => updateFormData('underOrganizationName', value)}
+               placeholder={formData.underOrganizationName}
+             />
+
+              <InputField
+                label="سطح تحصیلات"
+                value={formData.educationLevel}
+                onChangeText={(value) => updateFormData('educationLevel', value)}
+                placeholder={formData.educationLevel}
+              />
+
           </View>
 
           {/* Address Information */}
@@ -325,10 +376,10 @@ export default function EditNeedyPage() {
 
             <InputField
               label="آدرس *"
-              value={formData.address}
-              onChangeText={(value) => updateFormData('address', value)}
-              error={errors.address}
-              placeholder={formData.address}
+              value={formData.street}
+              onChangeText={(value) => updateFormData('street', value)}
+              error={errors.street}
+              placeholder={formData.street}
               multiline
               numberOfLines={3}
             />
@@ -341,6 +392,15 @@ export default function EditNeedyPage() {
               keyboardType="numeric"
               maxLength={10}
             />
+
+             <InputField
+               label="منطقه"
+               value={formData.region}
+               onChangeText={(value) => updateFormData('region', value)}
+               error={errors.region}
+               placeholder={formData.region}
+             />
+
           </View>
 
           {/* Financial and Job Information */}
@@ -350,41 +410,11 @@ export default function EditNeedyPage() {
             </ThemedText>
 
             <InputField
-              label="وضعیت شغلی"
-              value={formData.jobStatus}
-              onChangeText={(value) => updateFormData('jobStatus', value)}
-              placeholder={formData.jobStatus}
-            />
-
-            <InputField
               label="درآمد ماهانه (تومان)"
-              value={formData.income}
-              onChangeText={(value) => updateFormData('income', value)}
-              placeholder={formData.income}
+              value={formData.incomeForm}
+              onChangeText={(value) => updateFormData('incomeForm', value)}
+              placeholder={formData.incomeForm}
               keyboardType="numeric"
-            />
-          </View>
-
-          {/* Emergency Contact */}
-          <View style={[styles.section, { backgroundColor: surfaceColor, borderColor }]}>
-            <ThemedText style={[styles.sectionTitle, { color: primaryColor }]}>
-              مخاطب اضطراری
-            </ThemedText>
-
-            <InputField
-              label="نام مخاطب اضطراری"
-              value={formData.emergencyContact}
-              onChangeText={(value) => updateFormData('emergencyContact', value)}
-              placeholder={formData.emergencyContact}
-            />
-
-            <InputField
-              label="شماره تلفن اضطراری"
-              value={formData.emergencyPhone}
-              onChangeText={(value) => updateFormData('emergencyPhone', value)}
-              placeholder={formData.emergencyPhone}
-              keyboardType="phone-pad"
-              maxLength={11}
             />
           </View>
 
@@ -408,22 +438,6 @@ export default function EditNeedyPage() {
               onChangeText={(value) => updateFormData('longitude', value)}
               placeholder={formData.longitude}
               keyboardType="numeric"
-            />
-          </View>
-
-          {/* Description */}
-          <View style={[styles.section, { backgroundColor: surfaceColor, borderColor }]}>
-            <ThemedText style={[styles.sectionTitle, { color: primaryColor }]}>
-              توضیحات
-            </ThemedText>
-
-            <InputField
-              label="توضیحات"
-              value={formData.description}
-              onChangeText={(value) => updateFormData('description', value)}
-              placeholder={formData.description}
-              multiline
-              numberOfLines={4}
             />
           </View>
 

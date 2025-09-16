@@ -17,17 +17,15 @@ interface AdminEditData {
   nationalId: string;
   phone: string;
   email: string;
-  address: string;
+  street: string;
   city: string;
   province: string;
-  postalCode: string;
-  birthDate: string;
-  role: string;
-  department: string;
-  emergencyContact: string;
-  emergencyPhone: string;
+  postCode: string;
+  userRole: string;
+  createdBy: string;
+  password: string;
   latitude: string;
-  longitude: string;
+  longitude: string
 }
 
 export default function EditAdminPage() {
@@ -38,15 +36,13 @@ export default function EditAdminPage() {
     nationalId: '',
     phone: '',
     email: '',
-    address: '',
+    street: '',
     city: '',
     province: '',
-    postalCode: '',
-    birthDate: '',
-    role: '',
-    department: '',
-    emergencyContact: '',
-    emergencyPhone: '',
+    postCode: '',
+    userRole: '',
+    createdBy: '',
+    password: '',
     latitude: '',
     longitude: '',
   });
@@ -80,17 +76,15 @@ export default function EditAdminPage() {
           nationalId: data.NationalID || '',
           phone: data.Phone || '',
           email: data.Email || '',
-          address: data.address || '',
+          street: data.Street || '',
           city: data.City || '',
           province: data.Province || '',
-          postalCode: data.PostCode || '',
-          birthDate: data.birthDate || '',
-          role: data.UserRole || '',
-          department: data.department || '',
-          emergencyContact: data.emergencyContact || '',
-          emergencyPhone: data.emergencyPhone || '',
+          postCode: data.PostCode || '',
+          userRole: data.UserRole || '',
+          createdBy: data.CreatedBy || '',
           latitude: data.Latitude?.toString() || '',
           longitude: data.Longitude?.toString() || '',
+          password: data.Password || ''
         });
       } else {
         Alert.alert('خطا', 'دریافت اطلاعات نماینده با خطا مواجه شد');
@@ -156,17 +150,15 @@ export default function EditAdminPage() {
         nationalId: formData.nationalId.trim(),
         phone: formData.phone.trim(),
         email: formData.email.trim() || undefined,
-        address: formData.address.trim(),
+        street: formData.street.trim(),
         city: formData.city.trim(),
         province: formData.province.trim(),
-        postalCode: formData.postalCode.trim() || undefined,
-        birthDate: formData.birthDate.trim() || undefined,
-        role: formData.role.trim(),
-        department: formData.department.trim() || undefined,
-        emergencyContact: formData.emergencyContact.trim() || undefined,
-        emergencyPhone: formData.emergencyPhone.trim() || undefined,
+        postCode: formData.postCode.trim() || undefined,
+        userRole: formData.userRole.trim(),
+        createdBy: formData.createdBy.trim() || undefined,
         latitude: formData.latitude ? parseFloat(formData.latitude) : undefined,
         longitude: formData.longitude ? parseFloat(formData.longitude) : undefined,
+        password: formData.password.trim()
       };
 
       const response = await apiService.editAdmin(registerId as string, apiData);
@@ -281,12 +273,13 @@ export default function EditAdminPage() {
               keyboardType="email-address"
             />
 
-            <InputField
-              label="تاریخ تولد"
-              value={formData.birthDate}
-              onChangeText={(value) => updateFormData('birthDate', value)}
-              placeholder={formData.birthDate}
-            />
+             <InputField
+               label="پسورد*"
+               value={formData.password}
+               onChangeText={(value) => updateFormData('password', value)}
+               placeholder={formData.password}
+             />
+
           </View>
 
           {/* Address Information */}
@@ -312,20 +305,20 @@ export default function EditAdminPage() {
             />
 
             <InputField
-              label="آدرس *"
-              value={formData.address}
+              label="خیابان *"
+              value={formData.street}
               onChangeText={(value) => updateFormData('address', value)}
               error={errors.address}
-              placeholder={formData.address}
+              placeholder={formData.street}
               multiline
               numberOfLines={3}
             />
 
             <InputField
               label="کد پستی"
-              value={formData.postalCode}
-              onChangeText={(value) => updateFormData('postalCode', value)}
-              placeholder={formData.postalCode}
+              value={formData.postCode}
+              onChangeText={(value) => updateFormData('postCode', value)}
+              placeholder={formData.postCode}
               keyboardType="numeric"
               maxLength={10}
             />
@@ -333,7 +326,7 @@ export default function EditAdminPage() {
 
           {/* Administrative Information */}
           <View style={[styles.section, { backgroundColor: surfaceColor, borderColor }]}>
-            <ThemedText style={[styles.sectionTitle, { color: getRoleColor(formData.role) }]}>
+            <ThemedText style={[styles.sectionTitle, { color: getRoleColor(formData.userRole) }]}>
               اطلاعات اداری
             </ThemedText>
 
@@ -361,39 +354,16 @@ export default function EditAdminPage() {
             </View>
 
             <InputField
-              label="دپارتمان"
-              value={formData.department}
+              label="ایجاد شده توسط"
+              value={formData.createdBy}
               onChangeText={(value) => updateFormData('department', value)}
-              placeholder={formData.department}
-            />
-          </View>
-
-          {/* Emergency Contact */}
-          <View style={[styles.section, { backgroundColor: surfaceColor, borderColor }]}>
-            <ThemedText style={[styles.sectionTitle, { color: getRoleColor(formData.role) }]}>
-              مخاطب اضطراری
-            </ThemedText>
-
-            <InputField
-              label="نام مخاطب اضطراری"
-              value={formData.emergencyContact}
-              onChangeText={(value) => updateFormData('emergencyContact', value)}
-              placeholder={formData.emergencyContact}
-            />
-
-            <InputField
-              label="شماره تلفن اضطراری"
-              value={formData.emergencyPhone}
-              onChangeText={(value) => updateFormData('emergencyPhone', value)}
-              placeholder={formData.emergencyPhone}
-              keyboardType="phone-pad"
-              maxLength={11}
+              placeholder={formData.createdBy}
             />
           </View>
 
           {/* Location */}
           <View style={[styles.section, { backgroundColor: surfaceColor, borderColor }]}>
-            <ThemedText style={[styles.sectionTitle, { color: getRoleColor(formData.role) }]}>
+            <ThemedText style={[styles.sectionTitle, { color: getRoleColor(formData.userRole) }]}>
               موقعیت جغرافیایی
             </ThemedText>
 

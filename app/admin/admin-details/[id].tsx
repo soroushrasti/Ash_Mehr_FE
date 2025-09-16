@@ -16,22 +16,19 @@ interface AdminDetails {
   lastName: string;
   nationalId: string;
   phone: string;
-  email?: string;
-  address: string;
+  email: string;
+  street: string;
   city: string;
   province: string;
-  postalCode?: string;
-  birthDate?: string;
-  role: string;
-  department?: string;
-  permissions?: string[];
-  emergencyContact?: string;
-  emergencyPhone?: string;
-  latitude?: number;
-  longitude?: number;
-  createdAt?: string;
-  updatedAt?: string;
-  lastLogin?: string;
+  postCode: string;
+  userRole: string;
+  password: string;
+  createdBy: string;
+  latitude: number;
+  longitude: number;
+  createdAt: string;
+  updatedAt: string;
+  birthDate: string
 }
 
 export default function AdminDetailsPage() {
@@ -176,14 +173,14 @@ export default function AdminDetailsPage() {
           <DetailRow label="کد ملی" value={adminDetails.NationalID} />
           <DetailRow label="شماره تلفن" value={adminDetails.Phone} />
           <DetailRow label="ایمیل" value={adminDetails.Email} />
-          <DetailRow label="تاریخ تولد" value={adminDetails.birthDate} />
+          <DetailRow label="پسورد" value={adminDetails.Password} />
         </DetailSection>
 
         {/* Address Information */}
         <DetailSection title="اطلاعات آدرس">
           <DetailRow label="استان" value={adminDetails.Province} />
           <DetailRow label="شهر" value={adminDetails.City} />
-          <DetailRow label="آدرس" value={adminDetails.address} />
+          <DetailRow label="خیابان" value={adminDetails.Street} />
           <DetailRow label="کد پستی" value={adminDetails.PostCode} />
           {adminDetails.Latitude && adminDetails.Longitude && (
             <>
@@ -196,29 +193,7 @@ export default function AdminDetailsPage() {
         {/* Administrative Information */}
         <DetailSection title="اطلاعات اداری">
           <DetailRow label="نقش" value={getRoleLabel(adminDetails.UserRole)} />
-          <DetailRow label="دپارتمان" value={adminDetails.department} />
-          {adminDetails.permissions && adminDetails.permissions.length > 0 && (
-            <View style={styles.permissionsContainer}>
-              <ThemedText style={[styles.label, { color: textColor }]}>
-                مجوزها:
-              </ThemedText>
-              <View style={styles.permissionsList}>
-                {adminDetails.permissions.map((permission, index) => (
-                  <View key={index} style={[styles.permissionBadge, { backgroundColor: primaryColor + '20' }]}>
-                    <ThemedText style={[styles.permissionText, { color: primaryColor }]}>
-                      {permission}
-                    </ThemedText>
-                  </View>
-                ))}
-              </View>
-            </View>
-          )}
-        </DetailSection>
-
-        {/* Emergency Contact */}
-        <DetailSection title="مخاطب اضطراری">
-          <DetailRow label="نام مخاطب اضطراری" value={adminDetails.emergencyContact} />
-          <DetailRow label="شماره تلفن اضطراری" value={adminDetails.emergencyPhone} />
+          <DetailRow label="ایجاد شده توسط" value={adminDetails.CreatedBy} />
         </DetailSection>
 
         {/* System Information */}
@@ -226,7 +201,6 @@ export default function AdminDetailsPage() {
           <DetailRow label="شناسه ثبت" value={adminDetails.AdminID} />
           <DetailRow label="تاریخ ثبت" value={adminDetails.CreatedDate} />
           <DetailRow label="آخرین به‌روزرسانی" value={adminDetails.UpdatedDate} />
-          <DetailRow label="آخرین ورود" value={adminDetails.lastLogin} />
         </DetailSection>
 
         {/* Action Buttons */}

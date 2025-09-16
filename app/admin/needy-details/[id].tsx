@@ -17,26 +17,32 @@ interface NeedyDetails {
   nationalId: string;
   phone: string;
   email?: string;
-  address: string;
+  street: string;
   city: string;
   province: string;
-  postalCode?: string;
+  age: string;
+  region:string;
+  gender: string;
+  nameFather: string;
+  husbandFirstName: string;
+  HusbandLastName: string;
+  reasonMissingHusband: string;
+  underOrganizationName: string;
+  educationLevel: string;
+  postCode?: string;
   birthDate?: string;
-  maritalStatus?: string;
-  numberOfChildren?: number;
-  jobStatus?: string;
-  income?: number;
-  description?: string;
-  emergencyContact?: string;
-  emergencyPhone?: string;
+  incomeForm?: number;
+  underWhichAdmin: string;
   latitude?: number;
   longitude?: number;
   createdAt?: string;
   updatedAt?: string;
   children?: Array<{
-    name: string;
+    firstName: string;
+    lastName: string;
     age: number;
     gender: string;
+    nationalId: string;
     education?: string;
   }>;
 }
@@ -150,20 +156,25 @@ export default function NeedyDetailsPage() {
           <DetailRow label="نام" value={needyDetails.FirstName} />
           <DetailRow label="نام خانوادگی" value={needyDetails.LastName} />
           <DetailRow label="کد ملی" value={needyDetails.NationalID} />
+          <DetailRow label="تاریخ تولد" value={needyDetails.BirthDate} />
           <DetailRow label="شماره تلفن" value={needyDetails.Phone} />
-          <DetailRow label="ایمیل" value={needyDetails.Email} />
-          <DetailRow label="تاریخ تولد" value={needyDetails.birthDate} />
-          <DetailRow label="وضعیت تأهل" value={needyDetails.maritalStatus} />
-          <DetailRow label="تعداد فرزندان" value={needyDetails.NumberOfChildren} />
+          <DetailRow label="سن" value={needyDetails.Age} />
+          <DetailRow label="جنسیت" value={needyDetails.Gender} />
+          <DetailRow label="نام همسر" value={needyDetails.HusbandFirstName} />
+          <DetailRow label="نام خانوادگی همسر" value={needyDetails.HusbandLastName} />
+          <DetailRow label="علت نبود همسر" value={needyDetails.ReasonMissingHusband} />
+          <DetailRow label="نام سازمان تحت حمایت" value={needyDetails.UnderOrganizationName} />
+          <DetailRow label="سطح تحصیلات" value={needyDetails.EducationLevel} />
         </DetailSection>
 
         {/* Address Information */}
         <DetailSection title="اطلاعات آدرس">
           <DetailRow label="استان" value={needyDetails.Province} />
           <DetailRow label="شهر" value={needyDetails.City} />
-          <DetailRow label="آدرس" value={needyDetails.Address} />
-          <DetailRow label="کد پستی" value={needyDetails.PostalCode} />
-          {needyDetails.latitude && needyDetails.longitude && (
+          <DetailRow label="آدرس" value={needyDetails.Street} />
+          <DetailRow label="کد پستی" value={needyDetails.PostCode} />
+          <DetailRow label="منظقه" value={needyDetails.Region} />
+          {needyDetails.Latitude && needyDetails.Longitude && (
             <>
               <DetailRow label="عرض جغرافیایی" value={needyDetails.Latitude.toString()} />
               <DetailRow label="طول جغرافیایی" value={needyDetails.Longitude.toString()} />
@@ -173,14 +184,7 @@ export default function NeedyDetailsPage() {
 
         {/* Financial Information */}
         <DetailSection title="اطلاعات مالی و شغلی">
-          <DetailRow label="وضعیت شغلی" value={needyDetails.jobStatus} />
-          <DetailRow label="درآمد ماهانه" value={needyDetails.income ? `${needyDetails.income.toLocaleString()} تومان` : undefined} />
-        </DetailSection>
-
-        {/* Emergency Contact */}
-        <DetailSection title="مخاطب اضطراری">
-          <DetailRow label="نام مخاطب اضطراری" value={needyDetails.emergencyContact} />
-          <DetailRow label="شماره تلفن اضطراری" value={needyDetails.emergencyPhone} />
+          <DetailRow label="درآمد ماهانه" value={needyDetails.IncomeForm ? `${needyDetails.IncomeForm.toLocaleString()} تومان` : undefined} />
         </DetailSection>
 
         {/* Children Information */}
@@ -191,21 +195,14 @@ export default function NeedyDetailsPage() {
                 <ThemedText style={[styles.childTitle, { color: primaryColor }]}>
                   فرزند {index + 1}
                 </ThemedText>
-                <DetailRow label="نام" value={child.name} />
-                <DetailRow label="سن" value={child.age.toString()} />
-                <DetailRow label="جنسیت" value={child.gender} />
-                <DetailRow label="تحصیلات" value={child.education} />
+                <DetailRow label="نام" value={child.FirstName} />
+                <DetailRow label="نام خانوادگی" value={child.LastName} />
+                <DetailRow label="سن" value={child.Age.toString()} />
+                <DetailRow label="کد ملی" value={child.NationalID} />
+                <DetailRow label="جنسیت" value={child.Gender} />
+                <DetailRow label="تحصیلات" value={child.EducationLevel} />
               </View>
             ))}
-          </DetailSection>
-        )}
-
-        {/* Description */}
-        {needyDetails.description && (
-          <DetailSection title="توضیحات">
-            <ThemedText style={[styles.description, { color: textColor }]}>
-              {needyDetails.description}
-            </ThemedText>
           </DetailSection>
         )}
 

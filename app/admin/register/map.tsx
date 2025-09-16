@@ -13,112 +13,138 @@ import { withOpacity } from '@/utils/colorUtils';
 import AppHeader from '@/components/AppHeader';
 import * as Location from 'expo-location';
 
+// Google Geocoding service
+const geocodeCity = async (city: string, province?: string): Promise<{ latitude: number; longitude: number } | null> => {
+  try {
+    const address = `${city}${province ? `, ${province}` : ''}, Iran`;
+    const encodedAddress = encodeURIComponent(address);
+    const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodedAddress}&key=${Config.GOOGLE_MAPS_API_KEY}`;
+
+    console.log('Geocoding request for:', address);
+
+    const response = await fetch(url);
+    const data = await response.json();
+
+    if (data.status === 'OK' && data.results && data.results.length > 0) {
+      const location = data.results[0].geometry.location;
+      const result = {
+        latitude: location.lat,
+        longitude: location.lng
+      };
+
+      console.log('Geocoding successful:', result);
+      return result;
+    } else {
+      console.log('Geocoding failed:', data.status, data.error_message);
+      return null;
+    }
+  } catch (error) {
+    console.error('Geocoding error:', error);
+    return null;
+  }
+};
+
 export default function AdminRegisterMap() {
   const router = useRouter();
-  const { formData, role, roleTitle, roleIcon, next } = useLocalSearchParams();
+  const params = useLocalSearchParams();
+
+  // Get city and province from URL parameters
+  const city = params.city as string;
+  const province = params.province as string;
+
+  const { formData, role, roleTitle, roleIcon, next } = params;
   const targetForm = Array.isArray(next) ? next[0] : (next || 'admin-user');
   const roleIconSafe = typeof roleIcon === 'string' ? roleIcon : Array.isArray(roleIcon) ? roleIcon[0] : '📍';
+
   const [location, setLocation] = useState<{ latitude: number; longitude: number; address?: string } | null>(null);
+  const [initialRegion, setInitialRegion] = useState<any>(null);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [locError, setLocError] = useState<string | null>(null);
+  const [selectedLocation, setSelectedLocation] = useState<{ latitude: number; longitude: number } | null>(null);
 
   useEffect(() => {
-    (async () => {
-      try {
-        const { status } = await Location.requestForegroundPermissionsAsync();
-        if (status !== 'granted') {
-          setLocError('مجوز دسترسی به موقعیت داده نشد. لطفاً به صورت دستی مکان را انتخاب کنید.');
-          return;
-        }
-        const pos = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
-        setLocation({ latitude: pos.coords.latitude, longitude: pos.coords.longitude });
-      } catch {
-        setLocError('امکان دریافت موقعیت فعلی وجود ندارد.');
-      }
-    })();
-  }, []);
+    const initializeMapWithCity = async () => {
+      // If city is provided, use Google API to geocode and zoom to that area
+      if (city && city.trim()) {
+        try {
+          const cityCoords = await geocodeCity(city.trim(), province?.trim());
 
-  // Extract city from serialized formData (supports both lower and upper case keys)
-  const formDataStr = Array.isArray(formData) ? formData[0] : (formData as string | undefined);
-  let city: string | undefined = undefined;
-  try {
-    if (formDataStr) {
-      const parsed = JSON.parse(formDataStr);
-      city = parsed.city || parsed.City || parsed?.address?.city;
-    }
-  } catch {
-    // ignore parse errors
-  }
+          if (cityCoords) {
+            // Set initial region to zoom into the city area
+            setInitialRegion({
+              latitude: cityCoords.latitude,
+              longitude: cityCoords.longitude,
+              latitudeDelta: 0.05, // City-level zoom
+              longitudeDelta: 0.05,
+            });
+
+            // Set as suggested location
+            setLocation({
+              latitude: cityCoords.latitude,
+              longitude: cityCoords.longitude,
+              address: `${city}${province ? `, ${province}` : ''}`,
+            });
+
+            console.log('Map initialized for city:', city, cityCoords);
+          } else {
+            // If geocoding fails, use default Tehran location
+            setInitialRegion({
+              latitude: 35.6892,
+              longitude: 51.3890,
+              latitudeDelta: 0.1,
+              longitudeDelta: 0.1,
+            });
+          }
+        } catch (error) {
+          console.error('Error initializing map with city:', error);
+          // Fallback to Tehran
+          setInitialRegion({
+            latitude: 35.6892,
+            longitude: 51.3890,
+            latitudeDelta: 0.1,
+            longitudeDelta: 0.1,
+          });
+        }
+      } else {
+        // No city provided, use default location
+        setInitialRegion({
+          latitude: 35.6892,
+          longitude: 51.3890,
+          latitudeDelta: 0.1,
+          longitudeDelta: 0.1,
+        });
+      }
+    };
+
+    initializeMapWithCity();
+  }, [city, province]);
 
   const primaryColor = useThemeColor({}, 'primary');
   const successColor = useThemeColor({}, 'success');
   const errorColor = useThemeColor({}, 'error');
 
-  const handleFinalize = async () => {
-    if (!location) {
-      setError('لطفاً روی نقشه موقعیت را انتخاب کنید');
-      Alert.alert('خطا', 'لطفاً روی نقشه موقعیت را انتخاب کنید');
-      return;
-    }
-
-    setError('');
-    setLoading(true);
-
-    // Navigate to confirmation page
-    setTimeout(() => {
-      router.push({
-        pathname: '/admin/register/confirm',
-        params: {
-          formData,
-          role,
-          roleTitle,
-          roleIcon,
-          location: JSON.stringify(location),
-        },
-      });
-      setLoading(false);
-    }, 500);
-  };
-
-  const INSET_BEHAVIOR: any = 'always';
-  const ANDROID_OVERSCROLL: any = Platform.OS === 'android' ? 'always' : undefined;
-
-  const ProgressBar = () => (
-    <View style={styles.progressContainer}>
-      <View style={[styles.progressStep, { backgroundColor: successColor }]}>
-        <ThemedText style={styles.progressText}>✓</ThemedText>
-      </View>
-      <View style={[styles.progressLine, { backgroundColor: successColor }]} />
-      <View style={[styles.progressStep, { backgroundColor: successColor }]}>
-        <ThemedText style={styles.progressText}>✓</ThemedText>
-      </View>
-      <View style={[styles.progressLine, { backgroundColor: primaryColor }]} />
-      <View style={[styles.progressStep, { backgroundColor: primaryColor }]}>
-        <ThemedText style={styles.progressText}>۳</ThemedText>
-      </View>
-    </View>
-  );
-
-  const [selectedLocation, setSelectedLocation] = useState<{ latitude: number; longitude: number } | null>(null);
-
-  const handleLocationSelect = (location: { latitude: number; longitude: number }) => {
-    setSelectedLocation(location);
-    setLocation(location);
-    setError('');
+  const handleLocationSelect = (newLocation: { latitude: number; longitude: number }) => {
+    setSelectedLocation(newLocation);
+    setLocation(newLocation);
   };
 
   const handleConfirm = () => {
-    if (!selectedLocation) {
+    if (!selectedLocation && !location) {
       Alert.alert('خطا', 'لطفاً موقعیت خود را روی نقشه انتخاب کنید');
       return;
     }
 
+    const finalLocation = selectedLocation || location;
+    if (!finalLocation) return;
+
     router.push({
-      pathname: `/admin/register/${targetForm}`,
+      pathname: `/admin/register/confirm`,
       params: {
-        latitude: selectedLocation.latitude,
-        longitude: selectedLocation.longitude,
+        ...params,
+        location: JSON.stringify({
+          latitude: finalLocation.latitude,
+          longitude: finalLocation.longitude,
+          address: finalLocation.address || `${finalLocation.latitude}, ${finalLocation.longitude}`
+        }),
       },
     });
   };
@@ -129,138 +155,65 @@ export default function AdminRegisterMap() {
 
   return (
     <ThemedView type="container" style={styles.container}>
-      <AppHeader title="انتخاب موقعیت جغرافیایی" subtitle={`برای ${roleTitle}`} />
-
-      {/* Top action bar so user can confirm without scrolling */}
-      <View style={[styles.topBar, { backgroundColor: withOpacity(primaryColor, 8) }]}>
-        <Button
-          title="تأیید و ادامه"
-          onPress={handleFinalize}
-          loading={loading}
-          disabled={!location}
-          size="small"
-          variant="success"
-        />
-      </View>
+      <AppHeader
+        title="انتخاب موقعیت جغرافیایی"
+        subtitle={city ? `برای ${city}${province ? `, ${province}` : ''}` : "موقعیت خود را انتخاب کنید"}
+      />
 
       <RNScrollView
         style={{ flex: 1 }}
+        contentContainerStyle={styles.scrollContent}
         keyboardShouldPersistTaps="handled"
-        keyboardDismissMode={Platform.OS === 'ios' ? 'on-drag' : 'none'}
-        contentInsetAdjustmentBehavior={INSET_BEHAVIOR}
-        nestedScrollEnabled
-        overScrollMode={ANDROID_OVERSCROLL}
-        removeClippedSubviews={false}
-        scrollEnabled
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ flexGrow: 1, paddingHorizontal: Spacing.xl, paddingBottom: Spacing['4xl'] }}
       >
-        {/* Progress Bar */}
-        <ProgressBar />
-
-        {/* Header with Role Badge */}
-        <View style={styles.header}>
-          <View style={[styles.roleIconContainer, { backgroundColor: withOpacity(primaryColor, 20) }]}>
-            <ThemedText style={styles.roleIcon}>{roleIconSafe}</ThemedText>
+        {/* City Info Display */}
+        {city && (
+          <View style={[styles.cityInfo, { backgroundColor: withOpacity(primaryColor, 10), borderColor: primaryColor }]}>
+            <ThemedText style={[styles.cityInfoText, { color: primaryColor }]}>
+              📍 نقشه برای: {city}
+            </ThemedText>
           </View>
-          <ThemedText type="heading2" center style={styles.title}>
-            انتخاب موقعیت جغرافیایی
-          </ThemedText>
-          <ThemedText type="body" center style={styles.subtitle}>
-            لطفاً موقعیت دقیق را روی نقشه مشخص کنید
-          </ThemedText>
+        )}
+
+        {/* Map Container */}
+        <View style={styles.mapContainer}>
+          {initialRegion ? (
+            <UniversalMap
+              style={styles.map}
+              initialRegion={initialRegion}
+              onLocationSelect={handleLocationSelect}
+              selectedLocation={selectedLocation || location}
+              showCurrentLocation={true}
+              points={[]}
+            />
+          ) : (
+            <View style={styles.loadingContainer}>
+              <ThemedText>در حال بارگذاری نقشه...</ThemedText>
+            </View>
+          )}
         </View>
 
-        {/* Map Section */}
-        <ThemedView type="card" style={styles.mapCard}>
-          <ThemedText type="heading3" style={styles.mapTitle}>
-            انتخاب آدرس روی نقشه
-          </ThemedText>
-
-          <View style={styles.mapContainer} onStartShouldSetResponderCapture={() => true}>
-            <UniversalMap
-              points={[]}
-              onLocationSelect={handleLocationSelect}
-              selectedLocation={selectedLocation}
-              initialRegion={location ? {
-                latitude: location.latitude,
-                longitude: location.longitude,
-                latitudeDelta: 0.05,
-                longitudeDelta: 0.05,
-              } : undefined}
-              style={{ flex: 1 }}
-            />
-          </View>
-
-          {!!locError && (
-            <ThemedText type="caption" style={{ color: 'red', marginBottom: Spacing.sm }}>
-              {locError}
+        {/* Location Info */}
+        {(selectedLocation || location) && (
+          <View style={[styles.locationInfo, { backgroundColor: withOpacity(successColor, 10) }]}>
+            <ThemedText style={[styles.locationTitle, { color: successColor }]}>
+              ✅ موقعیت انتخاب شده:
             </ThemedText>
-          )}
+            <ThemedText style={styles.locationText}>
+              عرض جغرافیایی: {(selectedLocation || location)!.latitude.toFixed(6)}
+            </ThemedText>
+            <ThemedText style={styles.locationText}>
+              طول جغرافیایی: {(selectedLocation || location)!.longitude.toFixed(6)}
+            </ThemedText>
+          </View>
+        )}
 
-          {location && (
-            <ThemedView type="surface" style={styles.locationInfo}>
-              <View style={styles.locationHeader}>
-                <ThemedText style={styles.locationIcon}>📍</ThemedText>
-                <ThemedText type="body" weight="medium" style={styles.locationTitle}>
-                  موقعیت انتخاب شده
-                </ThemedText>
-              </View>
-              <ThemedText type="caption" style={styles.coordinates}>
-                عرض جغرافیایی: {location.latitude.toFixed(6)}
-              </ThemedText>
-              <ThemedText type="caption" style={styles.coordinates}>
-                طول جغرافیایی: {location.longitude.toFixed(6)}
-              </ThemedText>
-              {location.address && (
-                <ThemedText type="body" style={styles.address}>
-                  آدرس: {location.address}
-                </ThemedText>
-              )}
-            </ThemedView>
-          )}
-
-          {/* Error State */}
-          {error && (
-            <ThemedView style={[styles.errorContainer, { backgroundColor: withOpacity(errorColor, 10), borderColor: withOpacity(errorColor, 20) }]}>
-              <ThemedText type="caption" style={[styles.errorText, { color: errorColor }]}>
-                ⚠️ {error}
-              </ThemedText>
-            </ThemedView>
-          )}
-        </ThemedView>
-
-        {/* Instructions */}
-        <ThemedView type="card" style={[styles.instructionsCard, { backgroundColor: withOpacity(primaryColor, 5), borderColor: withOpacity(primaryColor, 20) }]}>
-          <ThemedText type="body" weight="medium" style={styles.instructionsTitle}>
-            راهنمای استفاده از نقشه:
-          </ThemedText>
-          <ThemedText type="caption" style={styles.instructionText}>
-            • روی نقشه کلیک کنید تا موقعیت انتخاب شود
-          </ThemedText>
-          <ThemedText type="caption" style={styles.instructionText}>
-            • با دو انگشت روی نقشه حرکت کنید تا بزرگ یا کوچک شود
-          </ThemedText>
-          <ThemedText type="caption" style={styles.instructionText}>
-            • موقعیت انتخابی با نشانگر قرمز مشخص می‌شود
-          </ThemedText>
-        </ThemedView>
-
-        {/* Action Buttons (still available at bottom) */}
-        <View style={styles.buttonContainer}>
+        {/* Action Buttons */}
+        <View style={styles.footer}>
           <Button
-            title="بازگشت"
-            onPress={() => router.back()}
-            variant="outline"
-            style={styles.backButton}
-          />
-          <Button
-            title="تأیید و ادامه"
-            onPress={handleFinalize}
-            loading={loading}
-            disabled={!location}
-            style={styles.continueButton}
-            icon={<ThemedText>✓</ThemedText>}
+            title="تأیید موقعیت"
+            onPress={handleConfirm}
+            disabled={!selectedLocation && !location}
+            style={styles.confirmButton}
           />
         </View>
       </RNScrollView>
@@ -269,104 +222,50 @@ export default function AdminRegisterMap() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
-  topBar: {
-    paddingHorizontal: Spacing.xl,
-    paddingTop: Spacing.md,
-    paddingBottom: Spacing.sm,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderColor: 'rgba(0,0,0,0.06)',
+  container: {
+    flex: 1
   },
-  progressContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: Spacing['3xl'],
-    paddingHorizontal: Spacing.xl,
+  scrollContent: {
+    paddingBottom: Spacing.xl,
   },
-  progressStep: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    justifyContent: 'center',
-    alignItems: 'center',
+  cityInfo: {
+    padding: Spacing.md,
+    borderRadius: BorderRadius.md,
+    borderWidth: 1,
+    margin: Spacing.md,
   },
-  progressLine: {
-    flex: 1,
-    height: 2,
-    marginHorizontal: Spacing.sm,
-  },
-  progressText: { color: 'white', fontWeight: 'bold' },
-  header: { alignItems: 'center', marginBottom: Spacing['3xl'] },
-  roleIconContainer: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: Spacing.lg,
-  },
-  roleIcon: { fontSize: 36 },
-  title: { marginBottom: Spacing.sm },
-  subtitle: { opacity: 0.7, textAlign: 'center' },
-  mapCard: { marginBottom: Spacing.xl },
-  mapTitle: { marginBottom: Spacing.lg },
-  mapContainer: { height: 300, borderRadius: 12, overflow: 'hidden', marginBottom: Spacing.md },
-  locationInfo: { padding: Spacing.md, borderRadius: 8, marginBottom: Spacing.md },
-  locationHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: Spacing.sm },
-  locationIcon: { fontSize: 20, marginLeft: Spacing.sm },
-  locationTitle: { flex: 1 },
-  coordinates: { opacity: 0.7, marginBottom: Spacing.xs },
-  address: { marginTop: Spacing.sm },
-  errorContainer: { padding: Spacing.md, borderRadius: 8, borderWidth: 1 },
-  errorText: { textAlign: 'center' },
-  instructionsCard: { marginBottom: Spacing.xl, borderWidth: 1 },
-  instructionsTitle: { marginBottom: Spacing.md },
-  instructionText: { marginBottom: Spacing.xs, opacity: 0.8 },
-  buttonContainer: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: Spacing['4xl'] },
-  backButton: { flex: 0.45 },
-  continueButton: { flex: 0.45 },
-  content: {
-    flex: 1,
-    padding: Spacing.lg,
-  },
-  instructions: {
-    marginBottom: Spacing.md,
-  },
-  instructionTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: Spacing.xs,
+  cityInfoText: {
     textAlign: 'center',
-  },
-  instructionText: {
-    fontSize: 14,
-    opacity: 0.8,
-    textAlign: 'center',
+    fontWeight: '500',
   },
   mapContainer: {
-    flex: 1,
+    // no flex here to allow ScrollView to control height
+    margin: Spacing.md,
     borderRadius: BorderRadius.lg,
     overflow: 'hidden',
-    marginBottom: Spacing.md,
+    minHeight: 300, // ensure a large, comfortable viewport for the map
   },
   map: {
     flex: 1,
   },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   locationInfo: {
     padding: Spacing.md,
-    backgroundColor: 'rgba(76, 175, 80, 0.1)',
     borderRadius: BorderRadius.md,
-    marginBottom: Spacing.md,
+    margin: Spacing.md,
   },
   locationTitle: {
     fontWeight: 'bold',
     marginBottom: Spacing.xs,
-    color: '#4CAF50',
   },
   locationText: {
     fontSize: 14,
     opacity: 0.8,
+    marginBottom: Spacing.xs,
   },
   footer: {
     padding: Spacing.lg,

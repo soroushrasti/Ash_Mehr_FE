@@ -26,7 +26,7 @@ export default function VolunteerManagementPage() {
       subtitle: 'مشاهده، ویرایش و حذف اطلاعات مددجویان',
       icon: '👥',
       gradient: ['#4facfe', '#00f2fe'],
-      route: '/admin/reports',
+      route: '/admin/needy-management',
       color: primaryColor,
       features: [
         'مشاهده لیست کامل مددجویان',

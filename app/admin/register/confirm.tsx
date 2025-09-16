@@ -15,6 +15,9 @@ import { NeedyCreateWithChildren } from '@/types/api';
 export default function AdminRegisterConfirm() {
   const router = useRouter();
   const { formData, roleTitle, roleIcon, location, role } = useLocalSearchParams();
+  console.log('Form Data:', formData);
+  console.log('Location Data:', location);
+  console.log('Role:', role, 'Role Title:', roleTitle, 'Role Icon:', roleIcon);
   const roleParam = Array.isArray(role) ? role[0] : role;
   const { userId, userType } = useAuth();
   const [loading, setLoading] = useState(false);
@@ -26,28 +29,28 @@ export default function AdminRegisterConfirm() {
 
   // Organize form data for display
   const personalInfo = [
-    { label: 'نام', value: parsedFormData.firstName },
-    { label: 'نام خانوادگی', value: parsedFormData.lastName },
-    { label: 'شماره تلفن', value: parsedFormData.phone },
-    { label: 'کد ملی', value: parsedFormData.nationalId },
-    { label: 'ایمیل', value: parsedFormData.email },
+    { label: 'نام', value: parsedFormData.FirstName },
+    { label: 'نام خانوادگی', value: parsedFormData.LastName },
+    { label: 'شماره تلفن', value: parsedFormData.Phone },
+    { label: 'کد ملی', value: parsedFormData.NationalID },
+    { label: 'ایمیل', value: parsedFormData.Email },
   ];
 
   const addressInfo = [
-    { label: 'استان', value: parsedFormData.province },
-    { label: 'شهر', value: parsedFormData.city },
-    { label: 'آدرس', value: parsedFormData.street },
+    { label: 'استان', value: parsedFormData.Province },
+    { label: 'شهر', value: parsedFormData.City },
+    { label: 'آدرس', value: parsedFormData.Street },
   ];
 
   const additionalInfo = [
-    { label: 'سن', value: parsedFormData.age },
-    { label: 'جنسیت', value: parsedFormData.gender === 'Male' ? 'مرد' : parsedFormData.gender === 'Female' ? 'زن' : parsedFormData.gender },
-    { label: 'منطقه', value: parsedFormData.region },
-    { label: 'سطح تحصیلات', value: getEducationLabel(parsedFormData.educationLevel) },
-    { label: 'درآمد ماهانه', value: parsedFormData.incomeAmount ? `${parsedFormData.incomeAmount} تومان` : '' },
-    { label: 'نام همسر', value: parsedFormData.housebandFirstName && parsedFormData.housebandLastName ? `${parsedFormData.housebandFirstName} ${parsedFormData.housebandLastName}` : '' },
-    { label: 'دلیل غیبت همسر', value: parsedFormData.reasonMissingHouseband },
-    { label: 'سازمان حامی', value: parsedFormData.underOrganizationName },
+    { label: 'سن', value: parsedFormData.Age },
+    { label: 'جنسیت', value: parsedFormData.Gender === 'Male' ? 'مرد' : parsedFormData.gender === 'Female' ? 'زن' : parsedFormData.gender },
+    { label: 'منطقه', value: parsedFormData.Region },
+    { label: 'سطح تحصیلات', value: getEducationLabel(parsedFormData.EducationLevel) },
+    { label: 'درآمد ماهانه', value: parsedFormData.incomeAmount ? `${parsedFormData.IncomeAmount} تومان` : '' },
+    { label: 'نام همسر', value: parsedFormData.HousebandLastName && parsedFormData.HousebandFirstName ? `${parsedFormData.HousebandFirstName} ${parsedFormData.HousebandLastName}` : '' },
+    { label: 'دلیل غیبت همسر', value: parsedFormData.ReasonMissingHusband },
+    { label: 'سازمان حامی', value: parsedFormData.UnderOrganizationName },
   ].filter(item => item.value); // Only show fields with values
 
   function getEducationLabel(value: string) {
@@ -86,25 +89,17 @@ export default function AdminRegisterConfirm() {
 
       if (isAdminRole) {
         // Validate password
-        if (!parsedFormData.password || parsedFormData.password.length < 6) {
+        if (!parsedFormData.Password || parsedFormData.Password.length < 6) {
           Alert.alert('خطا', 'رمز عبور معتبر وارد نشده است.');
           setLoading(false);
           return;
         }
         const adminPayload = {
-          FirstName: parsedFormData.firstName || '',
-          LastName: parsedFormData.lastName || '',
-            Phone: parsedFormData.phone || undefined,
-            Email: parsedFormData.email || undefined,
-            Password: parsedFormData.password,
-            City: parsedFormData.city || undefined,
-            Province: parsedFormData.province || undefined,
-            Street: parsedFormData.street || undefined,
-            NationalID: parsedFormData.nationalId || undefined,
-            UserRole: roleParam === 'GroupAdmin' ? 'GroupAdmin' : 'Admin',
-            Latitude: parsedLocation.latitude?.toString() || undefined,
-            Longitude: parsedLocation.longitude?.toString() || undefined,
-            CreatedBy: Number(userId),
+          ...parsedFormData,
+          UserRole: roleParam === 'GroupAdmin' ? 'GroupAdmin' : 'Admin',
+          CreatedBy: Number(userId),
+          Latitude: parsedLocation.latitude?.toString() || parsedFormData.Latitude || undefined,
+          Longitude: parsedLocation.longitude?.toString() || parsedFormData.Longitude || undefined,
         };
         const result = await apiService.createAdmin(adminPayload as any);
         if (!result.success) {
@@ -316,11 +311,6 @@ export default function AdminRegisterConfirm() {
               <ThemedText type="caption" style={styles.infoLabel}>
                 طول جغرافیایی: {parsedLocation.longitude?.toFixed(6)}
               </ThemedText>
-              {parsedLocation.address && (
-                <ThemedText type="body" style={styles.infoValue}>
-                  {parsedLocation.address}
-                </ThemedText>
-              )}
             </View>
           </View>
         </ThemedView>
@@ -331,7 +321,6 @@ export default function AdminRegisterConfirm() {
             title="تأیید و ثبت‌نام نهایی"
             onPress={handleSubmit}
             loading={loading}
-            fullWidth
             variant="success"
             icon={<ThemedText>🎉</ThemedText>}
           />
@@ -403,18 +392,20 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(76, 175, 80, 0.2)',
   },
   summaryHeader: {
-    flexDirection: 'row',
+    flexDirection: 'row-reverse', // RTL layout for Persian text
     alignItems: 'center',
   },
   summaryIcon: {
-    fontSize: 32,
-    marginLeft: Spacing.md,
+    fontSize: 24, // Reduced from 32 to 24 for better proportion
+    marginRight: Spacing.md, // Changed from marginLeft to marginRight for RTL
   },
   summaryTitle: {
     marginBottom: Spacing.xs,
+    textAlign: 'right', // Right align for Persian text
   },
   summarySubtitle: {
     opacity: 0.7,
+    textAlign: 'right', // Right align for Persian text
   },
   infoCard: {
     marginBottom: Spacing.lg,
@@ -427,19 +418,25 @@ const styles = StyleSheet.create({
   },
   cardTitle: {
     color: '#2E7D32',
+    textAlign: 'right',
   },
   infoRow: {
-    flexDirection: 'row',
+    flexDirection: 'row-reverse', // RTL layout
     marginBottom: Spacing.md,
     alignItems: 'flex-start',
+    textAlign: 'right',
   },
   infoLabel: {
     width: '35%',
     opacity: 0.7,
+    textAlign: 'right',
+    paddingLeft: Spacing.sm,
   },
   infoValue: {
     flex: 1,
     fontWeight: '500',
+    textAlign: 'right',
+    paddingRight: Spacing.sm,
   },
   locationInfo: {
     flexDirection: 'row',

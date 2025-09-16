@@ -58,32 +58,11 @@ export default function AdminHome() {
       if (ag.success && Array.isArray(ag.data)) setAdminMapPoints(ag.data as MapPoint[]);
     } catch (error) {
       console.error('Error fetching data:', error);
-      // Use sample data if API fails
-      setSampleData();
-    } finally {
+        } finally {
       if (showRefreshing) setRefreshing(false);
     }
   }, []);
 
-  const setSampleData = () => {
-    const sampleNeedyFamilies: MapPoint[] = [
-      { id: 'n1', lat: 35.7002, lng: 51.3911, name: 'خانواده احمدی', info: '۳ فرزند، نیاز به کمک غذایی' },
-      { id: 'n2', lat: 35.7108, lng: 51.4052, name: 'خانواده حسینی', info: 'اجاره معوق، نیاز فوری' },
-      { id: 'n3', lat: 35.6893, lng: 51.3924, name: 'خانواده رضایی', info: 'هزینه درمان' },
-      { id: 'n4', lat: 35.6769, lng: 51.4201, name: 'خانواده موسوی', info: 'بسته ارزاق' },
-      { id: 'n5', lat: 35.7055, lng: 51.4303, name: 'خانواده کریمی', info: 'لوازم‌التحریر دانش‌آموز' },
-      { id: 'n6', lat: 35.7182, lng: 51.3701, name: 'خانواده جعفری', info: 'کمک نقدی' },
-      { id: 'n7', lat: 35.6951, lng: 51.4452, name: 'خانواده عباسی', info: 'تعمیرات مسکن' },
-      { id: 'n8', lat: 35.6856, lng: 51.4107, name: 'خانواده شریفی', info: 'کمک دارویی' },
-    ];
-
-    setMapPoints(sampleNeedyFamilies);
-    setNeedyInfo({
-      numberNeedyPersons: sampleNeedyFamilies.length,
-      LastNeedycreatedTime: new Date().toISOString(),
-      LastNeedyNameCreated: 'خانواده احمدی'
-    });
-  };
 
   // Refresh data when page comes into focus
   useFocusEffect(
@@ -223,7 +202,7 @@ export default function AdminHome() {
           ]}
         >
           <ThemedText style={[styles.sectionTitle, { color: textColor }]} rtl={true}>
-            نقشه خانواده‌های مددجو
+             نقشه
           </ThemedText>
           <ThemedText style={[styles.sectionSubtitle, { color: textColor, opacity: 0.7 }]} rtl={true}>
             موقعیت جغرافیایی خانواده‌ها و نمایندگان
@@ -262,7 +241,7 @@ export default function AdminHome() {
             {/* Registration Actions */}
             <TouchableOpacity
               style={[styles.actionCard, styles.registrationCard, styles.rtlActionCard, { backgroundColor: primaryColor, borderColor: primaryColor }]}
-              onPress={() => router.push('/admin/register/form')}
+              onPress={() => router.push('/admin/register/needy-form')}
             >
               <View style={styles.actionCardHeader}>
                 <ThemedText style={styles.registrationIcon}>👨‍👩‍👧‍👦</ThemedText>
@@ -277,7 +256,7 @@ export default function AdminHome() {
 
             <TouchableOpacity
               style={[styles.actionCard, styles.registrationCard, styles.rtlActionCard, { backgroundColor: volunteerColor, borderColor: volunteerColor }]}
-              onPress={() => router.push('/admin/register/admin-user')}
+              onPress={() => router.push('/admin/register/group-admin-form')}
             >
               <View style={styles.actionCardHeader}>
                 <ThemedText style={styles.registrationIcon}>👨‍💼</ThemedText>
@@ -286,14 +265,30 @@ export default function AdminHome() {
                 </ThemedText>
               </View>
               <ThemedText style={[styles.actionDescription, { color: '#FFFFFF', opacity: 0.9 }]} rtl={true}>
-                افزودن نماینده یا نماینده گروه جدید
+                افزودن نماینده گروه جدید
               </ThemedText>
             </TouchableOpacity>
+
+
+              <TouchableOpacity
+                  style={[styles.actionCard, styles.registrationCard, styles.rtlActionCard, { backgroundColor: donationColor, borderColor: donationColor }]}
+                  onPress={() => router.push('/admin/register/admin-form')}
+              >
+                  <View style={styles.actionCardHeader}>
+                      <ThemedText style={styles.registrationIcon}>👨‍💼</ThemedText>
+                      <ThemedText style={[styles.actionTitle, { color: '#FFFFFF' }]} rtl={true}>
+                          ثبت مدیر
+                      </ThemedText>
+                  </View>
+                  <ThemedText style={[styles.actionDescription, { color: '#FFFFFF', opacity: 0.9 }]} rtl={true}>
+                      افزودن مدیر جدید
+                  </ThemedText>
+              </TouchableOpacity>
 
             {/* Management Actions */}
             <TouchableOpacity
               style={[styles.actionCard, styles.rtlActionCard, { backgroundColor: surfaceColor, borderColor }]}
-              onPress={() => router.push('/admin/volunteer-management')}
+              onPress={() => router.push('/admin/info-management')}
             >
               <View style={styles.actionCardHeader}>
                 <ThemedText style={styles.managementIcon}>📋</ThemedText>

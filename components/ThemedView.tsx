@@ -90,6 +90,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   rtlContainer: {
-    direction: 'rtl' as any,
+    ...(Platform.OS === 'web'
+      ? { direction: 'rtl' as any }
+      : { writingDirection: 'rtl' as any }
+    ),
   },
 });

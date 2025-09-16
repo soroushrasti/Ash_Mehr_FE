@@ -1,428 +1,490 @@
-import React, { useState } from 'react';
-import { /* ScrollView, */ StyleSheet, View, Platform } from 'react-native';
-import { useRouter, useLocalSearchParams } from 'expo-router';
+import React, { useEffect, useState } from 'react';
+import { StyleSheet, View, Alert, ScrollView } from 'react-native';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { ThemedView } from '@/components/ThemedView';
 import { ThemedText } from '@/components/ThemedText';
-import { Button } from '@/components/Button';
 import { InputField } from '@/components/InputField';
-import { useThemeColor } from '@/hooks/useThemeColor';
-import { Spacing, BorderRadius } from '@/constants/Design';
-import { withOpacity } from '@/utils/colorUtils';
+import { Button } from '@/components/Button';
 import AppHeader from '@/components/AppHeader';
-import KeyboardAwareContainer from '@/components/KeyboardAwareContainer';
+import { Spacing, BorderRadius } from '@/constants/Design';
+import { apiService } from '@/services/apiService';
+import {AdminPersonLocation, NeedyCreateWithChildren} from '@/types/api';
+import { KeyboardAwareContainer } from '@/components/KeyboardAwareContainer';
+import { useAuth } from '@/components/AuthContext';
+import { useThemeColor } from '@/hooks/useThemeColor';
+import { RTLPicker } from '@/components/RTLPicker';
 
-// Types
-interface FieldOption { label: string; value: string; }
-interface FieldDef {
-  key: string;
-  label: string;
-  placeholder?: string;
-  required: boolean;
-  type?: 'phone' | 'number' | 'email' | 'select';
-  secure?: boolean;
-  multiline?: boolean;
-  options?: FieldOption[];
+interface ExtendedNeedyForm extends NeedyCreateWithChildren {
+    BirthDate?: string;
+    UnderWhichAdmin?: number;
 }
 
-type FormState = Record<string, string>;
-
-// Field definitions with Farsi labels and validation
-const baseFields: FieldDef[] = [
-  { key: 'firstName', label: 'نام', placeholder: 'نام خود را وارد کنید', required: true },
-  { key: 'lastName', label: 'نام خانوادگی', placeholder: 'نام خانوادگی خود را وارد کنید', required: true },
-  { key: 'phone', label: 'شماره تلفن', placeholder: '09xxxxxxxxx', required: true, type: 'phone' },
-  { key: 'nationalId', label: 'کد ملی', placeholder: 'کد ملی ۱۰ رقمی', required: true, type: 'number' },
-  { key: 'email', label: 'ایمیل', placeholder: 'example@email.com', required: false, type: 'email' },
-  { key: 'province', label: 'استان', placeholder: 'استان محل سکونت', required: true },
-  { key: 'city', label: 'شهر', placeholder: 'شهر محل سکونت', required: true },
-  { key: 'street', label: 'آدرس', placeholder: 'آدرس کامل', required: true, multiline: true },
-];
-
-const needyFamilyFields: FieldDef[] = [
-  { key: 'age', label: 'سن', placeholder: 'سن به سال', required: false, type: 'number' },
-  { key: 'region', label: 'منطقه', placeholder: 'منطقه شهری', required: false },
-  { key: 'gender', label: 'جنسیت', placeholder: 'انتخاب کنید', required: false, type: 'select', options: [
-    { label: 'مرد', value: 'Male' },
-    { label: 'زن', value: 'Female' }
-  ]},
-  { key: 'housebandFirstName', label: 'نام همسر', placeholder: 'نام همسر', required: false },
-  { key: 'housebandLastName', label: 'نام خانوادگی همسر', placeholder: 'نام خانوادگی همسر', required: false },
-  { key: 'reasonMissingHouseband', label: 'دلیل غیبت همسر', placeholder: 'در صورت عدم حضور همسر', required: false },
-  { key: 'underOrganizationName', label: 'نام سازمان حامی', placeholder: 'نام سازمان یا موسسه حامی', required: false },
-  { key: 'educationLevel', label: 'سطح تحصیلات', placeholder: 'انتخاب کنید', required: false, type: 'select', options: [
-    { label: 'بی‌سواد', value: 'None' },
-    { label: 'ابتدایی', value: 'Primary' },
-    { label: 'راهنمایی', value: 'Secondary' },
-    { label: 'دبیرستان', value: 'High School' },
-    { label: 'دیپلم', value: 'Diploma' },
-    { label: 'فوق‌دیپلم', value: 'Associate Degree' },
-    { label: 'لیسانس', value: 'Bachelor' },
-    { label: 'فوق‌لیسانس', value: 'Master' },
-    { label: 'دکتری', value: 'PhD' },
-  ]},
-  { key: 'incomeAmount', label: 'میزان درآمد ماهانه', placeholder: 'درآمد به تومان', required: false, type: 'number' },
-];
-
-function validateField(field: FieldDef, value: string): string {
-  if (field.required && (!value || value.trim() === '')) return `${field.label} الزامی است`;
-  if (field.type === 'email' && value && !/^\S+@\S+\.\S+$/.test(value)) return 'فرمت ایمیل نادرست است';
-  if (field.type === 'phone' && value && !/^(۰۹|09)[۰-۹0-9]{9}$/.test(value.replace(/[^۰-۹0-9]/g, ''))) {
-    return 'شماره تلفن باید با ۰۹ یا 09 شروع شود و ۱۱ رقم باشد';
-  }
-  if (field.type === 'number' && value && !/^[۰-۹0-9]+$/.test(value)) {
-    return `${field.label} باید عدد باشد`;
-  }
-  return '';
+interface AdminOption {
+    AdminID: number;
+    FirstName: string;
+    LastName: string;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-function isValidNationalId(nationalId: string): boolean {
-  // تبدیل کد ملی به اعداد انگلیسی
-  nationalId = nationalId.replace(/[۰-۹]/g, (char) => String(char.charCodeAt(0) - 1776));
+export default function AdminUserRegister() {
+    const router = useRouter();
+    const params = useLocalSearchParams();
+    const { userId } = useAuth();
+    const errorColor = useThemeColor({}, 'danger');
 
-  if (nationalId.length !== 10) return false;
-  const check = parseInt(nationalId[9]);
-  const sum = nationalId
-    .split('')
-    .slice(0, 9)
-    .reduce((acc: number, digit: string, index: number) => acc + parseInt(digit) * (10 - index), 0);
-  const remainder = sum % 11;
-  return (remainder < 2 && check === remainder) || (remainder >= 2 && check === 11 - remainder);
-}
+    const [formData, setFormData] = useState<ExtendedNeedyForm>({
+        FirstName: '',
+        LastName: '',
+        Phone: '',
+        Email: '',
+        City: '',
+        Province: '',
+        Street: '',
+        NameFather: '',
+        NationalID: '',
+        CreatedBy: Number(userId) || 0,
+        BirthDate: '',
+        UnderWhichAdmin: undefined,
+        Age: undefined,
+        Region: '',
+        Gender: '',
+        HusbandFirstName: '',
+        HusbandLastName: '',
+        ReasonMissingHusband: '',
+        UnderOrganizationName: '',
+        EducationLevel: '',
+        IncomeForm: '',
+        Latitude: params.latitude ? String(params.latitude) : '',
+        Longitude: params.longitude ? String(params.longitude) : '',
+        children_of_registre: null,
+    });
 
-export default function AdminRegisterForm() {
-  const router = useRouter();
-  const { role } = useLocalSearchParams();
-  const roleParam = Array.isArray(role) ? role[0] : role;
-  const [form, setForm] = useState<FormState>({});
-  const [errors, setErrors] = useState<FormState>({});
-  const [loading, setLoading] = useState(false);
+    const [loading, setLoading] = useState(false);
+    const [validationErrors, setValidationErrors] = useState<string[]>([]);
+    const [fieldErrors, setFieldErrors] = useState<{[key: string]: string}>({});
+    const [adminOptions, setAdminOptions] = useState<AdminPersonLocation[]>([]);
 
-  const primaryColor = useThemeColor({}, 'primary');
-  const successColor = useThemeColor({}, 'success');
-  const textColor = useThemeColor({}, 'textPrimary');
-  const errorColor = useThemeColor({}, 'error');
+    // Load admin options for dropdown
+    useEffect(() => {
+        const loadAdmins = async () => {
+            try {
+                const response = await apiService.getAdminGeoPoints();
+                if (response.success && response.data) {
+                    setAdminOptions(response.data);
+                }
+            } catch (error) {
+                console.error('Failed to load admins:', error);
+            }
+        };
+        loadAdmins();
+    }, []);
 
-  // Determine which fields to show based on role
-  let fields: FieldDef[] = baseFields;
-  let roleTitle = '';
-  let roleIcon = '';
+    // Validation function
+    const validateForm = () => {
+        const errors: string[] = [];
+        const fieldErrs: {[key: string]: string} = {};
 
-  switch (roleParam) {
-    case 'Admin':
-      roleTitle = 'مدیر';
-      roleIcon = '👨‍💼';
-      break;
-    case 'GroupAdmin':
-      roleTitle = 'نماینده گروه';
-      roleIcon = '👥';
-      break;
-    case 'NeedyFamily':
-    case 'Child':
-    case 'Elderly':
-    case 'Volunteer':
-      fields = [...baseFields, ...needyFamilyFields];
-      roleTitle = roleParam === 'NeedyFamily' ? 'خانواده مددجو' :
-                 roleParam === 'Child' ? 'کودک مددجو' :
-                 roleParam === 'Elderly' ? 'سالمند مددجو' : 'داوطلب';
-      roleIcon = roleParam === 'NeedyFamily' ? '🏠' :
-                roleParam === 'Child' ? '👶' :
-                roleParam === 'Elderly' ? '👴' : '🤝';
-      break;
-    default:
-      roleTitle = 'کاربر جدید';
-      roleIcon = '👤';
-  }
+        // Required field validation
+        if (!formData.FirstName.trim()) {
+            errors.push('نام الزامی است');
+            fieldErrs.FirstName = 'نام الزامی است';
+        }
 
-  // Group fields explicitly (avoid index slices)
-  const personalKeys = ['firstName','lastName','phone','nationalId','email'];
-  const addressKeys = ['province','city','street'];
-  const personalFields = fields.filter(f => personalKeys.includes(f.key));
-  const addressFields = fields.filter(f => addressKeys.includes(f.key));
-  const additionalFields = fields.filter(f => !personalKeys.includes(f.key) && !addressKeys.includes(f.key));
+        if (!formData.LastName.trim()) {
+            errors.push('نام خانوادگی الزامی است');
+            fieldErrs.LastName = 'نام خانوادگی الزامی است';
+        }
 
-  const handleChange = (key: string, value: string) => {
-    setForm({ ...form, [key]: value });
-    if (errors[key]) {
-      const field = fields.find(f => f.key === key)!;
-      setErrors({ ...errors, [key]: validateField(field, value) });
-    }
-  };
+        // Email validation (if provided)
+        if (formData.Email && formData.Email.trim()) {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(formData.Email)) {
+                errors.push('فرمت ایمیل صحیح نیست');
+                fieldErrs.Email = 'فرمت ایمیل صحیح نیست';
+            }
+        }
 
-  const handleNext = () => {
-    let valid = true;
-    const newErrors: FormState = {};
+        // Phone validation (if provided)
+        if (formData.Phone && formData.Phone.trim()) {
+            const phoneRegex = /^09\d{9}$/;
+            if (!phoneRegex.test(formData.Phone)) {
+                errors.push('شماره موبایل باید با ۰۹ شروع شده و ۱۱ رقم باشد');
+                fieldErrs.Phone = 'شماره موبایل باید با ۰۹ شروع شده و ۱۱ رقم باشد';
+            }
+        }
 
-    for (const field of fields) {
-      const err = validateField(field, form[field.key] || '');
-      if (err) valid = false;
-      newErrors[field.key] = err;
-    }
+        // National ID validation (if provided)
+        if (formData.NationalID && formData.NationalID.trim()) {
+            if (formData.NationalID.length !== 10) {
+                errors.push('کد ملی باید ۱۰ رقم باشد');
+                fieldErrs.NationalID = 'کد ملی باید ۱۰ رقم باشد';
+            }
+        }
 
-    setErrors(newErrors);
-    if (!valid) return;
+        // Age validation (if provided)
+        if (formData.Age && (formData.Age < 1 || formData.Age > 120)) {
+            errors.push('سن باید بین ۱ تا ۱۲۰ سال باشد');
+            fieldErrs.Age = 'سن باید بین ۱ تا ۱۲۰ سال باشد';
+        }
 
-    setLoading(true);
+        // User ID validation
+        if (!userId) {
+            errors.push('شناسه کاربر ثبت‌کننده یافت نشد. لطفاً دوباره وارد شوید.');
+        }
 
-    setTimeout(() => {
-      router.push({
-        pathname: '/admin/register/map',
-        params: {
-          formData: JSON.stringify(form),
-          role: roleParam as string,
-          roleTitle,
-          roleIcon
-        },
-      });
-      setLoading(false);
-    }, 500);
-  };
+        setValidationErrors(errors);
+        setFieldErrors(fieldErrs);
+        return errors.length === 0;
+    };
 
-  const ProgressBar = () => (
-    <View style={styles.progressContainer}>
-      <View style={[styles.progressStep, { backgroundColor: successColor }]}>
-        <ThemedText style={styles.progressText}>✓</ThemedText>
-      </View>
-      <View style={[styles.progressLine, { backgroundColor: primaryColor }]} />
-      <View style={[styles.progressStep, { backgroundColor: primaryColor }]}>
-        <ThemedText style={styles.progressText}>۲</ThemedText>
-      </View>
-      <View style={[styles.progressLine, { backgroundColor: '#E0E0E0' }]} />
-      <View style={[styles.progressStep, { backgroundColor: '#E0E0E0' }]}>
-        <ThemedText style={[styles.progressText, { color: '#757575' }]}>۳</ThemedText>
-      </View>
-    </View>
-  );
+    // Clear validation errors when user starts typing
+    const handleFieldChange = (field: keyof ExtendedNeedyForm, value: string | number | undefined) => {
+        setFormData(prev => ({ ...prev, [field]: value }));
 
-  const renderSelectField = (field: FieldDef) => {
-    if (Platform.OS === 'web') {
-      return (
-        <View key={field.key} style={styles.selectContainer}>
-          <ThemedText type="caption" weight="medium" style={styles.selectLabel}>
-            {field.label}
-          </ThemedText>
-          <select
-            style={{
-              borderWidth: 1,
-              borderColor: '#E0E0E0',
-              borderRadius: BorderRadius.lg,
-              padding: Spacing.md,
-              backgroundColor: 'white',
-              fontSize: 16,
-              fontFamily: 'Arial',
-              writingDirection: 'rtl',
-              color: textColor as any,
-            }}
-            value={form[field.key] || ''}
-            onChange={(e: any) => handleChange(field.key, e.target.value)}
-          >
-            <option value="">انتخاب کنید</option>
-            {field.options?.map((opt: FieldOption) => (
-              <option key={opt.value} value={opt.value}>{opt.label}</option>
-            ))}
-          </select>
-          {errors[field.key] && (
-            <ThemedText type="caption" style={[styles.errorText, { color: errorColor }]}>
-              {errors[field.key]}
-            </ThemedText>
-          )}
-        </View>
-      );
-    } else {
-      return (
-        <InputField
-          key={field.key}
-          label={field.label}
-          placeholder={field.placeholder || 'انتخاب کنید'}
-          value={form[field.key] || ''}
-          onChangeText={(value) => handleChange(field.key, value)}
-          error={errors[field.key]}
-        />
-      );
-    }
-  };
+        // Clear field-specific error when user starts typing
+        if (fieldErrors[field]) {
+            setFieldErrors(prev => {
+                const newErrors = { ...prev };
+                delete newErrors[field];
+                return newErrors;
+            });
+        }
 
-  return (
-    <ThemedView type="container" style={{ flex: 1 }}>
-      <AppHeader title={`ثبت‌نام ${roleTitle}`} subtitle="اطلاعات پایه" />
+        // Clear general validation errors when user starts making changes
+        if (validationErrors.length > 0) {
+            setValidationErrors([]);
+        }
+    };
 
-      <KeyboardAwareContainer contentContainerStyle={{ padding: Spacing.xl }}>
-        <ProgressBar />
 
-        {/* Header with Role badge */}
-        <View style={styles.header}>
-          <View style={[styles.roleIconContainer, { backgroundColor: withOpacity(primaryColor, 20) }]}>
-            <ThemedText style={styles.roleIcon}>{roleIcon}</ThemedText>
-          </View>
-          <ThemedText type="heading2" weight="bold" style={styles.title}>
-            ثبت‌نام {roleTitle}
-          </ThemedText>
-          <ThemedText type="subtitle" style={styles.subtitle}>
-            لطفاً اطلاعات مورد نیاز را با دقت تکمیل کنید
-          </ThemedText>
-        </View>
+    return (
+        <ThemedView style={styles.container}>
+            <AppHeader title="ثبت اطلاعات مددجو" showBackButton />
 
-        <ThemedView type="card" style={styles.formCard}>
-          <ThemedText type="heading3" style={[styles.formTitle, { color: primaryColor }]}>
-            ثبت‌نام {roleTitle}
-          </ThemedText>
+            <KeyboardAwareContainer>
+                <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+                    <View style={styles.form}>
+                        {/* Validation Error Bar */}
+                        {validationErrors.length > 0 && (
+                            <View style={[styles.errorContainer, { backgroundColor: errorColor + '20', borderColor: errorColor }]}>
+                                <ThemedText style={[styles.errorTitle, { color: errorColor }]}>
+                                    خطاهای اعتبارسنجی:
+                                </ThemedText>
+                                {validationErrors.map((error, index) => (
+                                    <ThemedText key={index} style={[styles.errorText, { color: errorColor }]}>
+                                        • {error}
+                                    </ThemedText>
+                                ))}
+                            </View>
+                        )}
 
-          {personalFields.map(field =>
-            field.type === 'select'
-              ? renderSelectField(field)
-              : (
-                <InputField
-                  key={field.key}
-                  label={field.label}
-                  placeholder={field.placeholder}
-                  value={form[field.key] || ''}
-                  onChangeText={(value) => handleChange(field.key, value)}
-                  secureTextEntry={field.secure}
-                  keyboardType={
-                    field.type === 'phone' ? 'phone-pad'
-                      : field.type === 'email' ? 'email-address'
-                      : field.type === 'number' ? 'numeric'
-                      : 'default'
-                  }
-                  multiline={field.multiline}
-                  error={errors[field.key]}
-                />
-              )
-          )}
-        </ThemedView>
+                        <ThemedText style={styles.sectionTitle}>اطلاعات شخصی</ThemedText>
 
-        <ThemedView type="card" style={styles.formCard}>
-          <ThemedText type="heading3" style={styles.formTitle}>
-            اطلاعات آدرسx
-          </ThemedText>
+                        <InputField
+                            label="نام *"
+                            value={formData.FirstName}
+                            onChangeText={(text) => handleFieldChange('FirstName', text)}
+                            placeholder="نام را وارد کنید"
+                            error={fieldErrors.FirstName}
+                            required
+                        />
 
-          {addressFields.map(field => (
-            <InputField
-              key={field.key}
-              label={field.label}
-              placeholder={field.placeholder}
-              value={form[field.key] || ''}
-              onChangeText={(value) => handleChange(field.key, value)}
-              multiline={field.multiline}
-              error={errors[field.key]}
-            />
-          ))}
-        </ThemedView>
+                        <InputField
+                            label="نام خانوادگی *"
+                            value={formData.LastName}
+                            onChangeText={(text) => handleFieldChange('LastName', text)}
+                            placeholder="نام خانوادگی را وارد کنید"
+                            error={fieldErrors.LastName}
+                            required
+                        />
 
-        {additionalFields.length > 0 && (
-          <ThemedView type="card" style={styles.formCard}>
-            <ThemedText type="heading3" style={styles.formTitle}>
-              اطلاعات تکمیلی
-            </ThemedText>
+                        <InputField
+                            label="نام پدر"
+                            value={formData.NameFather || ''}
+                            onChangeText={(text) => handleFieldChange('NameFather', text)}
+                            placeholder="نام پدر را وارد کنید"
+                        />
 
-            {additionalFields.map(field =>
-              field.type === 'select'
-                ? renderSelectField(field)
-                : (
-                  <InputField
-                    key={field.key}
-                    label={field.label}
-                    placeholder={field.placeholder}
-                    value={form[field.key] || ''}
-                    onChangeText={(value) => handleChange(field.key, value)}
-                    keyboardType={field.type === 'number' ? 'numeric' : 'default'}
-                    multiline={field.multiline}
-                    error={errors[field.key]}
-                  />
-                )
-            )}
-          </ThemedView>
-        )}
+                        <InputField
+                            label="شماره موبایل"
+                            value={formData.Phone || ''}
+                            onChangeText={(text) => handleFieldChange('Phone', text)}
+                            placeholder="09123456789"
+                            keyboardType="phone-pad"
+                            error={fieldErrors.Phone}
+                        />
 
-        <View style={styles.buttonContainer}>
-          <Button
-            title="مرحله بعد: انتخاب موقعیت"
-            onPress={handleNext}
-            loading={loading}
-            fullWidth
-            icon={<ThemedText>📍</ThemedText>}
-          />
-        </View>
+                        <InputField
+                            label="کد ملی"
+                            value={formData.NationalID || ''}
+                            onChangeText={(text) => handleFieldChange('NationalID', text)}
+                            placeholder="کد ملی ۱۰ رقمی"
+                            keyboardType="numeric"
+                            error={fieldErrors.NationalID}
+                        />
+
+                        <InputField
+                            label="ایمیل"
+                            value={formData.Email || ''}
+                            onChangeText={(text) => handleFieldChange('Email', text)}
+                            placeholder="example@email.com"
+                            keyboardType="email-address"
+                            autoCapitalize="none"
+                            error={fieldErrors.Email}
+                        />
+
+                        <InputField
+                            label="تاریخ تولد"
+                            value={formData.BirthDate || ''}
+                            onChangeText={(text) => handleFieldChange('BirthDate', text)}
+                            placeholder="۱۴۰۰/۰۱/۰۱"
+                        />
+
+                        <InputField
+                            label="سن"
+                            value={formData.Age?.toString() || ''}
+                            onChangeText={(text) => handleFieldChange('Age', text ? parseInt(text) : undefined)}
+                            placeholder="سن را وارد کنید"
+                            keyboardType="numeric"
+                            error={fieldErrors.Age}
+                        />
+
+                        <ThemedText style={styles.fieldLabel}>جنسیت</ThemedText>
+                        <RTLPicker
+                            items={[
+                                { label: "انتخاب کنید", value: "" },
+                                { label: "مرد", value: "Male" },
+                                { label: "زن", value: "Female" }
+                            ]}
+                            selectedValue={formData.Gender || ''}
+                            onValueChange={(value) => handleFieldChange('Gender', value)}
+                            placeholder="انتخاب کنید"
+                            style={styles.pickerContainer}
+                        />
+
+                        <ThemedText style={styles.sectionTitle}>اطلاعات آدرس</ThemedText>
+
+                        <InputField
+                            label="استان"
+                            value={formData.Province || ''}
+                            onChangeText={(text) => handleFieldChange('Province', text)}
+                            placeholder="نام استان"
+                        />
+
+                        <InputField
+                            label="شهر"
+                            value={formData.City || ''}
+                            onChangeText={(text) => handleFieldChange('City', text)}
+                            placeholder="نام شهر"
+                        />
+
+                        <InputField
+                            label="منطقه"
+                            value={formData.Region || ''}
+                            onChangeText={(text) => handleFieldChange('Region', text)}
+                            placeholder="منطقه یا ناحیه"
+                        />
+
+                        <InputField
+                            label="آدرس"
+                            value={formData.Street || ''}
+                            onChangeText={(text) => handleFieldChange('Street', text)}
+                            placeholder="آدرس کامل"
+                            multiline
+                        />
+
+                        <ThemedText style={styles.sectionTitle}>اطلاعات همسر</ThemedText>
+
+                        <InputField
+                            label="نام همسر"
+                            value={formData.HusbandFirstName || ''}
+                            onChangeText={(text) => handleFieldChange('HusbandFirstName', text)}
+                            placeholder="نام همسر"
+                        />
+
+                        <InputField
+                            label="نام خانوادگی همسر"
+                            value={formData.HusbandLastName || ''}
+                            onChangeText={(text) => handleFieldChange('HusbandLastName', text)}
+                            placeholder="نام خانوادگی همسر"
+                        />
+
+                        <InputField
+                            label="دلیل غیبت همسر"
+                            value={formData.ReasonMissingHusband || ''}
+                            onChangeText={(text) => handleFieldChange('ReasonMissingHusband', text)}
+                            placeholder="در صورت غیبت همسر، دلیل را شرح دهید"
+                            multiline
+                        />
+
+                        <ThemedText style={styles.sectionTitle}>اطلاعات تحصیلی و شغلی</ThemedText>
+
+                        <ThemedText style={styles.fieldLabel}>سطح تحصیلات</ThemedText>
+                        <RTLPicker
+                            items={[
+                                { label: "انتخاب کنید", value: "" },
+                                { label: "بی‌سواد", value: "None" },
+                                { label: "ابتدایی", value: "Primary" },
+                                { label: "راهنمایی", value: "Secondary" },
+                                { label: "دبیرستان", value: "High School" },
+                                { label: "دیپلم", value: "Diploma" },
+                                { label: "فوق‌دیپلم", value: "Associate Degree" },
+                                { label: "لیسانس", value: "Bachelor" },
+                                { label: "فوق‌لیسانس", value: "Master" },
+                                { label: "دکتری", value: "PhD" }
+                            ]}
+                            selectedValue={formData.EducationLevel || ''}
+                            onValueChange={(value) => handleFieldChange('EducationLevel', value)}
+                            placeholder="انتخاب کنید"
+                            style={styles.pickerContainer}
+                        />
+
+                        <InputField
+                            label="درآمد خانواده"
+                            value={formData.IncomeForm || ''}
+                            onChangeText={(text) => handleFieldChange('IncomeForm', text)}
+                            placeholder="توضیح درآمد خانواده"
+                            multiline
+                        />
+
+                        <InputField
+                            label="نام سازمان حامی"
+                            value={formData.UnderOrganizationName || ''}
+                            onChangeText={(text) => handleFieldChange('UnderOrganizationName', text)}
+                            placeholder="نام سازمان یا نهاد حامی (در صورت وجود)"
+                        />
+
+                        <ThemedText style={styles.fieldLabel}>تحت نظارت نماینده</ThemedText>
+                        <RTLPicker
+                            items={[
+                                { label: "انتخاب نماینده", value: 0 },
+                                ...adminOptions.map(admin => ({
+                                    label: `${admin.name} ${admin.info ? admin.info : ''}` || `نماینده ${admin.id}`,
+                                    value: admin.id
+                                }))
+                            ]}
+                            selectedValue={formData.UnderWhichAdmin || 0}
+                            onValueChange={(value) => handleFieldChange('UnderWhichAdmin', value || undefined)}
+                            placeholder="انتخاب نماینده"
+                            style={styles.pickerContainer}
+                        />
+
+                        {params.latitude && params.longitude && (
+                            <View style={styles.locationInfo}>
+                                <ThemedText style={styles.locationLabel}>موقعیت انتخاب شده:</ThemedText>
+                                <ThemedText style={styles.locationText}>
+                                    عرض جغرافیایی: {params.latitude}
+                                </ThemedText>
+                                <ThemedText style={styles.locationText}>
+                                    طول جغرافیایی: {params.longitude}
+                                </ThemedText>
+                            </View>
+                        )}
+                    </View>
+                </ScrollView>
+
+                <View style={styles.footer}>
+
+                    <Button
+                        title="انتخاب موقعیت در نقشه"
+                        onPress={() => {
+                            router.push({
+                                pathname: '/admin/register/map',
+                                params: {
+                                    formData: JSON.stringify(formData),
+                                    roleTitle: 'ممددجو',
+                                    roleIcon: '👤',
+                                    role: 'needy',
+                                    city: formData.City || '',
+                                    province: formData.Province || '',
+                                    location: formData.Latitude && formData.Longitude
+                                        ? JSON.stringify({
+                                            latitude: parseFloat(formData.Latitude),
+                                            longitude: parseFloat(formData.Longitude)
+                                        })
+                                        : '',
+                                }
+                            });
+                        }}
+                        variant="outline"
+                        style={styles.mapButton}
+                    />
+                </View>
       </KeyboardAwareContainer>
     </ThemedView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  progressContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: Spacing['3xl'],
-    paddingHorizontal: Spacing.xl,
-  },
-  progressStep: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  progressLine: {
-    flex: 1,
-    height: 2,
-    marginHorizontal: Spacing.sm,
-  },
-  progressText: {
-    color: 'white',
-    fontWeight: 'bold',
-  },
-  header: {
-    alignItems: 'center',
-    marginBottom: Spacing['3xl'],
-  },
-  roleIconContainer: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: Spacing.lg,
-  },
-  roleIcon: {
-    fontSize: 36,
-  },
-  title: {
-    marginBottom: Spacing.sm,
-  },
-  subtitle: {
-    opacity: 0.7,
-    textAlign: 'center',
-  },
-  formCard: {
-    marginBottom: Spacing.xl,
-  },
-  formTitle: {
-    marginBottom: Spacing.lg,
-  },
-  selectContainer: {
-    marginBottom: Spacing.md,
-  },
-  selectLabel: {
-    marginBottom: Spacing.sm,
-  },
-  webSelect: {
-    borderWidth: 1,
-    borderColor: '#E0E0E0',
-    borderRadius: BorderRadius.lg,
-    padding: Spacing.md,
-    backgroundColor: 'white',
-    fontSize: 16,
-    fontFamily: 'Arial',
-    writingDirection: 'rtl',
-  },
-  errorText: {
-    marginTop: Spacing.xs,
-  },
-  buttonContainer: {
-    marginTop: Spacing.xl,
-  },
+    container: {
+        flex: 1,
+    },
+    scrollView: {
+        flex: 1,
+    },
+    form: {
+        padding: Spacing.lg,
+    },
+    sectionTitle: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        marginTop: Spacing.lg,
+        marginBottom: Spacing.md,
+    },
+    locationInfo: {
+        marginTop: Spacing.md,
+        padding: Spacing.md,
+        backgroundColor: 'rgba(76, 175, 80, 0.1)',
+        borderRadius: BorderRadius.md,
+    },
+    locationLabel: {
+        fontWeight: 'bold',
+        marginBottom: Spacing.xs,
+    },
+    locationText: {
+        fontSize: 14,
+        opacity: 0.8,
+    },
+    footer: {
+        padding: Spacing.lg,
+        gap: Spacing.md,
+    },
+    submitButton: {
+        marginBottom: Spacing.sm,
+    },
+    mapButton: {
+        textAlign: 'right',
+        marginBottom: Spacing.sm,
+    },
+    errorContainer: {
+        padding: Spacing.md,
+        borderRadius: BorderRadius.md,
+        borderWidth: 1,
+        marginBottom: Spacing.md,
+    },
+    errorTitle: {
+        fontWeight: 'bold',
+        marginBottom: Spacing.xs,
+    },
+    errorText: {
+        fontSize: 14,
+        marginBottom: Spacing.xs,
+    },
+    fieldLabel: {
+        marginTop: Spacing.md,
+        marginBottom: Spacing.xs,
+        fontWeight: 'bold',
+        fontSize: 16,
+    },
+    pickerContainer: {
+        borderWidth: 1,
+        borderColor: '#ccc',
+        borderRadius: BorderRadius.md,
+        overflow: 'hidden',
+        marginBottom: Spacing.md,
+        backgroundColor: 'white',
+    },
+    picker: {
+        height: 50,
+        width: '100%',
+    },
 });

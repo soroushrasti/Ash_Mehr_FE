@@ -47,7 +47,7 @@ export default function AdminRegisterConfirm() {
     { label: 'جنسیت', value: parsedFormData.Gender === 'Male' ? 'مرد' : parsedFormData.gender === 'Female' ? 'زن' : parsedFormData.gender },
     { label: 'منطقه', value: parsedFormData.Region },
     { label: 'سطح تحصیلات', value: getEducationLabel(parsedFormData.EducationLevel) },
-    { label: 'درآمد ماهانه', value: parsedFormData.incomeAmount ? `${parsedFormData.IncomeAmount} تومان` : '' },
+    { label: 'درآمد ماهانه', value: parsedFormData.IncomeAmount ? `${parsedFormData.IncomeAmount} تومان` : '' },
     { label: 'نام همسر', value: parsedFormData.HousebandLastName && parsedFormData.HousebandFirstName ? `${parsedFormData.HousebandFirstName} ${parsedFormData.HousebandLastName}` : '' },
     { label: 'دلیل غیبت همسر', value: parsedFormData.ReasonMissingHusband },
     { label: 'سازمان حامی', value: parsedFormData.UnderOrganizationName },
@@ -116,28 +116,11 @@ export default function AdminRegisterConfirm() {
 
       // Needy / other roles flow
       const registerData: NeedyCreateWithChildren = {
-        FirstName: parsedFormData.firstName || '',
-        LastName: parsedFormData.lastName || '',
-        Phone: parsedFormData.phone || undefined,
-        Email: parsedFormData.email || undefined,
-        City: parsedFormData.city || undefined,
-        Province: parsedFormData.province || undefined,
-        Street: parsedFormData.street || undefined,
-        NameFather: parsedFormData.nameFather || undefined,
-        NationalID: parsedFormData.nationalId || undefined,
+        ...parsedFormData,
         CreatedBy: Number(userId),
-        Age: parsedFormData.age ? Number(parsedFormData.age) : undefined,
-        Region: parsedFormData.region || undefined,
-        Gender: parsedFormData.gender || undefined,
-        HusbandFirstName: parsedFormData.housebandFirstName || undefined,
-        HusbandLastName: parsedFormData.housebandLastName || undefined,
-        ReasonMissingHusband: parsedFormData.reasonMissingHouseband || undefined,
-        UnderOrganizationName: parsedFormData.underOrganizationName || undefined,
-        EducationLevel: parsedFormData.educationLevel || undefined,
-        IncomeForm: parsedFormData.incomeAmount ? String(parsedFormData.incomeAmount) : undefined,
         Latitude: parsedLocation.latitude?.toString() || undefined,
         Longitude: parsedLocation.longitude?.toString() || undefined,
-        children_of_registre: null,
+          children_of_registre: null,
       } as NeedyCreateWithChildren;
       const result = await apiService.createNeedyPerson(registerData);
 

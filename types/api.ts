@@ -90,7 +90,15 @@ export interface NeedyPersonLocation {
   lng: number;
   name?: string;
   info?: string;
-  role?: string;
+}
+
+export interface AdminPersonLocation {
+    id: string;
+    lat: number;
+    lng: number;
+    name?: string;
+    info?: string;
+    role?: string;
 }
 
 export interface InfoNeedyResponse {

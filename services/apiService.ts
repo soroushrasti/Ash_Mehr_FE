@@ -1,5 +1,8 @@
 import { Config, buildApiUrl, getApiHeaders } from '@/constants/Config';
-import { AdminCreate, ApiResponse, NeedyCreateWithChildren, InfoNeedyResponse, InfoAdminResponse, NeedyPersonLocation } from '@/types/api';
+import {
+    AdminCreate, ApiResponse, NeedyCreateWithChildren, InfoNeedyResponse, InfoAdminResponse, NeedyPersonLocation,
+    AdminPersonLocation
+} from '@/types/api';
 import { apiRequest } from './apiClient';
 
 class ApiService {
@@ -104,8 +107,8 @@ class ApiService {
     });
   }
 
-  async getAdminGeoPoints(): Promise<ApiResponse<NeedyPersonLocation[]>> {
-    return apiRequest<NeedyPersonLocation[]>({
+  async getAdminGeoPoints(): Promise<ApiResponse<AdminPersonLocation[]>> {
+    return apiRequest<AdminPersonLocation[]>({
       endpoint: Config.ENDPOINTS.FIND_ADMIN_GEO,
       method: 'GET',
       includeAuth: true,

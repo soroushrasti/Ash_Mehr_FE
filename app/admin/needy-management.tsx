@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, ScrollView, TouchableOpacity, Alert, RefreshControl } from 'react-native';
+import { View, StyleSheet, ScrollView, TouchableOpacity, Alert, RefreshControl, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 import { ThemedView } from '@/components/ThemedView';
 import { ThemedText } from '@/components/ThemedText';
@@ -10,10 +10,12 @@ import { apiService } from '@/services/apiService';
 import AppHeader from '@/components/AppHeader';
 
 interface NeedyRecord {
-    id: string;
+    id: number; // Changed from string to number to match API response
     name: string;
-    phone: string;
+    phone?: string;
     info: string;
+    lat?: number;
+    lng?: number;
 }
 
 export default function ReportsPage() {
@@ -66,31 +68,44 @@ export default function ReportsPage() {
     };
 
     const handleDelete = (record: NeedyRecord) => {
-        Alert.alert(
-            'حذف مددجو',
-            `آیا از حذف ${record.FirstName} ${record.LastName} اطمینان دارید؟`,
-            [
-                { text: 'انصراف', style: 'cancel' },
-                {
-                    text: 'حذف',
-                    style: 'destructive',
-                    onPress: async () => {
-                        try {
-                            const response = await apiService.deleteNeedy(record.RegisterID);
-                            if (response.success) {
-                                setNeedyRecords(prev => prev.filter(r => r.id !== record.RegisterID));
-                                Alert.alert('موفقیت', 'مددجو با موفقیت حذف شد');
-                            } else {
-                                Alert.alert('خطا', response.error || 'حذف با خطا مواجه شد');
-                            }
-                        } catch (error) {
-                            console.error('Error deleting needy:', error);
-                            Alert.alert('خطا', 'خطا در حذف مددجو');
-                        }
+        console.log('Attempting to delete record:', record);
+        const confirmMessage = `آیا از حذف ${record.name || 'این مددجو'} اطمینان دارید؟`;
+
+        const performDelete = async () => {
+            try {
+                const response = await apiService.deleteNeedy(String(record.id));
+                if (response.success) {
+                    setNeedyRecords(prev => prev.filter(r => r.id !== record.id));
+                } else {
+                    const errMsg = response.error || 'حذف با خطا مواجه شد';
+                    if (Platform.OS === 'web') {
+                        // eslint-disable-next-line no-alert
+                        window.alert(errMsg);
+                    } else {
+                        Alert.alert('خطا', errMsg);
                     }
                 }
-            ]
-        );
+            } catch (error) {
+                console.error('Error deleting needy:', error);
+                if (Platform.OS === 'web') {
+                    // eslint-disable-next-line no-alert
+                    window.alert('خطا در حذف مددجو');
+                } else {
+                    Alert.alert('خطا', 'خطا در حذف مددجو');
+                }
+            }
+        };
+
+        if (Platform.OS === 'web') {
+            // eslint-disable-next-line no-alert
+            const confirmed = window.confirm(confirmMessage);
+            if (confirmed) void performDelete();
+        } else {
+            Alert.alert('حذف مددجو', confirmMessage, [
+                { text: 'انصراف', style: 'cancel' },
+                { text: 'حذف', style: 'destructive', onPress: () => { void performDelete(); } },
+            ]);
+        }
     };
 
     const TableRow = ({ record, isHeader = false }: { record: any; isHeader?: boolean }) => (

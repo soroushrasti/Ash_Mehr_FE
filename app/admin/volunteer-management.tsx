@@ -105,13 +105,13 @@ export default function VolunteerManagementPage() {
 
   return (
     <ThemedView style={[styles.container, { backgroundColor }]}>
-      <AppHeader title="مدیریت داوطلبان" subtitle="مدیریت اطلاعات مددجویان و مدیران" />
+      <AppHeader title="مدیریت اطلاعات" subtitle="مدیریت اطلاعات مددجویان و مدیران" />
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         {/* Header Section */}
         <View style={[styles.headerSection, { backgroundColor: surfaceColor, borderColor }]}>
           <ThemedText style={[styles.headerTitle, { color: primaryColor }]}>
-            🤝 مدیریت داوطلبان
+            🤝 مدیریت اطلاعات مددجویان و مدیران
           </ThemedText>
           <ThemedText style={[styles.headerDescription, { color: textColor }]}>
             از این بخش می‌توانید اطلاعات مددجویان و نمایندگان سیستم را مشاهده، ویرایش و مدیریت کنید.

@@ -164,7 +164,7 @@ export default function AdminHome() {
         >
           <TouchableOpacity
             style={[styles.statCard, { backgroundColor: primaryColor }]}
-            onPress={() => router.push('/admin/volunteer-management')}
+            onPress={() => router.push('')}
           >
             <LinearGradient
               colors={[primaryColor, `${primaryColor}CC`]}
@@ -175,27 +175,14 @@ export default function AdminHome() {
             </LinearGradient>
           </TouchableOpacity>
 
+
+
           <TouchableOpacity
             style={[styles.statCard, { backgroundColor: volunteerColor }]}
-            onPress={() => router.push('/admin/admin-management')}
+            onPress={() => router.push('')}
           >
             <LinearGradient
               colors={[volunteerColor, `${volunteerColor}CC`]}
-              style={styles.cardGradient}
-            >
-              <ThemedText style={styles.statNumber} rtl={false}>
-                {adminInfo?.numberAdminPersons || 0}
-              </ThemedText>
-              <ThemedText style={styles.statLabel} rtl={true}>نماینده</ThemedText>
-            </LinearGradient>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[styles.statCard, { backgroundColor: donationColor }]}
-            onPress={() => router.push('/admin/reports')}
-          >
-            <LinearGradient
-              colors={[donationColor, `${donationColor}CC`]}
               style={styles.cardGradient}
             >
               <ThemedText style={styles.statNumber} rtl={false}>
@@ -204,6 +191,22 @@ export default function AdminHome() {
               <ThemedText style={styles.statLabel} rtl={true}>نماینده گروه</ThemedText>
             </LinearGradient>
           </TouchableOpacity>
+
+            <TouchableOpacity
+                style={[styles.statCard, { backgroundColor: donationColor }]}
+                onPress={() => router.push('')}
+            >
+                <LinearGradient
+                    colors={[donationColor, `${donationColor}CC`]}
+                    style={styles.cardGradient}
+                >
+                    <ThemedText style={styles.statNumber} rtl={false}>
+                        {adminInfo?.numberAdminPersons || 0}
+                    </ThemedText>
+                    <ThemedText style={styles.statLabel} rtl={true}>مدیر</ThemedText>
+                </LinearGradient>
+            </TouchableOpacity>
+
         </Animated.View>
 
         {/* Map Section */}
@@ -295,11 +298,11 @@ export default function AdminHome() {
               <View style={styles.actionCardHeader}>
                 <ThemedText style={styles.managementIcon}>📋</ThemedText>
                 <ThemedText style={[styles.actionTitle, { color: primaryColor }]} rtl={true}>
-                  مدیریت مددجویان
+                  مدیریت اطلاعات
                 </ThemedText>
               </View>
               <ThemedText style={[styles.actionDescription, { color: textColor, opacity: 0.7 }]} rtl={true}>
-                مشاهده و مدیریت خانواده‌های مددجو
+                مشاهده و مدیریت اطلاعات
               </ThemedText>
             </TouchableOpacity>
 

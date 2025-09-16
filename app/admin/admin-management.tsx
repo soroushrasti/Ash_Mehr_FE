@@ -299,7 +299,7 @@ export default function AdminManagementPage() {
 
         {/* Back Button */}
         <Button
-          title="بازگشت به مدیریت داوطلبان"
+          title="بازگشت به مدیریت اطلاعات"
           onPress={() => router.push('/admin')}
           variant="outline"
           style={styles.backButton}

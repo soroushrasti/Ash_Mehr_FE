@@ -25,6 +25,7 @@ export default function ReportsPage() {
   const primaryColor = useThemeColor({}, 'primary');
   const successColor = useThemeColor({}, 'success');
   const dangerColor = useThemeColor({}, 'danger');
+  const warningColor = useThemeColor({}, 'warning');
   const backgroundColor = useThemeColor({}, 'background');
   const surfaceColor = useThemeColor({}, 'surface');
   const textColor = useThemeColor({}, 'text');
@@ -112,19 +113,18 @@ export default function ReportsPage() {
         </ThemedText>
       </View>
 
-
-        <View style={styles.tableCell}>
-            <ThemedText
-                style={[
-                    styles.tableCellText,
-                    { color: isHeader ? 'white' : textColor },
-                    isHeader && styles.tableHeaderText
-                ]}
-            >
-                {isHeader ? 'آدرس' : record.info}
-            </ThemedText>
-        </View>
-
+      <View style={styles.tableCell}>
+        <ThemedText
+          style={[
+            styles.tableCellText,
+            { color: isHeader ? 'white' : textColor },
+            isHeader && styles.tableHeaderText
+          ]}
+          numberOfLines={isHeader ? 1 : 2}
+        >
+          {isHeader ? 'آدرس' : record.info}
+        </ThemedText>
+      </View>
 
       {!isHeader && (
         <View style={styles.actionsCell}>
@@ -176,9 +176,16 @@ export default function ReportsPage() {
 
   return (
     <ThemedView style={[styles.container, { backgroundColor }]}>
-      <AppHeader title="گزارش‌گیری" subtitle="مدیریت اطلاعات مددجویان" />
+      <AppHeader title="لیست مددجویان" subtitle="مدیریت اطلاعات مددجویان" />
 
-      <View style={styles.content}>
+      <ScrollView
+        style={styles.content}
+        contentContainerStyle={styles.scrollContainer}
+        showsVerticalScrollIndicator={true}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
+      >
         {/* Statistics Section */}
         <View style={[styles.statsContainer, { backgroundColor: surfaceColor, borderColor }]}>
           <View style={styles.statItem}>
@@ -197,25 +204,15 @@ export default function ReportsPage() {
             لیست مددجویان
           </ThemedText>
 
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            refreshControl={
-              <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-            }
-          >
-            <View style={styles.table}>
-              {/* Table Header */}
-              <TableRow record={{}} isHeader={true} />
+          <View style={styles.tableWrapper}>
+            {/* Table Header */}
+            <TableRow record={{}} isHeader={true} />
 
-              {/* Table Rows */}
-              <ScrollView showsVerticalScrollIndicator={false}>
-                {needyRecords.map((record, index) => (
-                  <TableRow key={record.id || index} record={record} />
-                ))}
-              </ScrollView>
-            </View>
-          </ScrollView>
+            {/* Table Rows - Direct rendering without nested ScrollView */}
+            {needyRecords.map((record, index) => (
+              <TableRow key={record.id || index} record={record} />
+            ))}
+          </View>
 
           {needyRecords.length === 0 && (
             <View style={styles.emptyContainer}>
@@ -234,11 +231,11 @@ export default function ReportsPage() {
         {/* Back Button */}
         <Button
           title="بازگشت به پنل مدیریت"
-          onPress={() => router.back()}
+          onPress={() => router.push('/admin')}
           variant="outline"
           style={styles.backButton}
         />
-      </View>
+      </ScrollView>
     </ThemedView>
   );
 }
@@ -270,51 +267,59 @@ const styles = StyleSheet.create({
     fontSize: 36,
     fontWeight: 'bold',
     marginBottom: Spacing.xs,
+    textAlign: 'center',
   },
   statLabel: {
     fontSize: 16,
     opacity: 0.7,
+    textAlign: 'center',
   },
   tableContainer: {
     borderRadius: BorderRadius.lg,
     borderWidth: 1,
     padding: Spacing.lg,
     marginBottom: Spacing.lg,
-    flex: 1,
   },
   sectionTitle: {
     fontSize: 20,
     fontWeight: 'bold',
     marginBottom: Spacing.lg,
-    textAlign: 'center',
+    textAlign: 'right',
   },
-  table: {
-    minWidth: 600,
+  tableWrapper: {
+    flex: 1,
+    borderRadius: BorderRadius.md,
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+  },
+  scrollContainer: {
+    paddingBottom: Spacing.lg,
   },
   tableRow: {
-    flexDirection: 'row',
+    flexDirection: 'row-reverse',
     borderBottomWidth: 1,
+    borderColor: '#E0E0E0',
     paddingVertical: Spacing.md,
     paddingHorizontal: Spacing.sm,
+    minHeight: 60,
+    width: '100%',
   },
   tableCell: {
     flex: 1,
     paddingHorizontal: Spacing.xs,
     justifyContent: 'center',
-  },
-  addressCell: {
-    flex: 2,
+    alignItems: 'flex-end',
   },
   actionsCell: {
-    flexDirection: 'row',
+    flex: 1,
+    flexDirection: 'row-reverse',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: Spacing.xs,
     paddingHorizontal: Spacing.xs,
   },
   tableCellText: {
     fontSize: 14,
-    textAlign: 'center',
+    textAlign: 'right',
   },
   tableHeaderText: {
     fontWeight: 'bold',
@@ -326,6 +331,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     justifyContent: 'center',
     alignItems: 'center',
+    marginHorizontal: 2,
   },
   actionButtonText: {
     fontSize: 12,
@@ -333,14 +339,16 @@ const styles = StyleSheet.create({
   },
   emptyContainer: {
     alignItems: 'center',
-    paddingVertical: Spacing['2xl'],
+    paddingVertical: Spacing.xl,
     gap: Spacing.lg,
   },
   emptyText: {
     fontSize: 16,
     opacity: 0.7,
+    textAlign: 'center',
   },
   backButton: {
     marginTop: Spacing.lg,
+    marginBottom: Spacing.lg,
   },
 });

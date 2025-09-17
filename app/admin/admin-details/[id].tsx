@@ -107,7 +107,7 @@ export default function AdminDetailsPage() {
   const getRoleIcon = (role: string) => {
     switch (role?.toLowerCase()) {
       case 'admin':
-        return '👑';
+        return '👤';
       case 'groupadmin':
         return '👥';
       default:
@@ -249,8 +249,6 @@ export default function AdminDetailsPage() {
         {/* Administrative Information */}
         <DetailSection title="اطلاعات اداری" icon="⚙️">
           <DetailRow label="نقش" value={getRoleLabel(adminDetails.UserRole)} />
-          <DetailRow label="ایجاد شده توسط" value={adminDetails.CreatedBy} />
-          <DetailRow label="رمز عبور" value="••••••••" />
         </DetailSection>
 
         {/* System Information */}

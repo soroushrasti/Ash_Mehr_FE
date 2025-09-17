@@ -439,7 +439,7 @@ export default function EditNeedyPage() {
 
             {formData.Latitude && formData.Longitude && (
               <View style={styles.locationInfo}>
-                <ThemedText style={styles.locationLabel}>موقعیت فعلی:</ThemedText>
+                <ThemedText style={styles.locationLabel}>موقعیت :</ThemedText>
                 <ThemedText style={styles.locationText}>
                   عرض جغرافیایی: {formData.Latitude}
                 </ThemedText>

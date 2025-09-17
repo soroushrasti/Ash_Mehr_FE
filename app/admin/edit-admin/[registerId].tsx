@@ -126,11 +126,6 @@ export default function EditAdminPage() {
       fieldErrs.LastName = 'نام خانوادگی الزامی است';
     }
 
-    // Password validation
-    if (!formData.Password || formData.Password.length < 6) {
-      errors.push('رمز عبور باید حداقل ۶ کاراکتر باشد');
-      fieldErrs.Password = 'رمز عبور باید حداقل ۶ کاراکتر باشد';
-    }
 
     // Email validation (if provided)
     if (formData.Email && formData.Email.trim()) {
@@ -367,16 +362,6 @@ export default function EditAdminPage() {
               style={styles.rtlInput}
             />
 
-            <InputField
-              label="رمز عبور *"
-              value={formData.Password}
-              onChangeText={(text) => handleFieldChange('Password', text)}
-              placeholder="حداقل ۶ کاراکتر"
-              secureTextEntry
-              error={fieldErrors.Password}
-              required
-              style={styles.rtlInput}
-            />
 
             <ThemedText style={[styles.sectionTitle, { color: textColor }]}>اطلاعات آدرس</ThemedText>
 

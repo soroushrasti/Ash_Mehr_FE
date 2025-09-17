@@ -268,10 +268,10 @@ export default function AdminHome() {
               onPress={() => router.push('/admin/register/needy-form')}
             >
               <View style={styles.actionCardHeader}>
-                <ThemedText style={styles.registrationIcon}>👨‍👩‍👧‍👦</ThemedText>
                 <ThemedText style={[styles.actionTitle, { color: '#FFFFFF' }]} rtl={true}>
                   ثبت خانواده مددجو
                 </ThemedText>
+                <ThemedText style={styles.registrationIcon}>👨‍👩‍👧‍👦</ThemedText>
               </View>
               <ThemedText style={[styles.actionDescription, { color: '#FFFFFF', opacity: 0.9 }]} rtl={true}>
                 افزودن خانواده مددجو جدید به سیستم
@@ -283,31 +283,30 @@ export default function AdminHome() {
               onPress={() => router.push('/admin/register/group-admin-form')}
             >
               <View style={styles.actionCardHeader}>
-                <ThemedText style={styles.registrationIcon}>👨‍💼</ThemedText>
                 <ThemedText style={[styles.actionTitle, { color: '#FFFFFF' }]} rtl={true}>
                   ثبت نماینده جدید
                 </ThemedText>
+                <ThemedText style={styles.registrationIcon}>👨‍💼</ThemedText>
               </View>
               <ThemedText style={[styles.actionDescription, { color: '#FFFFFF', opacity: 0.9 }]} rtl={true}>
                 افزودن نماینده گروه جدید
               </ThemedText>
             </TouchableOpacity>
 
-
-              <TouchableOpacity
-                  style={[styles.actionCard, styles.registrationCard, styles.rtlActionCard, { backgroundColor: donationColor, borderColor: donationColor }]}
-                  onPress={() => router.push('/admin/register/admin-form')}
-              >
-                  <View style={styles.actionCardHeader}>
-                      <ThemedText style={styles.registrationIcon}>👨‍💼</ThemedText>
-                      <ThemedText style={[styles.actionTitle, { color: '#FFFFFF' }]} rtl={true}>
-                          ثبت مدیر
-                      </ThemedText>
-                  </View>
-                  <ThemedText style={[styles.actionDescription, { color: '#FFFFFF', opacity: 0.9 }]} rtl={true}>
-                      افزودن مدیر جدید
-                  </ThemedText>
-              </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.actionCard, styles.registrationCard, styles.rtlActionCard, { backgroundColor: donationColor, borderColor: donationColor }]}
+              onPress={() => router.push('/admin/register/admin-form')}
+            >
+              <View style={styles.actionCardHeader}>
+                <ThemedText style={[styles.actionTitle, { color: '#FFFFFF' }]} rtl={true}>
+                  ثبت مدیر
+                </ThemedText>
+                <ThemedText style={styles.registrationIcon}>👑</ThemedText>
+              </View>
+              <ThemedText style={[styles.actionDescription, { color: '#FFFFFF', opacity: 0.9 }]} rtl={true}>
+                افزودن مدیر جدید
+              </ThemedText>
+            </TouchableOpacity>
 
             {/* Management Actions */}
             <TouchableOpacity
@@ -315,10 +314,10 @@ export default function AdminHome() {
               onPress={() => router.push('/admin/info-management')}
             >
               <View style={styles.actionCardHeader}>
-                <ThemedText style={styles.managementIcon}>📋</ThemedText>
                 <ThemedText style={[styles.actionTitle, { color: primaryColor }]} rtl={true}>
                   مدیریت اطلاعات
                 </ThemedText>
+                <ThemedText style={styles.managementIcon}>📋</ThemedText>
               </View>
               <ThemedText style={[styles.actionDescription, { color: textColor, opacity: 0.7 }]} rtl={true}>
                 مشاهده و مدیریت اطلاعات

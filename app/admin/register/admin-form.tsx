@@ -228,12 +228,6 @@ export default function AdminUserRegister() {
               required
             />
 
-            <InputField
-              label="ایجاد شده توسط"
-              value={formData.CreatedBy}
-              onChangeText={(text) => handleFieldChange('CreatedBy', text)}
-              placeholder="توسط کدام نماینده ایجاد شده"
-            />
 
             <ThemedText style={styles.sectionTitle}>آدرس</ThemedText>
 

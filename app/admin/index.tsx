@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Animated, RefreshControl, TouchableOpacity, ScrollView, StyleSheet, View } from 'react-native';
+import { Animated, RefreshControl, TouchableOpacity, ScrollView, StyleSheet, View, I18nManager } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { ThemedView } from '@/components/ThemedView';
@@ -12,6 +12,12 @@ import { apiService } from '@/services/apiService';
 import type { InfoAdminResponse } from '@/types/api';
 import { useAuth } from '@/components/AuthContext';
 import { RTLPicker } from '@/components/RTLPicker';
+
+// Force RTL layout
+if (!I18nManager.isRTL) {
+  I18nManager.allowRTL(true);
+  I18nManager.forceRTL(true);
+}
 
 // Local MapPoint type to align with API points
 interface MapPoint {
@@ -444,7 +450,8 @@ const styles = StyleSheet.create({
     ...Shadows.small,
   },
   rtlActionCard: {
-    writingDirection: 'rtl',
+    direction: 'rtl',
+    alignItems: 'flex-end',
   },
   registrationCard: {
     flexDirection: 'column',
@@ -454,27 +461,29 @@ const styles = StyleSheet.create({
   actionCardHeader: {
     flexDirection: 'row-reverse',
     alignItems: 'center',
+    justifyContent: 'flex-end',
     marginBottom: Spacing.xs,
+    width: '100%',
   },
   registrationIcon: {
     fontSize: 24,
-    marginRight: Spacing.xs,
-    marginLeft: Spacing.sm,
+    marginLeft: Spacing.md,
   },
   managementIcon: {
     fontSize: 20,
-    marginRight: Spacing.xs,
-    marginLeft: Spacing.sm,
+    marginLeft: Spacing.md,
   },
   actionTitle: {
     fontSize: Typography.sizes.md,
     fontWeight: Typography.weights.semibold as any,
     marginBottom: Spacing.xs,
     textAlign: 'right',
+    flex: 1,
   },
   actionDescription: {
     fontSize: Typography.sizes.sm,
     lineHeight: 20,
     textAlign: 'right',
+    width: '100%',
   },
 });

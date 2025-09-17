@@ -8,6 +8,8 @@ interface MapPoint {
   lng: number;
   name?: string;
   info?: string;
+  group_name?: string;
+  phone?: string;
 }
 
 interface GoogleMapWebProps {
@@ -45,6 +47,7 @@ const GoogleMapWeb: React.FC<GoogleMapWebProps> = ({
   style,
   showCurrentLocation = false,
 }) => {
+    console.log('GoogleMapWeb props:', { points, selectedLocation, initialRegion });
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<any>(null);
   const markersRef = useRef<any[]>([]);
@@ -181,6 +184,12 @@ const GoogleMapWeb: React.FC<GoogleMapWebProps> = ({
 
       console.log('Google Maps initialized successfully with click listener');
       setLoadError(null);
+
+      // Trigger updateMarkers after map is fully initialized
+      setTimeout(() => {
+        console.log('Triggering updateMarkers after map initialization...');
+        updateMarkers();
+      }, 100);
     } catch (error) {
       console.error('Error initializing map:', error);
       setLoadError('Failed to initialize map');
@@ -189,6 +198,7 @@ const GoogleMapWeb: React.FC<GoogleMapWebProps> = ({
 
   // Load Google Maps on component mount
   useEffect(() => {
+    console.log('Loading Google Maps, Platform.OS:', Platform.OS);
     if (Platform.OS === 'web') {
       loadGoogleMaps().catch((error) => {
         console.error('Failed to load Google Maps:', error);
@@ -199,9 +209,11 @@ const GoogleMapWeb: React.FC<GoogleMapWebProps> = ({
 
   // Initialize map when loaded
   useEffect(() => {
+    console.log('Map loaded state changed:', { isMapLoaded, mapInstance: !!mapInstanceRef.current });
     if (isMapLoaded) {
       // Small delay to ensure DOM is ready
       initTimeoutRef.current = setTimeout(() => {
+        console.log('Attempting to initialize map...');
         initializeMap();
       }, 100);
     }
@@ -236,6 +248,7 @@ const GoogleMapWeb: React.FC<GoogleMapWebProps> = ({
       }
 
       // Filter valid points
+      console.log('All received points:', points);
       const validPoints = points.filter(point =>
         point &&
         typeof point.lat === 'number' &&
@@ -249,12 +262,14 @@ const GoogleMapWeb: React.FC<GoogleMapWebProps> = ({
       );
 
       console.log(`Creating ${validPoints.length} valid markers from ${points.length} points`);
+      console.log('Valid points details:', validPoints);
 
       if (validPoints.length === 0) return;
 
       // Create markers with error handling
       const markers = validPoints.map(point => {
         try {
+          console.log('Creating marker for point:', point);
           const marker = new window.google.maps.Marker({
             position: { lat: point.lat, lng: point.lng },
             map: mapInstanceRef.current,
@@ -268,6 +283,8 @@ const GoogleMapWeb: React.FC<GoogleMapWebProps> = ({
               strokeWeight: 2,
             }
           });
+
+          console.log('Marker created successfully at:', point.lat, point.lng);
 
           // Add info window with error handling
           if (point.info || point.name) {
@@ -297,6 +314,7 @@ const GoogleMapWeb: React.FC<GoogleMapWebProps> = ({
       }).filter(Boolean);
 
       markersRef.current = markers;
+      console.log('Total markers created:', markers.length);
 
       // --- Clustering (standard) -------------------------------------------------
       // Clear any existing clusterer safely
@@ -357,11 +375,23 @@ const GoogleMapWeb: React.FC<GoogleMapWebProps> = ({
     }
   }, [points, isMapLoaded]);
 
+  // Separate effect for points changes (after initial map setup)
   useEffect(() => {
-    if (isMapLoaded && mapInstanceRef.current) {
-      updateMarkers();
+    console.log('Points changed, checking if map is ready...', {
+      isMapLoaded,
+      hasMapInstance: !!mapInstanceRef.current,
+      pointsLength: points.length,
+      hasGoogleMaps: !!(window.google && window.google.maps)
+    });
+
+    if (isMapLoaded && mapInstanceRef.current && points.length > 0) {
+      console.log('Calling updateMarkers for points change...');
+      // Small delay to ensure map is fully ready
+      setTimeout(() => {
+        updateMarkers();
+      }, 50);
     }
-  }, [isMapLoaded, updateMarkers]);
+  }, [points, isMapLoaded]); // Remove updateMarkers from dependencies to prevent infinite loop
 
   // Handle selected location
   useEffect(() => {

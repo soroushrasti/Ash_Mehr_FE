@@ -1,19 +1,19 @@
-import React, { useEffect, useRef, useState, useCallback } from 'react';
-import { ScrollView, StyleSheet, TouchableOpacity, View, Dimensions, Animated, RefreshControl } from 'react-native';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Animated, RefreshControl, TouchableOpacity, ScrollView, StyleSheet, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { ThemedView } from '@/components/ThemedView';
 import { ThemedText } from '@/components/ThemedText';
 import { SignOutButton } from '@/components/SignOutButton';
 import { useThemeColor } from '@/hooks/useThemeColor';
-import { Spacing, BorderRadius, Shadows, Typography, RTL } from '@/constants/Design';
+import { Spacing, BorderRadius, Shadows, Typography } from '@/constants/Design';
 import NeedyMap from '@/components/NeedyMap';
 import { apiService } from '@/services/apiService';
 import type { InfoAdminResponse } from '@/types/api';
 import { useAuth } from '@/components/AuthContext';
+import { RTLPicker } from '@/components/RTLPicker';
 
-const { width } = Dimensions.get('window');
-
+// Local MapPoint type to align with API points
 interface MapPoint {
   id: string;
   lat: number;
@@ -29,10 +29,10 @@ export default function AdminHome() {
   const slideAnim = useRef(new Animated.Value(50)).current;
   const { userName } = useAuth();
 
+  // Theme colors
   const primaryColor = useThemeColor({}, 'primary');
   const donationColor = useThemeColor({}, 'donation');
   const volunteerColor = useThemeColor({}, 'volunteer');
-  const emergencyColor = useThemeColor({}, 'emergency');
   const backgroundColor = useThemeColor({}, 'background');
   const surfaceColor = useThemeColor({}, 'surface');
   const textColor = useThemeColor({}, 'text');
@@ -41,28 +41,50 @@ export default function AdminHome() {
   const [needyInfo, setNeedyInfo] = useState<{ numberNeedyPersons: number; LastNeedycreatedTime: string; LastNeedyNameCreated: string } | null>(null);
   const [adminInfo, setAdminInfo] = useState<InfoAdminResponse | null>(null);
   const [mapPoints, setMapPoints] = useState<MapPoint[]>([]);
-  const [adminMapPoints, setAdminMapPoints] = useState<MapPoint[]>([]);
   const [refreshing, setRefreshing] = useState(false);
+  const [selectedGroupFilter, setSelectedGroupFilter] = useState('');
+  const [availableGroups, setAvailableGroups] = useState<string[]>([]);
 
   const fetchData = useCallback(async (showRefreshing = false) => {
     if (showRefreshing) setRefreshing(true);
     try {
-      const [ni, ai, ng, ag] = await Promise.all([
+      const [ni, ai, ng] = await Promise.all([
         apiService.getNeedyInfo(),
         apiService.getAdminInfo(),
         apiService.getNeedyGeoPoints(),
-        apiService.getAdminGeoPoints(),
       ]);
       if (ni.success) setNeedyInfo(ni.data!);
       if (ai.success) setAdminInfo(ai.data!);
-      if (ng.success && Array.isArray(ng.data)) setMapPoints(ng.data as MapPoint[]);
-      if (ag.success && Array.isArray(ag.data)) setAdminMapPoints(ag.data as MapPoint[]);
+      if (ng.success && Array.isArray(ng.data)) {
+        const points = ng.data as unknown as MapPoint[];
+        setMapPoints(points);
+        const groups = [...new Set(
+          points
+            .map(p => p.group_name)
+            .filter((g): g is string => !!g && g.trim() !== '')
+        )];
+        setAvailableGroups(groups);
+      }
     } catch (error) {
       console.error('Error fetching data:', error);
-        } finally {
+    } finally {
       if (showRefreshing) setRefreshing(false);
     }
   }, []);
+
+  const filteredMapPoints = useMemo(() => {
+      console.log('Filtering map points with group filter:', selectedGroupFilter);
+      console.log('Total map points before filtering:', mapPoints.length);
+
+      const result = !selectedGroupFilter
+        ? mapPoints
+        : mapPoints.filter(p => p.group_name === selectedGroupFilter);
+
+      console.log('Filtered result length:', result.length);
+      console.log('Filtered result sample:', result.slice(0, 2));
+
+      return result;
+  }, [mapPoints, selectedGroupFilter]);
 
 
   // Refresh data when page comes into focus
@@ -90,11 +112,9 @@ export default function AdminHome() {
     ]).start();
   }, [fetchData, fadeAnim, slideAnim]);
 
-  const onRefresh = () => {
-    fetchData(true);
-  };
+  const onRefresh = () => fetchData(true);
 
-  const needyCount = needyInfo?.numberNeedyPersons || mapPoints.length;
+  const needyCount = needyInfo?.numberNeedyPersons ?? mapPoints.length;
 
   return (
     <ThemedView style={[styles.container, { backgroundColor }]} rtl={true}>
@@ -156,7 +176,6 @@ export default function AdminHome() {
           </TouchableOpacity>
 
 
-
           <TouchableOpacity
             style={[styles.statCard, { backgroundColor: volunteerColor }]}
             onPress={() => router.push('')}
@@ -194,24 +213,28 @@ export default function AdminHome() {
           style={[
             styles.mapSection,
             styles.rtlSection,
-            {
-              backgroundColor: surfaceColor,
-              borderColor,
-              opacity: fadeAnim,
-              transform: [{ translateY: slideAnim }]
-            }
+            { backgroundColor: surfaceColor, borderColor, opacity: fadeAnim, transform: [{ translateY: slideAnim }] },
           ]}
         >
-          <ThemedText style={[styles.sectionTitle, { color: textColor }]} rtl={true}>
-             نقشه
-          </ThemedText>
+          <ThemedText style={[styles.sectionTitle, { color: textColor }]} rtl={true}>نقشه</ThemedText>
           <ThemedText style={[styles.sectionSubtitle, { color: textColor, opacity: 0.7 }]} rtl={true}>
-            موقعیت جغرافیایی مددجو ها
+            موقعیت جغرافیایی مددجوها بر اساس نمایندگان
           </ThemedText>
+
+          {/* Group Filter Picker */}
+          <View style={styles.filterContainer}>
+            <RTLPicker
+              style={styles.rtlPicker}
+              items={[{ label: 'همه نمایندگان', value: '' }, ...availableGroups.map(g => ({ label: g, value: g }))]}
+              selectedValue={selectedGroupFilter}
+              onValueChange={(val) => setSelectedGroupFilter(val)}
+              placeholder="انتخاب نماینده"
+            />
+          </View>
 
           <View style={styles.mapContainer}>
             <NeedyMap
-              points={mapPoints}
+              points={filteredMapPoints}
               initialRegion={{
                 latitude: 35.6892,
                 longitude: 51.3890,
@@ -310,12 +333,8 @@ export default function AdminHome() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  scrollContainer: {
-    paddingBottom: Spacing.xl,
-  },
+  container: { flex: 1 },
+  scrollContainer: { paddingBottom: Spacing.xl },
   header: {
     padding: Spacing.lg,
     borderBottomWidth: 1,
@@ -396,6 +415,13 @@ const styles = StyleSheet.create({
     fontSize: Typography.sizes.sm,
     marginBottom: Spacing.md,
     textAlign: 'right',
+  },
+  filterContainer: {
+    marginBottom: Spacing.md,
+  },
+  rtlPicker: {
+    borderWidth: 1,
+    borderRadius: BorderRadius.lg,
   },
   mapContainer: {
     height: 300,

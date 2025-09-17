@@ -41,7 +41,6 @@ const baseFields: FieldDef[] = [
 ];
 
 const needyFamilyFields: FieldDef[] = [
-  { key: 'age', label: 'سن', placeholder: 'سن به سال', required: false, type: 'number' },
   { key: 'region', label: 'منطقه', placeholder: 'منطقه شهری', required: false },
   { key: 'gender', label: 'جنسیت', placeholder: 'انتخاب کنید', required: false, type: 'select', options: [
     { label: 'مرد', value: 'Male' },
@@ -140,7 +139,7 @@ export default function AdminRegisterForm() {
   }
 
   // Group fields explicitly (avoid index slices)
-  const personalKeys = ['firstName','lastName','phone','nationalId','email'];
+  const personalKeys = ['firstName','lastName','phone','nationalId','email', 'birthDate'];
   const addressKeys = ['province','city','street'];
   const personalFields = fields.filter(f => personalKeys.includes(f.key));
   const addressFields = fields.filter(f => addressKeys.includes(f.key));

@@ -20,7 +20,6 @@ interface NeedyEditData {
   street: string;
   city: string;
   province: string;
-  age: string;
   region:string;
   gender: string;
   nameFather: string;
@@ -48,7 +47,6 @@ export default function EditNeedyPage() {
     street: '',
     city: '',
     province: '',
-    age: '',
     region:'',
     gender: '',
     nameFather: '',
@@ -96,7 +94,6 @@ export default function EditNeedyPage() {
           street: data.Street || '',
           city: data.City || '',
           province: data.Province || '',
-          age: data.Age || '',
           region:data.Region || '',
           gender: data.Gender || '',
           nameFather: data.NameFather || '',
@@ -176,7 +173,6 @@ export default function EditNeedyPage() {
         street: formData.address.trim(),
         city: formData.city.trim(),
         province: formData.province.trim(),
-        age: formData.age.trim(),
         region:formData.region.trim(),
         gender: formData.gender.trim(),
         nameFather: formData.nameFather.trim(),
@@ -266,6 +262,14 @@ export default function EditNeedyPage() {
             />
 
             <InputField
+              label="نام پدر"
+              value={formData.nameFather}
+              onChangeText={(value) => updateFormData('nameFather', value)}
+              error={errors.nameFather}
+              placeholder={formData.nameFather}
+            />
+
+            <InputField
               label="کد ملی *"
               value={formData.nationalId}
               onChangeText={(value) => updateFormData('nationalId', value)}
@@ -299,13 +303,6 @@ export default function EditNeedyPage() {
               value={formData.birthDate}
               onChangeText={(value) => updateFormData('birthDate', value)}
               placeholder={formData.birthDate}
-            />
-
-            <InputField
-              label="سن"
-              value={formData.age}
-              onChangeText={(value) => updateFormData('age', value)}
-              placeholder={formData.age}
             />
 
             <InputField

@@ -25,6 +25,7 @@ export default function AdminUserRegister() {
     Password: '',
     City: '',
     Province: '',
+    PostCode: '',
     Street: '',
     NationalID: '',
     CreatedBy: '',
@@ -165,6 +166,13 @@ export default function AdminUserRegister() {
               placeholder="آدرس کامل"
               multiline
             />
+
+             <InputField
+               label="کد پستی"
+               value={formData.PostCode || ''}
+               onChangeText={(text) => setFormData(prev => ({ ...prev, PostCode: text }))}
+               placeholder="کد پستی"
+             />
 
             {params.latitude && params.longitude && (
               <View style={styles.locationInfo}>

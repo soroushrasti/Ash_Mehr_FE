@@ -239,15 +239,6 @@ export default function AdminUserRegister() {
                             placeholder="۱۴۰۰/۰۱/۰۱"
                         />
 
-                        <InputField
-                            label="سن"
-                            value={formData.Age?.toString() || ''}
-                            onChangeText={(text) => handleFieldChange('Age', text ? parseInt(text) : undefined)}
-                            placeholder="سن را وارد کنید"
-                            keyboardType="numeric"
-                            error={fieldErrors.Age}
-                        />
-
                         <ThemedText style={styles.fieldLabel}>جنسیت</ThemedText>
                         <RTLPicker
                             items={[

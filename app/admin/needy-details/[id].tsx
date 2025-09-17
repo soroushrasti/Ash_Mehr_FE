@@ -20,12 +20,11 @@ interface NeedyDetails {
   street: string;
   city: string;
   province: string;
-  age: string;
   region:string;
   gender: string;
   nameFather: string;
   husbandFirstName: string;
-  HusbandLastName: string;
+  husbandLastName: string;
   reasonMissingHusband: string;
   underOrganizationName: string;
   educationLevel: string;
@@ -155,10 +154,10 @@ export default function NeedyDetailsPage() {
         <DetailSection title="اطلاعات شخصی">
           <DetailRow label="نام" value={needyDetails.FirstName} />
           <DetailRow label="نام خانوادگی" value={needyDetails.LastName} />
+          <DetailRow label="نام پدر" value={needyDetails.NameFather} />
           <DetailRow label="کد ملی" value={needyDetails.NationalID} />
           <DetailRow label="تاریخ تولد" value={needyDetails.BirthDate} />
           <DetailRow label="شماره تلفن" value={needyDetails.Phone} />
-          <DetailRow label="سن" value={needyDetails.Age} />
           <DetailRow label="جنسیت" value={needyDetails.Gender} />
           <DetailRow label="نام همسر" value={needyDetails.HusbandFirstName} />
           <DetailRow label="نام خانوادگی همسر" value={needyDetails.HusbandLastName} />

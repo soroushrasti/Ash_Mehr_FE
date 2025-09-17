@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, ScrollView, TouchableOpacity, Alert, RefreshControl } from 'react-native';
+import { View, StyleSheet, ScrollView, TouchableOpacity, Alert, RefreshControl, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 import { ThemedView } from '@/components/ThemedView';
 import { ThemedText } from '@/components/ThemedText';
@@ -73,32 +73,45 @@ export default function AdminManagementPage() {
   };
 
   const handleDelete = (record: AdminRecord) => {
-    Alert.alert(
-      'حذف نماینده',
-      `آیا از حذف ${record.FirstName} ${record.LastName} اطمینان دارید؟`,
-      [
-        { text: 'انصراف', style: 'cancel' },
-        {
-          text: 'حذف',
-          style: 'destructive',
-          onPress: async () => {
+        console.log('Attempting to delete record:', record);
+        const confirmMessage = `آیا از حذف ${record.name || 'این نماینده'} اطمینان دارید؟`;
+
+        const performDelete = async () => {
             try {
-              const response = await apiService.deleteAdmin(record.register_id);
-              if (response.success) {
-                setAdminRecords(prev => prev.filter(r => r.register_id !== record.register_id));
-                Alert.alert('موفقیت', 'نماینده با موفقیت حذف شد');
-              } else {
-                Alert.alert('خطا', response.error || 'حذف با خطا مواجه شد');
-              }
+                const response = await apiService.deleteAdmin(String(record.id));
+                if (response.success) {
+                    setAdminRecords(prev => prev.filter(r => r.id !== record.id));
+                } else {
+                    const errMsg = response.error || 'حذف با خطا مواجه شد';
+                    if (Platform.OS === 'web') {
+                        // eslint-disable-next-line no-alert
+                        window.alert(errMsg);
+                    } else {
+                        Alert.alert('خطا', errMsg);
+                    }
+                }
             } catch (error) {
-              console.error('Error deleting admin:', error);
-              Alert.alert('خطا', 'خطا در حذف نماینده');
+                console.error('Error deleting admin:', error);
+                if (Platform.OS === 'web') {
+                    // eslint-disable-next-line no-alert
+                    window.alert('خطا در حذف نماینده');
+                } else {
+                    Alert.alert('خطا', 'خطا در حذف نماینده');
+                }
             }
-          }
+        };
+
+        if (Platform.OS === 'web') {
+            // eslint-disable-next-line no-alert
+            const confirmed = window.confirm(confirmMessage);
+            if (confirmed) void performDelete();
+        } else {
+            Alert.alert('حذف نماینده', confirmMessage, [
+                { text: 'انصراف', style: 'cancel' },
+                { text: 'حذف', style: 'destructive', onPress: () => { void performDelete(); } },
+            ]);
         }
-      ]
-    );
-  };
+    };
 
   const getRoleColor = (role: string) => {
     switch (role?.toLowerCase()) {

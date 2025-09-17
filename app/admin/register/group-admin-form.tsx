@@ -29,6 +29,8 @@ export default function AdminUserRegister() {
         Province: '',
         Street: '',
         NationalID: '',
+        PostCode: '',
+        CreatedBy: '',
         UserRole: 'Admin',
         Latitude: params.latitude ? String(params.latitude) : '',
         Longitude: params.longitude ? String(params.longitude) : '',
@@ -196,6 +198,14 @@ export default function AdminUserRegister() {
                             required
                         />
 
+                         <InputField
+                           label="ایجاد شده توسط"
+                           value={formData.CreatedBy}
+                           onChangeText={(text) => handleFieldChange('CreatedBy', text)}
+                           placeholder="توسط کدام نماینده ایجاد شده"
+                           error={fieldErrors.CreatedBy}
+                        />
+
                         <ThemedText style={styles.sectionTitle}>آدرس</ThemedText>
 
                         <InputField
@@ -219,6 +229,13 @@ export default function AdminUserRegister() {
                             placeholder="آدرس کامل"
                             multiline
                         />
+
+                         <InputField
+                           label="کد پستی"
+                           value={formData.PostCode || ''}
+                           onChangeText={(text) => handleFieldChange('PostCode', text)}
+                           placeholder="کد پستی"
+                         />
 
                         {params.latitude && params.longitude && (
                             <View style={styles.locationInfo}>

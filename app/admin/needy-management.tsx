@@ -5,7 +5,6 @@ import { ThemedView } from '@/components/ThemedView';
 import { ThemedText } from '@/components/ThemedText';
 import { Button } from '@/components/Button';
 import { InputField } from '@/components/InputField';
-import { RTLPicker } from '@/components/RTLPicker';
 import { useThemeColor } from '@/hooks/useThemeColor';
 import { Spacing, BorderRadius } from '@/constants/Design';
 import { apiService } from '@/services/apiService';
@@ -27,6 +26,7 @@ export default function ReportsPage() {
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedRepresentative, setSelectedRepresentative] = useState('');
     const [representatives, setRepresentatives] = useState<string[]>([]);
+    const [showRepresentativeDropdown, setShowRepresentativeDropdown] = useState(false);
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
     const router = useRouter();
@@ -262,7 +262,7 @@ export default function ReportsPage() {
                 <View style={[styles.filterContainer, { backgroundColor: surfaceColor, borderColor }]}>
                     <View style={styles.searchContainer}>
                         <TextInput
-                            style={[styles.searchInput, { color: textColor, borderColor }]}
+                            style={[styles.searchInput, { color: textColor, borderColor, backgroundColor: surfaceColor }]}
                             placeholder="جستجوی نام مددجو"
                             placeholderTextColor="#999"
                             value={searchTerm}
@@ -271,16 +271,45 @@ export default function ReportsPage() {
                     </View>
 
                     <View style={styles.filterPickerContainer}>
-                        <RTLPicker
-                            selectedValue={selectedRepresentative}
-                            onValueChange={setSelectedRepresentative}
-                            style={[styles.filterPicker, { borderColor }]}
-                            items={[
-                                { label: 'همه نمایندگان', value: '' },
-                                ...representatives.map(rep => ({ label: rep, value: rep }))
-                            ]}
-                            placeholder="انتخاب نماینده"
-                        />
+                        <TouchableOpacity
+                            style={[styles.filterPicker, { borderColor, backgroundColor: surfaceColor }]}
+                            onPress={() => setShowRepresentativeDropdown(prev => !prev)}
+                        >
+                            <ThemedText style={{ color: textColor }}>
+                                {selectedRepresentative || 'انتخاب نماینده'}
+                            </ThemedText>
+                        </TouchableOpacity>
+
+                        {showRepresentativeDropdown && (
+                            <View style={styles.dropdownContainer}>
+                                <TouchableOpacity
+                                    style={styles.dropdownItem}
+                                    onPress={() => {
+                                        setSelectedRepresentative('');
+                                        setShowRepresentativeDropdown(false);
+                                    }}
+                                >
+                                    <ThemedText style={styles.dropdownItemText}>
+                                        همه نمایندگان
+                                    </ThemedText>
+                                </TouchableOpacity>
+
+                                {representatives.map(rep => (
+                                    <TouchableOpacity
+                                        key={rep}
+                                        style={styles.dropdownItem}
+                                        onPress={() => {
+                                            setSelectedRepresentative(rep);
+                                            setShowRepresentativeDropdown(false);
+                                        }}
+                                    >
+                                        <ThemedText style={styles.dropdownItemText}>
+                                            {rep}
+                                        </ThemedText>
+                                    </TouchableOpacity>
+                                ))}
+                            </View>
+                        )}
                     </View>
                 </View>
 
@@ -438,32 +467,62 @@ const styles = StyleSheet.create({
         marginBottom: Spacing.lg,
     },
     filterContainer: {
-        flexDirection: 'row-reverse',
-        alignItems: 'center',
-        justifyContent: 'space-between',
+        flexDirection: 'column',
         padding: Spacing.md,
         borderRadius: BorderRadius.lg,
         borderWidth: 1,
         marginBottom: Spacing.lg,
+        gap: Spacing.md,
+        position: 'relative',
+        zIndex: 10,
     },
     searchContainer: {
-        flex: 1,
-        marginLeft: Spacing.sm,
+        width: '100%',
+        zIndex: 1,
     },
     searchInput: {
         height: 40,
         borderRadius: BorderRadius.md,
         borderWidth: 1,
         paddingHorizontal: Spacing.md,
+        fontSize: 14,
+        position: 'relative',
+        zIndex: 1,
     },
     filterPickerContainer: {
-        flex: 1,
-        marginRight: Spacing.sm,
+        width: '100%',
+        zIndex: 20,
+        position: 'relative',
     },
     filterPicker: {
         height: 40,
         borderRadius: BorderRadius.md,
         borderWidth: 1,
         paddingHorizontal: Spacing.md,
+        fontSize: 14,
+        position: 'relative',
+        zIndex: 20,
+    },
+    dropdownContainer: {
+        position: 'absolute',
+        top: 50,
+        right: 0,
+        left: 0,
+        backgroundColor: 'white',
+        borderRadius: BorderRadius.md,
+        borderWidth: 1,
+        borderColor: '#E0E0E0',
+        zIndex: 30,
+        elevation: 5,
+    },
+    dropdownItem: {
+        paddingVertical: Spacing.sm,
+        paddingHorizontal: Spacing.md,
+        borderBottomWidth: 1,
+        borderColor: '#E0E0E0',
+    },
+    dropdownItemText: {
+        fontSize: 14,
+        color: '#333',
     },
 });

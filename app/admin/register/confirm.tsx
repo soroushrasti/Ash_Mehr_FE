@@ -98,6 +98,7 @@ export default function AdminRegisterConfirm() {
           ...parsedFormData,
           UserRole: roleParam === 'GroupAdmin' ? 'GroupAdmin' : 'Admin',
           CreatedBy: Number(userId),
+            BirthDate: parsedFormData.BirthDate || undefined,
           Latitude: parsedLocation.latitude?.toString() || parsedFormData.Latitude || undefined,
           Longitude: parsedLocation.longitude?.toString() || parsedFormData.Longitude || undefined,
         };

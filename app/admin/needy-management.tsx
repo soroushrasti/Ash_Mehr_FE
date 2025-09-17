@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, ScrollView, TouchableOpacity, Alert, RefreshControl, Platform } from 'react-native';
+import { View, StyleSheet, ScrollView, TouchableOpacity, Alert, RefreshControl, Platform, TextInput } from 'react-native';
 import { useRouter } from 'expo-router';
 import { ThemedView } from '@/components/ThemedView';
 import { ThemedText } from '@/components/ThemedText';
 import { Button } from '@/components/Button';
+import { InputField } from '@/components/InputField';
+import { RTLPicker } from '@/components/RTLPicker';
 import { useThemeColor } from '@/hooks/useThemeColor';
 import { Spacing, BorderRadius } from '@/constants/Design';
 import { apiService } from '@/services/apiService';
@@ -16,18 +18,22 @@ interface NeedyRecord {
     info: string;
     lat?: number;
     lng?: number;
+    group_name?: string;
 }
 
 export default function ReportsPage() {
     const [needyRecords, setNeedyRecords] = useState<NeedyRecord[]>([]);
+    const [filteredRecords, setFilteredRecords] = useState<NeedyRecord[]>([]);
+    const [searchTerm, setSearchTerm] = useState('');
+    const [selectedRepresentative, setSelectedRepresentative] = useState('');
+    const [representatives, setRepresentatives] = useState<string[]>([]);
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
     const router = useRouter();
 
     const primaryColor = useThemeColor({}, 'primary');
     const successColor = useThemeColor({}, 'success');
-    const dangerColor = useThemeColor({}, 'danger');
-    const warningColor = useThemeColor({}, 'warning');
+    const dangerColor = useThemeColor({}, 'error');
     const backgroundColor = useThemeColor({}, 'background');
     const surfaceColor = useThemeColor({}, 'surface');
     const textColor = useThemeColor({}, 'text');
@@ -38,6 +44,12 @@ export default function ReportsPage() {
             const response = await apiService.findNeedyRecords();
             if (response.success && response.data) {
                 setNeedyRecords(response.data);
+                // Extract unique representatives
+                const uniqueReps = [...new Set(response.data
+                    .map(record => record.group_name)
+                    .filter(name => name && name.trim() !== '')
+                )];
+                setRepresentatives(uniqueReps);
             } else {
                 Alert.alert('خطا', 'دریافت اطلاعات مددجویان با خطا مواجه شد');
             }
@@ -49,6 +61,27 @@ export default function ReportsPage() {
             setRefreshing(false);
         }
     };
+
+    // Filter and search functionality
+    useEffect(() => {
+        let filtered = needyRecords;
+
+        // Apply search filter
+        if (searchTerm) {
+            filtered = filtered.filter(record =>
+                record.name.toLowerCase().includes(searchTerm.toLowerCase())
+            );
+        }
+
+        // Apply representative filter
+        if (selectedRepresentative) {
+            filtered = filtered.filter(record =>
+                record.group_name === selectedRepresentative
+            );
+        }
+
+        setFilteredRecords(filtered);
+    }, [needyRecords, searchTerm, selectedRepresentative]);
 
     useEffect(() => {
         loadNeedyRecords();
@@ -141,6 +174,18 @@ export default function ReportsPage() {
                 </ThemedText>
             </View>
 
+            <View style={styles.tableCell}>
+                <ThemedText
+                    style={[
+                        styles.tableCellText,
+                        { color: isHeader ? 'white' : textColor },
+                        isHeader && styles.tableHeaderText
+                    ]}
+                >
+                    {isHeader ? 'نماینده' : (record.group_name || 'نامشخص')}
+                </ThemedText>
+            </View>
+
             {!isHeader && (
                 <View style={styles.actionsCell}>
                     <TouchableOpacity
@@ -213,6 +258,32 @@ export default function ReportsPage() {
                     </View>
                 </View>
 
+                {/* Search and Filter Section */}
+                <View style={[styles.filterContainer, { backgroundColor: surfaceColor, borderColor }]}>
+                    <View style={styles.searchContainer}>
+                        <TextInput
+                            style={[styles.searchInput, { color: textColor, borderColor }]}
+                            placeholder="جستجوی نام مددجو"
+                            placeholderTextColor="#999"
+                            value={searchTerm}
+                            onChangeText={setSearchTerm}
+                        />
+                    </View>
+
+                    <View style={styles.filterPickerContainer}>
+                        <RTLPicker
+                            selectedValue={selectedRepresentative}
+                            onValueChange={setSelectedRepresentative}
+                            style={[styles.filterPicker, { borderColor }]}
+                            items={[
+                                { label: 'همه نمایندگان', value: '' },
+                                ...representatives.map(rep => ({ label: rep, value: rep }))
+                            ]}
+                            placeholder="انتخاب نماینده"
+                        />
+                    </View>
+                </View>
+
                 {/* Table Section */}
                 <View style={[styles.tableContainer, { backgroundColor: surfaceColor, borderColor }]}>
                     <ThemedText style={[styles.sectionTitle, { color: textColor }]}>
@@ -224,12 +295,12 @@ export default function ReportsPage() {
                         <TableRow record={{}} isHeader={true} />
 
                         {/* Table Rows - Direct rendering without nested ScrollView */}
-                        {needyRecords.map((record, index) => (
+                        {filteredRecords.map((record, index) => (
                             <TableRow key={record.id || index} record={record} />
                         ))}
                     </View>
 
-                    {needyRecords.length === 0 && (
+                    {filteredRecords.length === 0 && (
                         <View style={styles.emptyContainer}>
                             <ThemedText style={[styles.emptyText, { color: textColor }]}>
                                 هیچ مددجویی یافت نشد
@@ -365,5 +436,34 @@ const styles = StyleSheet.create({
     backButton: {
         marginTop: Spacing.lg,
         marginBottom: Spacing.lg,
+    },
+    filterContainer: {
+        flexDirection: 'row-reverse',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        padding: Spacing.md,
+        borderRadius: BorderRadius.lg,
+        borderWidth: 1,
+        marginBottom: Spacing.lg,
+    },
+    searchContainer: {
+        flex: 1,
+        marginLeft: Spacing.sm,
+    },
+    searchInput: {
+        height: 40,
+        borderRadius: BorderRadius.md,
+        borderWidth: 1,
+        paddingHorizontal: Spacing.md,
+    },
+    filterPickerContainer: {
+        flex: 1,
+        marginRight: Spacing.sm,
+    },
+    filterPicker: {
+        height: 40,
+        borderRadius: BorderRadius.md,
+        borderWidth: 1,
+        paddingHorizontal: Spacing.md,
     },
 });

@@ -90,6 +90,7 @@ export interface NeedyPersonLocation {
   lng: number;
   name?: string;
   info?: string;
+  group_name: string;
 }
 
 export interface AdminPersonLocation {

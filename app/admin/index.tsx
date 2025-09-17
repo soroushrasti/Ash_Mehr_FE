@@ -20,6 +20,7 @@ interface MapPoint {
   lng: number;
   name?: string;
   info?: string;
+  group_name?: string;
 }
 
 export default function AdminHome() {
@@ -205,7 +206,7 @@ export default function AdminHome() {
              نقشه
           </ThemedText>
           <ThemedText style={[styles.sectionSubtitle, { color: textColor, opacity: 0.7 }]} rtl={true}>
-            موقعیت جغرافیایی خانواده‌ها و نمایندگان
+            موقعیت جغرافیایی مددجو ها
           </ThemedText>
 
           <View style={styles.mapContainer}>

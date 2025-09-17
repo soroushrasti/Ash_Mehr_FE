@@ -4,7 +4,6 @@ import { useRouter } from 'expo-router';
 import { ThemedView } from '@/components/ThemedView';
 import { ThemedText } from '@/components/ThemedText';
 import { Button } from '@/components/Button';
-import { InputField } from '@/components/InputField';
 import { useThemeColor } from '@/hooks/useThemeColor';
 import { Spacing, BorderRadius } from '@/constants/Design';
 import { apiService } from '@/services/apiService';
@@ -69,7 +68,7 @@ export default function ReportsPage() {
         // Apply search filter
         if (searchTerm) {
             filtered = filtered.filter(record =>
-                record.name.toLowerCase().includes(searchTerm.toLowerCase())
+                record.name && record.name.toLowerCase().includes(searchTerm.toLowerCase())
             );
         }
 

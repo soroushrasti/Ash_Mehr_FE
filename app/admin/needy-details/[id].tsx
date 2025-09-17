@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, ScrollView, Alert, ActivityIndicator } from 'react-native';
+import { View, StyleSheet, ScrollView, Alert, ActivityIndicator, I18nManager } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { ThemedView } from '@/components/ThemedView';
 import { ThemedText } from '@/components/ThemedText';
@@ -8,6 +8,13 @@ import { useThemeColor } from '@/hooks/useThemeColor';
 import { Spacing, BorderRadius } from '@/constants/Design';
 import { apiService } from '@/services/apiService';
 import AppHeader from '@/components/AppHeader';
+import { withOpacity } from '@/utils/colorUtils';
+
+// Ensure RTL is enabled
+if (!I18nManager.isRTL) {
+  I18nManager.allowRTL(true);
+  I18nManager.forceRTL(true);
+}
 
 interface NeedyDetails {
   id: string;
@@ -20,7 +27,7 @@ interface NeedyDetails {
   street: string;
   city: string;
   province: string;
-  region:string;
+  region: string;
   gender: string;
   nameFather: string;
   husbandFirstName: string;
@@ -89,13 +96,35 @@ export default function NeedyDetailsPage() {
     }
   };
 
-  const DetailSection = ({ title, children }: { title: string; children: React.ReactNode }) => (
-    <View style={[styles.section, { backgroundColor: surfaceColor, borderColor }]}>
-      <ThemedText style={[styles.sectionTitle, { color: primaryColor }]}>
-        {title}
-      </ThemedText>
-      {children}
-    </View>
+  const getEducationLabel = (value: string) => {
+    const educationMap = {
+      'None': 'بی‌سواد',
+      'Primary': 'ابتدایی',
+      'Secondary': 'راهنمایی',
+      'High School': 'دبیرستان',
+      'Diploma': 'دیپلم',
+      'Associate Degree': 'فوق‌دیپلم',
+      'Bachelor': 'لیسانس',
+      'Master': 'فوق‌لیسانس',
+      'PhD': 'دکتری',
+    };
+    return educationMap[value as keyof typeof educationMap] || value;
+  };
+
+  const getGenderLabel = (value: string) => {
+    return value === 'Male' ? 'مرد' : value === 'Female' ? 'زن' : value;
+  };
+
+  const DetailSection = ({ title, icon, children }: { title: string; icon: string; children: React.ReactNode }) => (
+    <ThemedView style={[styles.sectionCard, { backgroundColor: surfaceColor }]}>
+      <View style={styles.sectionHeader}>
+        <ThemedText style={[styles.sectionIcon, { color: primaryColor }]}>{icon}</ThemedText>
+        <ThemedText style={[styles.sectionTitle, { color: textColor }]}>{title}</ThemedText>
+      </View>
+      <View style={styles.sectionContent}>
+        {children}
+      </View>
+    </ThemedView>
   );
 
   const DetailRow = ({ label, value }: { label: string; value?: string | number }) => (
@@ -112,11 +141,11 @@ export default function NeedyDetailsPage() {
   if (loading) {
     return (
       <ThemedView style={[styles.container, { backgroundColor }]}>
-        <AppHeader title="جزئیات مددجو" subtitle="اطلاعات کامل" />
+        <AppHeader title="جزئیات مددجو" subtitle="در حال بارگذاری..." />
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={primaryColor} />
-          <ThemedText style={{ marginTop: Spacing.lg, color: textColor }}>
-            در حال بارگذاری...
+          <ThemedText style={[styles.loadingText, { color: textColor }]}>
+            در حال بارگذاری اطلاعات...
           </ThemedText>
         </View>
       </ThemedView>
@@ -128,13 +157,13 @@ export default function NeedyDetailsPage() {
       <ThemedView style={[styles.container, { backgroundColor }]}>
         <AppHeader title="جزئیات مددجو" subtitle="اطلاعات یافت نشد" />
         <View style={styles.loadingContainer}>
-          <ThemedText style={{ color: textColor }}>
+          <ThemedText style={[styles.errorText, { color: textColor }]}>
             اطلاعات مددجو یافت نشد
           </ThemedText>
           <Button
             title="بازگشت"
             onPress={() => router.back()}
-            style={{ marginTop: Spacing.lg }}
+            style={styles.backButton}
           />
         </View>
       </ThemedView>
@@ -142,91 +171,126 @@ export default function NeedyDetailsPage() {
   }
 
   return (
-
     <ThemedView style={[styles.container, { backgroundColor }]}>
       <AppHeader
-       title={`${needyDetails.FirstName} ${needyDetails.LastName}`}
+        title={`${needyDetails.FirstName} ${needyDetails.LastName}`}
         subtitle="جزئیات مددجو"
+        showBackButton
       />
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+        {/* Header Card */}
+        <ThemedView style={[styles.headerCard, { backgroundColor: withOpacity(primaryColor, 5) }]}>
+          <View style={styles.headerContent}>
+            <View style={[styles.avatarContainer, { backgroundColor: withOpacity(primaryColor, 15) }]}>
+              <ThemedText style={[styles.avatarText, { color: primaryColor }]}>👤</ThemedText>
+            </View>
+            <View style={styles.headerInfo}>
+              <ThemedText style={[styles.headerTitle, { color: primaryColor }]}>
+                {needyDetails.FirstName} {needyDetails.LastName}
+              </ThemedText>
+              <ThemedText style={[styles.headerSubtitle, { color: textColor }]}>
+                شناسه: {needyDetails.RegisterID}
+              </ThemedText>
+              <ThemedText style={[styles.headerSubtitle, { color: textColor }]}>
+                کد ملی: {needyDetails.NationalID}
+              </ThemedText>
+            </View>
+          </View>
+        </ThemedView>
+
         {/* Personal Information */}
-        <DetailSection title="اطلاعات شخصی">
+        <DetailSection title="اطلاعات شخصی" icon="👤">
           <DetailRow label="نام" value={needyDetails.FirstName} />
           <DetailRow label="نام خانوادگی" value={needyDetails.LastName} />
           <DetailRow label="نام پدر" value={needyDetails.NameFather} />
           <DetailRow label="کد ملی" value={needyDetails.NationalID} />
           <DetailRow label="تاریخ تولد" value={needyDetails.BirthDate} />
-          <DetailRow label="شماره تلفن" value={needyDetails.Phone} />
-          <DetailRow label="جنسیت" value={needyDetails.Gender} />
-          <DetailRow label="نام همسر" value={needyDetails.HusbandFirstName} />
-          <DetailRow label="نام خانوادگی همسر" value={needyDetails.HusbandLastName} />
-          <DetailRow label="علت نبود همسر" value={needyDetails.ReasonMissingHusband} />
-          <DetailRow label="نام سازمان تحت حمایت" value={needyDetails.UnderOrganizationName} />
-          <DetailRow label="سطح تحصیلات" value={needyDetails.EducationLevel} />
+          <DetailRow label="شماره موبایل" value={needyDetails.Phone} />
+          <DetailRow label="ایمیل" value={needyDetails.Email} />
+          <DetailRow label="جنسیت" value={getGenderLabel(needyDetails.Gender)} />
         </DetailSection>
 
         {/* Address Information */}
-        <DetailSection title="اطلاعات آدرس">
+        <DetailSection title="اطلاعات آدرس" icon="🏠">
           <DetailRow label="استان" value={needyDetails.Province} />
           <DetailRow label="شهر" value={needyDetails.City} />
+          <DetailRow label="منطقه" value={needyDetails.Region} />
           <DetailRow label="آدرس" value={needyDetails.Street} />
           <DetailRow label="کد پستی" value={needyDetails.PostCode} />
-          <DetailRow label="منظقه" value={needyDetails.Region} />
           {needyDetails.Latitude && needyDetails.Longitude && (
             <>
-              <DetailRow label="عرض جغرافیایی" value={needyDetails.Latitude.toString()} />
-              <DetailRow label="طول جغرافیایی" value={needyDetails.Longitude.toString()} />
+              <DetailRow
+                label="عرض جغرافیایی"
+                value={typeof needyDetails.Latitude === 'number'
+                  ? needyDetails.Latitude.toFixed(6)
+                  : parseFloat(needyDetails.Latitude.toString()).toFixed(6)
+                }
+              />
+              <DetailRow
+                label="طول جغرافیایی"
+                value={typeof needyDetails.Longitude === 'number'
+                  ? needyDetails.Longitude.toFixed(6)
+                  : parseFloat(needyDetails.Longitude.toString()).toFixed(6)
+                }
+              />
             </>
           )}
         </DetailSection>
 
-        {/* Financial Information */}
-        <DetailSection title="اطلاعات مالی و شغلی">
-          <DetailRow label="درآمد ماهانه" value={needyDetails.IncomeForm ? `${needyDetails.IncomeForm.toLocaleString()} تومان` : undefined} />
+        {/* Spouse Information */}
+        <DetailSection title="اطلاعات همسر" icon="👫">
+          <DetailRow label="نام همسر" value={needyDetails.HusbandFirstName} />
+          <DetailRow label="نام خانوادگی همسر" value={needyDetails.HusbandLastName} />
+          <DetailRow label="دلیل غیبت همسر" value={needyDetails.ReasonMissingHusband} />
+        </DetailSection>
+
+        {/* Education and Work Information */}
+        <DetailSection title="اطلاعات تحصیلی و شغلی" icon="🎓">
+          <DetailRow label="سطح تحصیلات" value={getEducationLabel(needyDetails.EducationLevel)} />
+          <DetailRow
+            label="درآمد ماهانه"
+            value={needyDetails.IncomeForm ? `${needyDetails.IncomeForm.toLocaleString('fa-IR')} تومان` : undefined}
+          />
+          <DetailRow label="سازمان حامی" value={needyDetails.UnderOrganizationName} />
         </DetailSection>
 
         {/* Children Information */}
         {needyDetails.children && needyDetails.children.length > 0 && (
-          <DetailSection title="اطلاعات فرزندان">
+          <DetailSection title="اطلاعات فرزندان" icon="👨‍👩‍👧‍👦">
             {needyDetails.children.map((child, index) => (
-              <View key={index} style={[styles.childInfo, { borderColor }]}>
+              <View key={index} style={[styles.childCard, { backgroundColor: withOpacity(primaryColor, 5), borderColor: withOpacity(primaryColor, 20) }]}>
                 <ThemedText style={[styles.childTitle, { color: primaryColor }]}>
-                  فرزند {index + 1}
+                  👶 فرزند {index + 1}
                 </ThemedText>
                 <DetailRow label="نام" value={child.FirstName} />
                 <DetailRow label="نام خانوادگی" value={child.LastName} />
-                <DetailRow label="سن" value={child.Age.toString()} />
+                <DetailRow label="سن" value={child.Age?.toString()} />
                 <DetailRow label="کد ملی" value={child.NationalID} />
-                <DetailRow label="جنسیت" value={child.Gender} />
-                <DetailRow label="تحصیلات" value={child.EducationLevel} />
+                <DetailRow label="جنسیت" value={getGenderLabel(child.Gender)} />
+                <DetailRow label="سطح تحصیلات" value={getEducationLabel(child.EducationLevel)} />
               </View>
             ))}
           </DetailSection>
         )}
 
         {/* System Information */}
-        <DetailSection title="اطلاعات سیستم">
+        <DetailSection title="اطلاعات سیستم" icon="⚙️">
           <DetailRow label="شناسه ثبت" value={needyDetails.RegisterID} />
           <DetailRow label="تاریخ ثبت" value={needyDetails.CreatedDate} />
           <DetailRow label="آخرین به‌روزرسانی" value={needyDetails.UpdatedDate} />
         </DetailSection>
-
-        {/* Action Buttons */}
-        <View style={styles.actionButtons}>
-          <Button
-            title="ویرایش اطلاعات"
-            onPress={handleEdit}
-            style={[styles.actionButton, { backgroundColor: successColor }]}
-          />
-          <Button
-            title="بازگشت"
-            onPress={() => router.back()}
-            variant="outline"
-            style={styles.actionButton}
-          />
-        </View>
       </ScrollView>
+
+      {/* Footer Actions */}
+      <View style={[styles.footer, { backgroundColor: surfaceColor }]}>
+        <Button
+          title="❌ بازگشت"
+          onPress={() => router.back()}
+          variant="outline"
+          style={styles.backButton}
+        />
+      </View>
     </ThemedView>
   );
 }
@@ -243,36 +307,113 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    padding: Spacing.lg,
   },
-  section: {
+  loadingText: {
+    marginTop: Spacing.lg,
+    textAlign: 'center',
+  },
+  errorText: {
+    textAlign: 'center',
+    marginBottom: Spacing.lg,
+  },
+  headerCard: {
     borderRadius: BorderRadius.lg,
-    borderWidth: 1,
     padding: Spacing.lg,
     marginBottom: Spacing.lg,
+    borderWidth: 1,
+    borderColor: 'rgba(0,0,0,0.1)',
+  },
+  headerContent: {
+    flexDirection: 'row-reverse', // RTL layout
+    alignItems: 'center',
+  },
+  avatarContainer: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginLeft: Spacing.md,
+  },
+  avatarText: {
+    fontSize: 28,
+  },
+  headerInfo: {
+    flex: 1,
+    alignItems: 'flex-end', // Right align for RTL
+  },
+  headerTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: Spacing.xs,
+    textAlign: 'right',
+  },
+  headerSubtitle: {
+    fontSize: 14,
+    opacity: 0.7,
+    marginBottom: Spacing.xs / 2,
+    textAlign: 'right',
+  },
+  sectionCard: {
+    borderRadius: BorderRadius.lg,
+    padding: Spacing.lg,
+    marginBottom: Spacing.lg,
+    borderWidth: 1,
+    borderColor: 'rgba(0,0,0,0.1)',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  sectionHeader: {
+    flexDirection: 'row-reverse', // RTL layout
+    alignItems: 'center',
+    marginBottom: Spacing.lg,
+    paddingBottom: Spacing.md,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(0,0,0,0.1)',
+  },
+  sectionIcon: {
+    fontSize: 24,
+    marginLeft: Spacing.md,
   },
   sectionTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    marginBottom: Spacing.lg,
-    textAlign: 'center',
+    flex: 1,
+    textAlign: 'right',
+  },
+  sectionContent: {
+    paddingVertical: Spacing.xs,
   },
   detailRow: {
-    flexDirection: 'row',
-    paddingVertical: Spacing.sm,
+    flexDirection: 'row-reverse', // RTL layout
+    paddingVertical: Spacing.md,
     borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
+    borderBottomColor: 'rgba(0,0,0,0.05)',
+    alignItems: 'flex-start',
   },
   label: {
     flex: 1,
-    fontWeight: 'bold',
+    fontWeight: '600',
     fontSize: 14,
+    textAlign: 'right',
+    color: '#666',
+    paddingLeft: Spacing.sm,
   },
   value: {
     flex: 2,
     fontSize: 14,
     textAlign: 'right',
+    fontWeight: '500',
+    paddingRight: Spacing.sm,
   },
-  childInfo: {
+  childCard: {
     borderWidth: 1,
     borderRadius: BorderRadius.md,
     padding: Spacing.md,
@@ -284,16 +425,16 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.sm,
     textAlign: 'center',
   },
-  description: {
-    fontSize: 14,
-    lineHeight: 22,
-    textAlign: 'justify',
+  footer: {
+    padding: Spacing.lg,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(0,0,0,0.1)',
+    gap: Spacing.md,
   },
-  actionButtons: {
-    gap: Spacing.lg,
-    marginVertical: Spacing.xl,
-  },
-  actionButton: {
+  editButton: {
     marginBottom: Spacing.sm,
+  },
+  backButton: {
+    marginTop: Spacing.xs,
   },
 });

@@ -9,6 +9,12 @@
  * @returns Color with opacity applied
  */
 export function withOpacity(color: string, opacity: number): string {
+  // Check if color is undefined or null
+  if (!color || typeof color !== 'string') {
+    console.warn('withOpacity received invalid color:', color);
+    return `rgba(0, 0, 0, ${Math.max(0, Math.min(100, opacity)) / 100})`; // Return black with opacity as fallback
+  }
+
   // Normalize opacity to 0-1 range
   const normalizedOpacity = Math.max(0, Math.min(100, opacity)) / 100;
 
@@ -32,28 +38,8 @@ export function withOpacity(color: string, opacity: number): string {
     }
   }
 
-  if (color.startsWith('rgba(')) {
-    // Replace existing alpha value
-    return color.replace(/,\s*[\d.]+\)$/, `, ${normalizedOpacity})`);
-  }
-
-  // For named colors, return as is with some common mappings
-  const namedColors: Record<string, string> = {
-    'red': '#FF0000',
-    'green': '#00FF00',
-    'blue': '#0000FF',
-    'black': '#000000',
-    'white': '#FFFFFF',
-    'transparent': 'rgba(0, 0, 0, 0)',
-  };
-
-  const hexColor = namedColors[color.toLowerCase()];
-  if (hexColor) {
-    return withOpacity(hexColor, opacity);
-  }
-
-  // Fallback: return color with opacity as a filter or rgba approximation
-  return `rgba(128, 128, 128, ${normalizedOpacity})`; // Default gray with opacity
+  // For named colors, return as-is with opacity (CSS will handle it)
+  return `rgba(0, 0, 0, ${normalizedOpacity})`; // Fallback to black with opacity
 }
 
 /**

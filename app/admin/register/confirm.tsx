@@ -14,12 +14,13 @@ import { NeedyCreateWithChildren } from '@/types/api';
 
 export default function AdminRegisterConfirm() {
   const router = useRouter();
-  const { formData, roleTitle, roleIcon, location, role } = useLocalSearchParams();
+  const { formData, roleTitle, roleIcon, location, role, registerId, editMode } = useLocalSearchParams();
   console.log('Form Data:', formData);
   console.log('Location Data:', location);
-  console.log('Role:', role, 'Role Title:', roleTitle, 'Role Icon:', roleIcon);
+  console.log('Role:', role, 'Role Title:', roleTitle, 'Role Icon:', roleIcon, 'Register ID:', registerId, 'Edit Mode:', editMode);
   const roleParam = Array.isArray(role) ? role[0] : role;
-  const { userId, userType } = useAuth();
+  const registerIdString = Array.isArray(registerId) ? registerId[0] : registerId;
+  const { userId } = useAuth();
   const [loading, setLoading] = useState(false);
 
   const successColor = useThemeColor({}, 'success');
@@ -85,9 +86,10 @@ export default function AdminRegisterConfirm() {
     setLoading(true);
 
     try {
+        console.log('Submitting with editMode:', editMode);
       const isAdminRole = roleParam === 'Admin' || roleParam === 'GroupAdmin';
 
-      if (isAdminRole) {
+      if (isAdminRole && editMode !== 'true') {
         // Validate password
         if (!parsedFormData.Password || parsedFormData.Password.length < 6) {
           Alert.alert('خطا', 'رمز عبور معتبر وارد نشده است.');
@@ -98,7 +100,7 @@ export default function AdminRegisterConfirm() {
           ...parsedFormData,
           UserRole: roleParam === 'GroupAdmin' ? 'GroupAdmin' : 'Admin',
           CreatedBy: Number(userId),
-            BirthDate: parsedFormData.BirthDate || undefined,
+          BirthDate: parsedFormData.BirthDate || undefined,
           Latitude: parsedLocation.latitude?.toString() || parsedFormData.Latitude || undefined,
           Longitude: parsedLocation.longitude?.toString() || parsedFormData.Longitude || undefined,
         };
@@ -108,47 +110,94 @@ export default function AdminRegisterConfirm() {
           setLoading(false);
           return;
         }
-        Alert.alert('موفق', `${roleTitle} با موفقیت ثبت شد`, [
-          { text: 'تأیید', onPress: () => router.replace('/admin') }
-        ]);
-        setLoading(false);
-        return;
       }
 
-      // Needy / other roles flow
-      const registerData: NeedyCreateWithChildren = {
-        ...parsedFormData,
-        CreatedBy: Number(userId),
-        Latitude: parsedLocation.latitude?.toString() || undefined,
-        Longitude: parsedLocation.longitude?.toString() || undefined,
-          children_of_registre: null,
-      } as NeedyCreateWithChildren;
-      const result = await apiService.createNeedyPerson(registerData);
-
-      if (!result.success) {
-        Alert.alert('خطا', result.error || 'در ثبت‌نام خطایی رخ داد.');
-        setLoading(false);
-        return;
-      }
-
-      Alert.alert(
-        'ثبت‌نام موفق',
-        `${roleTitle} با موفقیت در سیستم ثبت شد.`,
-        [
-          {
-            text: 'تأیید',
-            onPress: () => {
-              if (userType === 'Admin') router.replace('/admin');
-              else if (userType === 'GroupAdmin') router.replace('/group-admin');
-              else router.replace('/');
+        if (isAdminRole && editMode === 'true' && registerIdString) {
+            // Validate password
+            if (!parsedFormData.Password || parsedFormData.Password.length < 6) {
+                Alert.alert('خطا', 'رمز عبور معتبر وارد نشده است.');
+                setLoading(false);
+                return;
             }
-          }
-        ]
-      );
+            const adminPayload = {
+                ...parsedFormData,
+                UserRole: roleParam === 'GroupAdmin' ? 'GroupAdmin' : 'Admin',
+                CreatedBy: Number(userId),
+                BirthDate: parsedFormData.BirthDate || undefined,
+                Latitude: parsedLocation.latitude?.toString() || parsedFormData.Latitude || undefined,
+                Longitude: parsedLocation.longitude?.toString() || parsedFormData.Longitude || undefined,
+            };
+            const result = await apiService.editAdmin(registerIdString, adminPayload as any);
+            if (!result.success) {
+                Alert.alert('خطا', result.error || 'ثبت نماینده ناموفق بود');
+                setLoading(false);
+                return;
+            }
+        }
+
+
+      // Needy roles flow
+        const isNeedy = roleParam === 'Needy' || roleParam === 'needy';
+
+        if (isNeedy && !registerId) {
+            const registerData: NeedyCreateWithChildren = {
+                ...parsedFormData,
+                CreatedBy: Number(userId),
+                Latitude: parsedLocation.latitude?.toString() || undefined,
+                Longitude: parsedLocation.longitude?.toString() || undefined,
+                children_of_registre: null,
+            } as NeedyCreateWithChildren;
+            const result = await apiService.createNeedyPerson(registerData);
+
+            if (!result.success) {
+                Alert.alert('خطا', result.error || 'در ذخیره خطایی رخ داد.');
+                setLoading(false);
+                return;
+            }
+
+        }
+        if (isNeedy && editMode === 'true' && registerIdString) {
+            console.log(isNeedy, editMode, registerIdString);
+            const registerData: NeedyCreateWithChildren = {
+                ...parsedFormData,
+                CreatedBy: Number(userId),
+                Latitude: parsedLocation.latitude?.toString() || undefined,
+                Longitude: parsedLocation.longitude?.toString() || undefined,
+                children_of_registre: null,
+            } as NeedyCreateWithChildren;
+            const result = await apiService.editNeedy(registerIdString, registerData);
+            console.log('Edit needy result:', result);
+            if (!result.success) {
+                Alert.alert('خطا', result.error || 'در ذخیره خطایی رخ داد.');
+                setLoading(false);
+                return;
+            }
+
+
+        }
+
+        if (Platform.OS === 'web') {
+            alert(`${roleTitle} با موفقیت در سیستم ویرایش شد.`);
+        }
+        Alert.alert(
+            'ذخیره موفق',
+            `${roleTitle} با موفقیت در سیستم ویرایش شد.`,
+            [
+                {
+                    text: 'تأیید',
+                    onPress: () => {
+                        router.replace('/admin');
+                    }
+                }
+            ]
+        );
+        router.replace('/admin');
+        setLoading(false);
+        return;
 
     } catch (error) {
       console.error('Registration error:', error);
-      Alert.alert('خطا', error instanceof Error ? error.message : 'در ثبت‌نام خطایی رخ داد. لطفاً دوباره تلاش کنید.');
+      Alert.alert('خطا', error instanceof Error ? error.message : 'در ذخیره خطایی رخ داد. لطفاً دوباره تلاش کنید.');
     } finally {
       setLoading(false);
     }
@@ -199,7 +248,7 @@ export default function AdminRegisterConfirm() {
     <ThemedView type="container" style={styles.container}>
       <View style={[styles.topBar, { backgroundColor: withOpacity(successColor, 10) }]}>
         <Button
-          title="تأیید و ثبت‌نام"
+          title="تأیید و ذخیره"
           onPress={handleSubmit}
           loading={loading}
           variant="success"
@@ -227,7 +276,7 @@ export default function AdminRegisterConfirm() {
             <ThemedText style={styles.roleIcon}>{roleIcon}</ThemedText>
           </View>
           <ThemedText type="heading2" center style={styles.title}>
-            تأیید نهایی ثبت‌نام
+            تأیید نهایی
           </ThemedText>
           <ThemedText type="body" center style={styles.subtitle}>
             لطفاً اطلاعات را بررسی کرده و در صورت صحت، تأیید نمایید
@@ -240,7 +289,7 @@ export default function AdminRegisterConfirm() {
             <ThemedText style={styles.summaryIcon}>✅</ThemedText>
             <View>
               <ThemedText type="heading3" style={[styles.summaryTitle, { color: successColor }]}>
-                آماده ثبت‌نام {roleTitle}
+                آماده ذخیره {roleTitle}
               </ThemedText>
               <ThemedText type="caption" style={styles.summarySubtitle}>
                 همه اطلاعات تکمیل شده است
@@ -302,7 +351,7 @@ export default function AdminRegisterConfirm() {
         {/* Submit Button */}
         <View style={styles.buttonContainer}>
           <Button
-            title="تأیید و ثبت‌نام نهایی"
+            title="تأیید و ذخیره نهایی"
             onPress={handleSubmit}
             loading={loading}
             variant="success"
@@ -329,7 +378,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: Spacing['3xl'],
+    marginBottom: Spacing.xxl,
     paddingHorizontal: Spacing.xl,
   },
   progressStep: {
@@ -350,7 +399,7 @@ const styles = StyleSheet.create({
   },
   header: {
     alignItems: 'center',
-    marginBottom: Spacing['3xl'],
+    marginBottom: Spacing.xxl,
   },
   roleIconContainer: {
     width: 80,
@@ -436,6 +485,6 @@ const styles = StyleSheet.create({
   },
   buttonContainer: {
     marginTop: Spacing.xl,
-    marginBottom: Spacing['4xl'],
+    marginBottom: Spacing.xxl,
   },
 });

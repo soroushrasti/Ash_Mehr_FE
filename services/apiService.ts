@@ -143,7 +143,6 @@ class ApiService {
       method: 'POST',
       body: needyData,
       includeAuth: true,
-      successMessage: 'اطلاعات مددجو با موفقیت به‌روزرسانی شد',
       showErrorAlert: true,
     });
   }
@@ -177,7 +176,6 @@ class ApiService {
       method: 'POST',
       body: adminData,
       includeAuth: true,
-      successMessage: 'اطلاعات نماینده با موفقیت به‌روزرسانی شد',
       showErrorAlert: true,
     });
   }

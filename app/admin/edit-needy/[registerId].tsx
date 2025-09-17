@@ -10,62 +10,53 @@ import { Spacing, BorderRadius } from '@/constants/Design';
 import { apiService } from '@/services/apiService';
 import AppHeader from '@/components/AppHeader';
 import KeyboardAwareContainer from '@/components/KeyboardAwareContainer';
+import { RTLPicker } from '@/components/RTLPicker';
+import { AdminPersonLocation, NeedyCreateWithChildren } from '@/types/api';
+import { useAuth } from '@/components/AuthContext';
 
-interface NeedyEditData {
-  firstName: string;
-  lastName: string;
-  nationalId: string;
-  phone: string;
-  email: string;
-  street: string;
-  city: string;
-  province: string;
-  region:string;
-  gender: string;
-  nameFather: string;
-  husbandFirstName: string;
-  husbandLastName: string;
-  reasonMissingHusband: string;
-  underOrganizationName: string;
-  educationLevel: string;
-  postCode: string;
-  birthDate: string;
-  incomeForm: string;
-  underWhichAdmin: string;
-  latitude: string;
-  longitude: string;
+interface ExtendedNeedyEditForm extends NeedyCreateWithChildren {
+  BirthDate?: string;
+  UnderWhichAdmin?: number;
 }
 
 export default function EditNeedyPage() {
   const { registerId } = useLocalSearchParams();
-  const [formData, setFormData] = useState<NeedyEditData>({
-    firstName: '',
-    lastName: '',
-    nationalId: '',
-    phone: '',
-    email: '',
-    street: '',
-    city: '',
-    province: '',
-    region:'',
-    gender: '',
-    nameFather: '',
-    husbandFirstName: '',
-    husbandLastName: '',
-    reasonMissingHusband: '',
-    underOrganizationName: '',
-    educationLevel: '',
-    postCode: '',
-    birthDate: '',
-    incomeForm: '',
-    underWhichAdmin: '',
-    latitude: '',
-    longitude: '',
+  const router = useRouter();
+  const { userId } = useAuth();
+  const errorColor = useThemeColor({}, 'danger');
+
+  const [formData, setFormData] = useState<ExtendedNeedyEditForm>({
+    FirstName: '',
+    LastName: '',
+    Phone: '',
+    Email: '',
+    City: '',
+    Province: '',
+    Street: '',
+    NameFather: '',
+    NationalID: '',
+    CreatedBy: Number(userId) || 0,
+    BirthDate: '',
+    UnderWhichAdmin: undefined,
+    Age: undefined,
+    Region: '',
+    Gender: '',
+    HusbandFirstName: '',
+    HusbandLastName: '',
+    ReasonMissingHusband: '',
+    UnderOrganizationName: '',
+    EducationLevel: '',
+    IncomeForm: '',
+    Latitude: '',
+    Longitude: '',
+    children_of_registre: null,
   });
+
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [errors, setErrors] = useState<Partial<NeedyEditData>>({});
-  const router = useRouter();
+  const [validationErrors, setValidationErrors] = useState<string[]>([]);
+  const [fieldErrors, setFieldErrors] = useState<{[key: string]: string}>({});
+  const [adminOptions, setAdminOptions] = useState<AdminPersonLocation[]>([]);
 
   const primaryColor = useThemeColor({}, 'primary');
   const successColor = useThemeColor({}, 'success');
@@ -76,7 +67,10 @@ export default function EditNeedyPage() {
 
   useEffect(() => {
     if (registerId) {
-      loadNeedyData(registerId as string);
+      Promise.all([
+        loadNeedyData(registerId as string),
+        loadAdmins()
+      ]);
     }
   }, [registerId]);
 
@@ -86,28 +80,30 @@ export default function EditNeedyPage() {
       if (response.success && response.data) {
         const data = response.data;
         setFormData({
-          firstName: data.FirstName || '',
-          lastName: data.LastName || '',
-          nationalId: data.NationalID || '',
-          phone: data.Phone || '',
-          email: data.Email || '',
-          street: data.Street || '',
-          city: data.City || '',
-          province: data.Province || '',
-          region:data.Region || '',
-          gender: data.Gender || '',
-          nameFather: data.NameFather || '',
-          husbandFirstName: data.HusbandFirstName || '',
-          husbandLastName: data.HusbandLastName || '',
-          reasonMissingHusband: data.ReasonMissingHusband || '',
-          underOrganizationName: data.UnderOrganizationName || '',
-          educationLevel: data.EducationLevel || '',
-          postCode: data.PostCode || '',
-          birthDate: data.birthDate || '',
-          incomeForm: data.income?.toString() || '',
-          underWhichAdmin: data.UnderWhichAdmin || '',
-          latitude: data.Latitude?.toString() || '',
-          longitude: data.Longitude?.toString() || '',
+          FirstName: data.FirstName || '',
+          LastName: data.LastName || '',
+          Phone: data.Phone || '',
+          Email: data.Email || '',
+          City: data.City || '',
+          Province: data.Province || '',
+          Street: data.Street || '',
+          NameFather: data.NameFather || '',
+          NationalID: data.NationalID || '',
+          CreatedBy: Number(userId) || 0,
+          BirthDate: data.birthDate || '',
+          UnderWhichAdmin: data.UnderWhichAdmin || undefined,
+          Age: data.Age || undefined,
+          Region: data.Region || '',
+          Gender: data.Gender || '',
+          HusbandFirstName: data.HusbandFirstName || '',
+          HusbandLastName: data.HusbandLastName || '',
+          ReasonMissingHusband: data.ReasonMissingHusband || '',
+          UnderOrganizationName: data.UnderOrganizationName || '',
+          EducationLevel: data.EducationLevel || '',
+          IncomeForm: data.income?.toString() || '',
+          Latitude: data.Latitude?.toString() || '',
+          Longitude: data.Longitude?.toString() || '',
+          children_of_registre: null,
         });
       } else {
         Alert.alert('خطا', 'دریافت اطلاعات مددجو با خطا مواجه شد');
@@ -122,102 +118,87 @@ export default function EditNeedyPage() {
     }
   };
 
-  const validateForm = (): boolean => {
-    const newErrors: Partial<NeedyEditData> = {};
-
-    if (!formData.firstName.trim()) {
-      newErrors.firstName = 'نام الزامی است';
-    }
-    if (!formData.lastName.trim()) {
-      newErrors.lastName = 'نام خانوادگی الزامی است';
-    }
-    if (!formData.nationalId.trim()) {
-      newErrors.nationalId = 'کد ملی الزامی است';
-    } else if (!/^\d{10}$/.test(formData.nationalId)) {
-      newErrors.nationalId = 'کد ملی باید ۱۰ رقم باشد';
-    }
-    if (!formData.phone.trim()) {
-      newErrors.phone = 'شماره تلفن الزامی است';
-    } else if (!/^09\d{9}$/.test(formData.phone)) {
-      newErrors.phone = 'شماره تلفن نامعتبر است';
-    }
-    if (!formData.city.trim()) {
-      newErrors.city = 'شهر الزامی است';
-    }
-    if (!formData.province.trim()) {
-      newErrors.province = 'استان الزامی است';
-    }
-    if (!formData.address.trim()) {
-      newErrors.address = 'آدرس الزامی است';
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const handleSave = async () => {
-    if (!validateForm()) {
-      Alert.alert('خطا', 'لطفاً فیلدهای اجباری را تکمیل کنید');
-      return;
-    }
-
-    setSaving(true);
+  const loadAdmins = async () => {
     try {
-      // Prepare data for API
-      const apiData = {
-        firstName: formData.firstName.trim(),
-        lastName: formData.lastName.trim(),
-        nationalId: formData.nationalId.trim(),
-        phone: formData.phone.trim(),
-        email: formData.email.trim() || undefined,
-        street: formData.address.trim(),
-        city: formData.city.trim(),
-        province: formData.province.trim(),
-        region:formData.region.trim(),
-        gender: formData.gender.trim(),
-        nameFather: formData.nameFather.trim(),
-        husbandFirstName: formData.husbandFirstName.trim(),
-        husbandLastName: formData.husbandLastName.trim(),
-        reasonMissingHusband: formData.reasonMissingHusband.trim(),
-        underOrganizationName: formData.underOrganizationName.trim(),
-        educationLevel: formData.educationLevel.trim(),
-        postCode: formData.postCode.trim() || undefined,
-        birthDate: formData.birthDate.trim() || undefined,
-        incomeForm: formData.income ? parseFloat(formData.income) : undefined,
-        underWhichAdmin: formData.underWhichAdmin.trim(),
-        latitude: formData.latitude ? parseFloat(formData.latitude) : undefined,
-        longitude: formData.longitude ? parseFloat(formData.longitude) : undefined,
-      };
-
-      const response = await apiService.editNeedy(registerId as string, apiData);
-      if (response.success) {
-        Alert.alert(
-          'موفقیت',
-          'اطلاعات مددجو با موفقیت به‌روزرسانی شد',
-          [
-            {
-              text: 'تایید',
-              onPress: () => router.back()
-            }
-          ]
-        );
-      } else {
-        Alert.alert('خطا', response.error || 'به‌روزرسانی با خطا مواجه شد');
+      const response = await apiService.getAdminGeoPoints();
+      if (response.success && response.data) {
+        setAdminOptions(response.data);
       }
     } catch (error) {
-      console.error('Error updating needy:', error);
-      Alert.alert('خطا', 'خطا در به‌روزرسانی اطلاعات');
-    } finally {
-      setSaving(false);
+      console.error('Failed to load admins:', error);
     }
   };
 
-  const updateFormData = (field: keyof NeedyEditData, value: string) => {
+  const validateForm = () => {
+    const errors: string[] = [];
+    const fieldErrs: {[key: string]: string} = {};
+
+    // Required field validation
+    if (!formData.FirstName.trim()) {
+      errors.push('نام الزامی است');
+      fieldErrs.FirstName = 'نام الزامی است';
+    }
+
+    if (!formData.LastName.trim()) {
+      errors.push('نام خانوادگی الزامی است');
+      fieldErrs.LastName = 'نام خانوادگی الزامی است';
+    }
+
+    // Email validation (if provided)
+    if (formData.Email && formData.Email.trim()) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(formData.Email)) {
+        errors.push('فرمت ایمیل صحیح نیست');
+        fieldErrs.Email = 'فرمت ایمیل صحیح نیست';
+      }
+    }
+
+    // Phone validation (if provided)
+    if (formData.Phone && formData.Phone.trim()) {
+      const phoneRegex = /^09\d{9}$/;
+      if (!phoneRegex.test(formData.Phone)) {
+        errors.push('شماره موبایل باید با ۰۹ شروع شده و ۱۱ رقم باشد');
+        fieldErrs.Phone = 'شماره موبایل باید با ۰۹ شروع شده و ۱۱ رقم باشد';
+      }
+    }
+
+    // National ID validation (if provided)
+    if (formData.NationalID && formData.NationalID.trim()) {
+      if (formData.NationalID.length !== 10) {
+        errors.push('کد ملی باید ۱۰ رقم باشد');
+        fieldErrs.NationalID = 'کد ملی باید ۱۰ رقم باشد';
+      }
+    }
+
+    // Age validation (if provided)
+    if (formData.Age && (formData.Age < 1 || formData.Age > 120)) {
+      errors.push('سن باید بین ۱ تا ۱۲۰ سال باشد');
+      fieldErrs.Age = 'سن باید بین ۱ تا ۱۲۰ سال باشد';
+    }
+
+    setValidationErrors(errors);
+    setFieldErrors(fieldErrs);
+    return errors.length === 0;
+  };
+
+  const handleFieldChange = (field: keyof ExtendedNeedyEditForm, value: string | number | undefined) => {
     setFormData(prev => ({ ...prev, [field]: value }));
-    if (errors[field]) {
-      setErrors(prev => ({ ...prev, [field]: undefined }));
+
+    // Clear field-specific error when user starts typing
+    if (fieldErrors[field]) {
+      setFieldErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors[field];
+        return newErrors;
+      });
+    }
+
+    // Clear general validation errors when user starts making changes
+    if (validationErrors.length > 0) {
+      setValidationErrors([]);
     }
   };
+
 
   if (loading) {
     return (
@@ -235,225 +216,276 @@ export default function EditNeedyPage() {
 
   return (
     <ThemedView style={[styles.container, { backgroundColor }]}>
-      <AppHeader title="ویرایش مددجو" subtitle="ویرایش اطلاعات" />
+      <AppHeader title="ویرایش مددجو" showBackButton />
 
       <KeyboardAwareContainer>
-        <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-          {/* Personal Information */}
-          <View style={[styles.section, { backgroundColor: surfaceColor, borderColor }]}>
-            <ThemedText style={[styles.sectionTitle, { color: primaryColor }]}>
-              اطلاعات شخصی
-            </ThemedText>
+        <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+          <View style={styles.form}>
+            {/* Validation Error Bar */}
+            {validationErrors.length > 0 && (
+              <View style={[styles.errorContainer, { backgroundColor: errorColor + '20', borderColor: errorColor }]}>
+                <ThemedText style={[styles.errorTitle, { color: errorColor }]}>
+                  خطاهای اعتبارسنجی:
+                </ThemedText>
+                {validationErrors.map((error, index) => (
+                  <ThemedText key={index} style={[styles.errorText, { color: errorColor }]}>
+                    • {error}
+                  </ThemedText>
+                ))}
+              </View>
+            )}
+
+            <ThemedText style={styles.sectionTitle}>اطلاعات شخصی</ThemedText>
 
             <InputField
               label="نام *"
-              value={formData.firstName}
-              onChangeText={(value) => updateFormData('firstName', value)}
-              error={errors.firstName}
-              placeholder={formData.firstName}
+              value={formData.FirstName}
+              onChangeText={(text) => handleFieldChange('FirstName', text)}
+              placeholder="نام را وارد کنید"
+              error={fieldErrors.FirstName}
+              required
             />
 
             <InputField
               label="نام خانوادگی *"
-              value={formData.lastName}
-              onChangeText={(value) => updateFormData('lastName', value)}
-              error={errors.lastName}
-              placeholder={formData.lastName}
+              value={formData.LastName}
+              onChangeText={(text) => handleFieldChange('LastName', text)}
+              placeholder="نام خانوادگی را وارد کنید"
+              error={fieldErrors.LastName}
+              required
             />
 
             <InputField
               label="نام پدر"
-              value={formData.nameFather}
-              onChangeText={(value) => updateFormData('nameFather', value)}
-              error={errors.nameFather}
-              placeholder={formData.nameFather}
+              value={formData.NameFather || ''}
+              onChangeText={(text) => handleFieldChange('NameFather', text)}
+              placeholder="نام پدر را وارد کنید"
             />
 
             <InputField
-              label="کد ملی *"
-              value={formData.nationalId}
-              onChangeText={(value) => updateFormData('nationalId', value)}
-              error={errors.nationalId}
-              placeholder={formData.nationalId}
-              keyboardType="numeric"
-              maxLength={10}
-            />
-
-            <InputField
-              label="شماره تلفن *"
-              value={formData.phone}
-              onChangeText={(value) => updateFormData('phone', value)}
-              error={errors.phone}
-              placeholder={formData.phone}
+              label="شماره موبایل"
+              value={formData.Phone || ''}
+              onChangeText={(text) => handleFieldChange('Phone', text)}
+              placeholder="09123456789"
               keyboardType="phone-pad"
-              maxLength={11}
+              error={fieldErrors.Phone}
+            />
+
+            <InputField
+              label="کد ملی"
+              value={formData.NationalID || ''}
+              onChangeText={(text) => handleFieldChange('NationalID', text)}
+              placeholder="کد ملی ۱۰ رقمی"
+              keyboardType="numeric"
+              error={fieldErrors.NationalID}
+              maxLength={10}
             />
 
             <InputField
               label="ایمیل"
-              value={formData.email}
-              onChangeText={(value) => updateFormData('email', value)}
-              error={errors.email}
-              placeholder={formData.email}
+              value={formData.Email || ''}
+              onChangeText={(text) => handleFieldChange('Email', text)}
+              placeholder="example@email.com"
               keyboardType="email-address"
+              autoCapitalize="none"
+              error={fieldErrors.Email}
             />
 
             <InputField
               label="تاریخ تولد"
-              value={formData.birthDate}
-              onChangeText={(value) => updateFormData('birthDate', value)}
-              placeholder={formData.birthDate}
+              value={formData.BirthDate || ''}
+              onChangeText={(text) => handleFieldChange('BirthDate', text)}
+              placeholder="۱۴۰۰/۰۱/۰۱"
+            />
+
+            <ThemedText style={styles.fieldLabel}>جنسیت</ThemedText>
+            <RTLPicker
+              items={[
+                { label: "انتخاب کنید", value: "" },
+                { label: "مرد", value: "Male" },
+                { label: "زن", value: "Female" }
+              ]}
+              selectedValue={formData.Gender || ''}
+              onValueChange={(value) => handleFieldChange('Gender', value)}
+              placeholder="انتخاب کنید"
+              style={styles.pickerContainer}
+            />
+
+            <ThemedText style={styles.sectionTitle}>اطلاعات آدرس</ThemedText>
+
+            <InputField
+              label="استان"
+              value={formData.Province || ''}
+              onChangeText={(text) => handleFieldChange('Province', text)}
+              placeholder="نام استان"
             />
 
             <InputField
-              label="جنسیت"
-              value={formData.gender}
-              onChangeText={(value) => updateFormData('gender', value)}
-              placeholder={formData.gender}
+              label="شهر"
+              value={formData.City || ''}
+              onChangeText={(text) => handleFieldChange('City', text)}
+              placeholder="نام شهر"
             />
+
+            <InputField
+              label="منطقه"
+              value={formData.Region || ''}
+              onChangeText={(text) => handleFieldChange('Region', text)}
+              placeholder="منطقه یا ناحیه"
+            />
+
+            <InputField
+              label="آدرس"
+              value={formData.Street || ''}
+              onChangeText={(text) => handleFieldChange('Street', text)}
+              placeholder="آدرس کامل"
+              multiline
+            />
+
+            <ThemedText style={styles.sectionTitle}>اطلاعات همسر</ThemedText>
 
             <InputField
               label="نام همسر"
-              value={formData.husbandFirstName}
-              onChangeText={(value) => updateFormData('HusbandFirstName', value)}
-              placeholder={formData.husbandFirstName}
+              value={formData.HusbandFirstName || ''}
+              onChangeText={(text) => handleFieldChange('HusbandFirstName', text)}
+              placeholder="نام همسر"
             />
 
             <InputField
               label="نام خانوادگی همسر"
-              value={formData.husbandLastName}
-              onChangeText={(value) => updateFormData('husbandLastName', value)}
-              placeholder={formData.husbandLastName}
-            />
-
-             <InputField
-               label="علت نبود همسر"
-               value={formData.reasonMissingHusband}
-               onChangeText={(value) => updateFormData('reasonMissingHusband', value)}
-               placeholder={formData.reasonMissingHusband}
-             />
-
-             <InputField
-               label="نام سازمان تحت حمایت"
-               value={formData.underOrganizationName}
-               onChangeText={(value) => updateFormData('underOrganizationName', value)}
-               placeholder={formData.underOrganizationName}
-             />
-
-              <InputField
-                label="سطح تحصیلات"
-                value={formData.educationLevel}
-                onChangeText={(value) => updateFormData('educationLevel', value)}
-                placeholder={formData.educationLevel}
-              />
-
-          </View>
-
-          {/* Address Information */}
-          <View style={[styles.section, { backgroundColor: surfaceColor, borderColor }]}>
-            <ThemedText style={[styles.sectionTitle, { color: primaryColor }]}>
-              اطلاعات آدرس
-            </ThemedText>
-
-            <InputField
-              label="استان *"
-              value={formData.province}
-              onChangeText={(value) => updateFormData('province', value)}
-              error={errors.province}
-              placeholder={formData.province}
+              value={formData.HusbandLastName || ''}
+              onChangeText={(text) => handleFieldChange('HusbandLastName', text)}
+              placeholder="نام خانوادگی همسر"
             />
 
             <InputField
-              label="شهر *"
-              value={formData.city}
-              onChangeText={(value) => updateFormData('city', value)}
-              error={errors.city}
-              placeholder={formData.city}
-            />
-
-            <InputField
-              label="آدرس *"
-              value={formData.street}
-              onChangeText={(value) => updateFormData('street', value)}
-              error={errors.street}
-              placeholder={formData.street}
+              label="دلیل غیبت همسر"
+              value={formData.ReasonMissingHusband || ''}
+              onChangeText={(text) => handleFieldChange('ReasonMissingHusband', text)}
+              placeholder="در صورت غیبت همسر، دلیل را شرح دهید"
               multiline
-              numberOfLines={3}
+            />
+
+            <ThemedText style={styles.sectionTitle}>اطلاعات تحصیلی و شغلی</ThemedText>
+
+            <ThemedText style={styles.fieldLabel}>سطح تحصیلات</ThemedText>
+            <RTLPicker
+              items={[
+                { label: "انتخاب کنید", value: "" },
+                { label: "بی‌سواد", value: "None" },
+                { label: "ابتدایی", value: "Primary" },
+                { label: "راهنمایی", value: "Secondary" },
+                { label: "دبیرستان", value: "High School" },
+                { label: "دیپلم", value: "Diploma" },
+                { label: "فوق‌دیپلم", value: "Associate Degree" },
+                { label: "لیسانس", value: "Bachelor" },
+                { label: "فوق‌لیسانس", value: "Master" },
+                { label: "دکتری", value: "PhD" }
+              ]}
+              selectedValue={formData.EducationLevel || ''}
+              onValueChange={(value) => handleFieldChange('EducationLevel', value)}
+              placeholder="انتخاب کنید"
+              style={styles.pickerContainer}
             />
 
             <InputField
-              label="کد پستی"
-              value={formData.postalCode}
-              onChangeText={(value) => updateFormData('postalCode', value)}
-              placeholder={formData.postalCode}
-              keyboardType="numeric"
-              maxLength={10}
+              label="درآمد خانواده"
+              value={formData.IncomeForm || ''}
+              onChangeText={(text) => handleFieldChange('IncomeForm', text)}
+              placeholder="توضیح درآمد خانواده"
+              multiline
             />
-
-             <InputField
-               label="منطقه"
-               value={formData.region}
-               onChangeText={(value) => updateFormData('region', value)}
-               error={errors.region}
-               placeholder={formData.region}
-             />
-
-          </View>
-
-          {/* Financial and Job Information */}
-          <View style={[styles.section, { backgroundColor: surfaceColor, borderColor }]}>
-            <ThemedText style={[styles.sectionTitle, { color: primaryColor }]}>
-              اطلاعات شغلی و مالی
-            </ThemedText>
 
             <InputField
-              label="درآمد ماهانه (تومان)"
-              value={formData.incomeForm}
-              onChangeText={(value) => updateFormData('incomeForm', value)}
-              placeholder={formData.incomeForm}
-              keyboardType="numeric"
+              label="نام سازمان حامی"
+              value={formData.UnderOrganizationName || ''}
+              onChangeText={(text) => handleFieldChange('UnderOrganizationName', text)}
+              placeholder="نام سازمان یا نهاد حامی (در صورت وجود)"
             />
-          </View>
 
-          {/* Location */}
-          <View style={[styles.section, { backgroundColor: surfaceColor, borderColor }]}>
-            <ThemedText style={[styles.sectionTitle, { color: primaryColor }]}>
-              موقعیت جغرافیایی
-            </ThemedText>
+            <ThemedText style={styles.fieldLabel}>تحت نظارت نماینده</ThemedText>
+            <RTLPicker
+              items={[
+                { label: "انتخاب نماینده", value: 0 },
+                ...adminOptions.map(admin => ({
+                  label: `${admin.name} ${admin.info ? admin.info : ''}` || `نماینده ${admin.id}`,
+                  value: admin.id
+                }))
+              ]}
+              selectedValue={formData.UnderWhichAdmin || 0}
+              onValueChange={(value) => handleFieldChange('UnderWhichAdmin', value || undefined)}
+              placeholder="انتخاب نماینده"
+              style={styles.pickerContainer}
+            />
+
+            {/* Location Section */}
+            <ThemedText style={styles.sectionTitle}>موقعیت جغرافیایی</ThemedText>
 
             <InputField
               label="عرض جغرافیایی"
-              value={formData.latitude}
-              onChangeText={(value) => updateFormData('latitude', value)}
-              placeholder={formData.latitude}
+              value={formData.Latitude || ''}
+              onChangeText={(text) => handleFieldChange('Latitude', text)}
+              placeholder="35.6892"
               keyboardType="numeric"
             />
 
             <InputField
               label="طول جغرافیایی"
-              value={formData.longitude}
-              onChangeText={(value) => updateFormData('longitude', value)}
-              placeholder={formData.longitude}
+              value={formData.Longitude || ''}
+              onChangeText={(text) => handleFieldChange('Longitude', text)}
+              placeholder="51.3890"
               keyboardType="numeric"
             />
-          </View>
 
-          {/* Action Buttons */}
-          <View style={styles.actionButtons}>
-            <Button
-              title="ذخیره تغییرات"
-              onPress={handleSave}
-              loading={saving}
-              style={[styles.actionButton, { backgroundColor: successColor }]}
-            />
-            <Button
-              title="انصراف"
-              onPress={() => router.back()}
-              variant="outline"
-              style={styles.actionButton}
-            />
+            {formData.Latitude && formData.Longitude && (
+              <View style={styles.locationInfo}>
+                <ThemedText style={styles.locationLabel}>موقعیت فعلی:</ThemedText>
+                <ThemedText style={styles.locationText}>
+                  عرض جغرافیایی: {formData.Latitude}
+                </ThemedText>
+                <ThemedText style={styles.locationText}>
+                  طول جغرافیایی: {formData.Longitude}
+                </ThemedText>
+              </View>
+            )}
           </View>
         </ScrollView>
+
+        <View style={styles.footer}>
+          <Button
+            title="انتخاب موقعیت در نقشه"
+            onPress={() => {
+              router.push({
+                pathname: '/admin/register/map',
+                params: {
+                  formData: JSON.stringify(formData),
+                  roleTitle: 'مددجو',
+                  roleIcon: '👤',
+                  role: 'needy',
+                  city: formData.City || '',
+                  province: formData.Province || '',
+                    savedlocation: formData.Latitude && formData.Longitude
+                    ? JSON.stringify({
+                        latitude: parseFloat(formData.Latitude),
+                        longitude: parseFloat(formData.Longitude)
+                      })
+                    : '',
+                  editMode: 'true',
+                  registerId: registerId as string
+                }
+              });
+            }}
+            variant="outline"
+            style={styles.actionButton}
+          />
+
+          <Button
+            title="انصراف"
+            onPress={() => router.back()}
+            variant="outline"
+            style={styles.actionButton}
+          />
+        </View>
       </KeyboardAwareContainer>
     </ThemedView>
   );
@@ -463,8 +495,10 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  content: {
+  scrollView: {
     flex: 1,
+  },
+  form: {
     padding: Spacing.lg,
   },
   loadingContainer: {
@@ -472,24 +506,59 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  section: {
-    borderRadius: BorderRadius.lg,
-    borderWidth: 1,
-    padding: Spacing.lg,
-    marginBottom: Spacing.lg,
-  },
   sectionTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    marginBottom: Spacing.lg,
-    textAlign: 'center',
+    marginTop: Spacing.lg,
+    marginBottom: Spacing.md,
   },
-  actionButtons: {
-    gap: Spacing.lg,
-    marginVertical: Spacing.xl,
-    paddingBottom: Spacing['2xl'],
+  fieldLabel: {
+    marginTop: Spacing.md,
+    marginBottom: Spacing.xs,
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
+  pickerContainer: {
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: BorderRadius.md,
+    overflow: 'hidden',
+    marginBottom: Spacing.md,
+    backgroundColor: 'white',
+  },
+  locationInfo: {
+    marginTop: Spacing.md,
+    padding: Spacing.md,
+    backgroundColor: 'rgba(76, 175, 80, 0.1)',
+    borderRadius: BorderRadius.md,
+  },
+  locationLabel: {
+    fontWeight: 'bold',
+    marginBottom: Spacing.xs,
+  },
+  locationText: {
+    fontSize: 14,
+    opacity: 0.8,
+  },
+  footer: {
+    padding: Spacing.lg,
+    gap: Spacing.md,
   },
   actionButton: {
     marginBottom: Spacing.sm,
+  },
+  errorContainer: {
+    padding: Spacing.md,
+    borderRadius: BorderRadius.md,
+    borderWidth: 1,
+    marginBottom: Spacing.md,
+  },
+  errorTitle: {
+    fontWeight: 'bold',
+    marginBottom: Spacing.xs,
+  },
+  errorText: {
+    fontSize: 14,
+    marginBottom: Spacing.xs,
   },
 });

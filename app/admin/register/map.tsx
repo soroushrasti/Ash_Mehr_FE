@@ -1,5 +1,5 @@
 /* eslint-disable import/no-unused-modules */
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { StyleSheet, View, Alert, Platform, ScrollView as RNScrollView } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { ThemedView } from '@/components/ThemedView';
@@ -52,17 +52,38 @@ export default function AdminRegisterMap() {
   const city = params.city as string;
   const province = params.province as string;
 
-  const { formData, role, roleTitle, roleIcon, next } = params;
+  const { formData, role, roleTitle, roleIcon, next, savedlocation } = params;
   const targetForm = Array.isArray(next) ? next[0] : (next || 'admin-user');
   const roleIconSafe = typeof roleIcon === 'string' ? roleIcon : Array.isArray(roleIcon) ? roleIcon[0] : '📍';
+    const parsedSavedLocation = savedlocation ? JSON.parse(savedlocation as string) : null;
 
-  const [location, setLocation] = useState<{ latitude: number; longitude: number; address?: string } | null>(null);
+  const [location, setLocation] = useState<{ latitude: number; longitude: number; address?: string } | null>(parsedSavedLocation);
   const [initialRegion, setInitialRegion] = useState<any>(null);
   const [loading, setLoading] = useState(false);
-  const [selectedLocation, setSelectedLocation] = useState<{ latitude: number; longitude: number } | null>(null);
+  const [selectedLocation, setSelectedLocation] = useState<{ latitude: number; longitude: number } | null>(parsedSavedLocation);
 
   useEffect(() => {
+
     const initializeMapWithCity = async () => {
+        console.log('Initializing map with saved location:', savedlocation);
+
+        if (savedlocation) {
+        const parsedSavedLocation = savedlocation ? JSON.parse(savedlocation as string) : null;
+
+        setInitialRegion({
+          latitude: parsedSavedLocation.latitude,
+          longitude: parsedSavedLocation.longitude,
+          latitudeDelta: 0.05, // City-level zoom
+          longitudeDelta: 0.05,
+        });
+
+        // Set as suggested location
+            setSelectedLocation({
+          latitude: parsedSavedLocation.latitude,
+          longitude: parsedSavedLocation.longitude,
+        });
+        return;
+      }
       // If city is provided, use Google API to geocode and zoom to that area
       if (city && city.trim()) {
         try {
@@ -116,7 +137,7 @@ export default function AdminRegisterMap() {
     };
 
     initializeMapWithCity();
-  }, [city, province]);
+  }, [city, province, savedlocation]);
 
   const primaryColor = useThemeColor({}, 'primary');
   const successColor = useThemeColor({}, 'success');

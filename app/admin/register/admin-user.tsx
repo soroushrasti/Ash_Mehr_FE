@@ -1,161 +1,251 @@
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, View, Alert } from 'react-native';
+import { StyleSheet, View, Alert, ScrollView } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { ThemedView } from '@/components/ThemedView';
 import { ThemedText } from '@/components/ThemedText';
 import { InputField } from '@/components/InputField';
 import { Button } from '@/components/Button';
 import AppHeader from '@/components/AppHeader';
-import { Spacing } from '@/constants/Design';
+import { Spacing, BorderRadius } from '@/constants/Design';
 import { apiService } from '@/services/apiService';
 import { AdminCreate } from '@/types/api';
-import { useThemeColor } from '@/hooks/useThemeColor';
+import { KeyboardAwareContainer } from '@/components/KeyboardAwareContainer';
 import { useAuth } from '@/components/AuthContext';
-import UniversalMap from '@/components/UniversalMap';
-import * as Location from 'expo-location';
-import KeyboardAwareContainer from '@/components/KeyboardAwareContainer';
 
-export default function AdminUserForm() {
-  const { mode } = useLocalSearchParams(); // 'volunteer' | 'admin'
+export default function AdminUserRegister() {
   const router = useRouter();
+  const params = useLocalSearchParams();
   const { userId } = useAuth();
 
-  const isVolunteer = mode === 'volunteer';
-  const title = isVolunteer ? 'افزودن داوطلب (مدیر گروه)' : 'افزودن مدیر جدید';
-  const primary = useThemeColor({}, 'primary');
-
-  const [form, setForm] = useState({
+  const [formData, setFormData] = useState<AdminCreate>({
     FirstName: '',
     LastName: '',
     Phone: '',
-    PostCode: '',
     Email: '',
+    Password: '',
     City: '',
     Province: '',
+    PostCode: '',
     Street: '',
     NationalID: '',
-    Password: ''
+    CreatedBy: '',
+    UserRole: 'Admin',
+    Latitude: params.latitude ? String(params.latitude) : '',
+    Longitude: params.longitude ? String(params.longitude) : '',
   });
+
   const [loading, setLoading] = useState(false);
 
-  // Location state for GroupAdmin creation
-  const [location, setLocation] = useState<{ latitude: number; longitude: number; address?: string } | null>(null);
-  const [locError, setLocError] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!isVolunteer) return;
-    (async () => {
-      try {
-        const { status } = await Location.requestForegroundPermissionsAsync();
-        if (status !== 'granted') {
-          setLocError('برای تعیین موقعیت مدیر گروه، مجوز دسترسی به موقعیت لازم است.');
-          return;
-        }
-        const pos = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
-        setLocation({ latitude: pos.coords.latitude, longitude: pos.coords.longitude });
-      } catch (e) {
-        setLocError('خطا در دریافت موقعیت فعلی');
-      }
-    })();
-  }, [isVolunteer]);
-
-  const setField = (k: string, v: string) => setForm(prev => ({ ...prev, [k]: v }));
-
-  const onSubmit = async () => {
-    const numericUserId = typeof userId === 'string' && !isNaN(Number(userId)) ? Number(userId) : undefined;
-
-    const payload: AdminCreate = {
-      FirstName: form.FirstName,
-      LastName: form.LastName,
-      Phone: form.Phone || undefined,
-      PostCode: form.PostCode || undefined,
-      Email: form.Email || undefined,
-      City: form.City || undefined,
-      Province: form.Province || undefined,
-      Street: form.Street || undefined,
-      NationalID: form.NationalID || undefined,
-      UserRole: isVolunteer ? 'GroupAdmin' : 'Admin',
-      Password: form.Password,
-      Latitude: isVolunteer && location ? String(location.latitude) : undefined,
-      Longitude: isVolunteer && location ? String(location.longitude) : undefined,
-    };
-
-    if (isVolunteer && !location) {
-      Alert.alert('خطا', 'لطفاً موقعیت مدیر گروه را روی نقشه انتخاب کنید.');
+  const handleSubmit = async () => {
+    // Validation
+    if (!formData.FirstName.trim() || !formData.LastName.trim()) {
+      Alert.alert('خطا', 'نام و نام خانوادگی الزامی است');
       return;
     }
 
-    setLoading(true);
-    const res = await apiService.createAdmin(payload);
-    setLoading(false);
+    if (!formData.Password || formData.Password.length < 6) {
+      Alert.alert('خطا', 'رمز عبور باید حداقل ۶ کاراکتر باشد');
+      return;
+    }
 
-    if (res.success) {
-      Alert.alert('موفق', isVolunteer ? 'داوطلب با نقش مدیرگروه ایجاد شد.' : 'مدیر جدید ایجاد شد.', [
-        { text: 'باشه', onPress: () => router.back() },
-      ]);
-    } else {
-      Alert.alert('خطا', res.error || 'خطای ناشناخته');
+    if (!userId) {
+      Alert.alert('خطا', 'شناسه کاربر ثبت‌کننده یافت نشد. لطفاً دوباره وارد شوید.');
+      return;
+    }
+
+    const payload = { ...formData, CreatedBy: Number(userId) };
+
+    setLoading(true);
+    try {
+      const response = await apiService.createAdmin(payload);
+      if (response.success) {
+        Alert.alert(
+          'موفق',
+          'اطلاعات نماینده با موفقیت ثبت شد',
+          [
+            {
+              text: 'تایید',
+              onPress: () => router.push('/admin/register/confirm')
+            }
+          ]
+        );
+      } else {
+        Alert.alert('خطا', response.error || 'خطا در ثبت اطلاعات');
+      }
+    } catch (error) {
+      Alert.alert('خطا', 'خطا در اتصال به سرور');
+      console.error('Admin registration error:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <ThemedView type="container" style={{ flex: 1 }}>
-      <AppHeader title={title} subtitle={isVolunteer ? 'نقش: مدیر گروه' : 'نقش: مدیر کل'} />
-      <KeyboardAwareContainer contentContainerStyle={styles.content}>
-        <ThemedView type="card" style={{ marginBottom: Spacing.xl }}>
-          <ThemedText type="heading3" style={{ marginBottom: Spacing.md, color: primary }}>
-            اطلاعات کاربر
-          </ThemedText>
+    <ThemedView style={styles.container}>
+      <AppHeader title="ثبت اطلاعات نماینده" showBackButton />
 
-          <InputField label="نام" value={form.FirstName} onChangeText={v => setField('FirstName', v)} />
-          <InputField label="نام خانوادگی" value={form.LastName} onChangeText={v => setField('LastName', v)} />
-          <InputField label="رمز عبور" value={form.Password} onChangeText={v => setField('Password', v)} secureTextEntry />
-          <InputField label="شماره تلفن" value={form.Phone} onChangeText={v => setField('Phone', v)} keyboardType="phone-pad" />
-          <InputField label="ایمیل" value={form.Email} onChangeText={v => setField('Email', v)} keyboardType="email-address" />
-          <InputField label="کد پستی" value={form.PostCode} onChangeText={v => setField('PostCode', v)} />
-          <InputField label="استان" value={form.Province} onChangeText={v => setField('Province', v)} />
-          <InputField label="شهر" value={form.City} onChangeText={v => setField('City', v)} />
-          <InputField label="خیابان/آدرس" value={form.Street} onChangeText={v => setField('Street', v)} />
-          <InputField label="کد ملی" value={form.NationalID} onChangeText={v => setField('NationalID', v)} />
+      <KeyboardAwareContainer>
+        <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+          <View style={styles.form}>
+            <ThemedText style={styles.sectionTitle}>اطلاعات شخصی</ThemedText>
 
-          {isVolunteer && (
-            <>
-              <ThemedText type="heading3" style={{ marginVertical: Spacing.md, color: primary }}>
-                انتخاب موقعیت مدیر گروه
-              </ThemedText>
-              <ThemedText type="caption" style={{ marginBottom: Spacing.sm, opacity: 0.8 }}>
-                ابتدا مجوز دسترسی به موقعیت را تایید کنید. سپس نشانگر را روی موقعیت دقیق قرار دهید.
-              </ThemedText>
-              <View style={{ height: 300, borderRadius: 12, overflow: 'hidden', marginBottom: Spacing.md }}>
-                <UniversalMap
-                  location={location}
-                  onLocationSelect={(loc) => setLocation(loc)}
-                  zoom={13}
-                  showControls
-                />
+            <InputField
+              label="نام *"
+              value={formData.FirstName}
+              onChangeText={(text) => setFormData(prev => ({ ...prev, FirstName: text }))}
+              placeholder="نام خود را وارد کنید"
+            />
+
+            <InputField
+              label="نام خانوادگی *"
+              value={formData.LastName}
+              onChangeText={(text) => setFormData(prev => ({ ...prev, LastName: text }))}
+              placeholder="نام خانوادگی خود را وارد کنید"
+            />
+
+            <InputField
+              label="شماره موبایل"
+              value={formData.Phone || ''}
+              onChangeText={(text) => setFormData(prev => ({ ...prev, Phone: text }))}
+              placeholder="09123456789"
+              keyboardType="phone-pad"
+            />
+
+            <InputField
+              label="کد ملی"
+              value={formData.NationalID || ''}
+              onChangeText={(text) => setFormData(prev => ({ ...prev, NationalID: text }))}
+              placeholder="کد ملی ۱۰ رقمی"
+              keyboardType="numeric"
+            />
+
+            <InputField
+              label="ایمیل"
+              value={formData.Email || ''}
+              onChangeText={(text) => setFormData(prev => ({ ...prev, Email: text }))}
+              placeholder="example@email.com"
+              keyboardType="email-address"
+              autoCapitalize="none"
+            />
+
+            <InputField
+              label="رمز عبور *"
+              value={formData.Password}
+              onChangeText={(text) => setFormData(prev => ({ ...prev, Password: text }))}
+              placeholder="حداقل ۶ کاراکتر"
+              secureTextEntry
+            />
+
+            <InputField
+              label="ایجاد شده توسط"
+              value={formData.CreatedBy}
+              onChangeText={(text) => setFormData(prev => ({ ...prev, CreatedBy: text }))}
+              placeholder="توسط کدام نماینده ایجاد شده"
+            />
+
+            <ThemedText style={styles.sectionTitle}>آدرس</ThemedText>
+
+            <InputField
+              label="استان"
+              value={formData.Province || ''}
+              onChangeText={(text) => setFormData(prev => ({ ...prev, Province: text }))}
+              placeholder="نام استان"
+            />
+
+            <InputField
+              label="شهر"
+              value={formData.City || ''}
+              onChangeText={(text) => setFormData(prev => ({ ...prev, City: text }))}
+              placeholder="نام شهر"
+            />
+
+            <InputField
+              label="آدرس"
+              value={formData.Street || ''}
+              onChangeText={(text) => setFormData(prev => ({ ...prev, Street: text }))}
+              placeholder="آدرس کامل"
+              multiline
+            />
+
+             <InputField
+               label="کد پستی"
+               value={formData.PostCode || ''}
+               onChangeText={(text) => setFormData(prev => ({ ...prev, PostCode: text }))}
+               placeholder="کد پستی"
+             />
+
+            {params.latitude && params.longitude && (
+              <View style={styles.locationInfo}>
+                <ThemedText style={styles.locationLabel}>موقعیت انتخاب شده:</ThemedText>
+                <ThemedText style={styles.locationText}>
+                  عرض جغرافیایی: {params.latitude}
+                </ThemedText>
+                <ThemedText style={styles.locationText}>
+                  طول جغرافیایی: {params.longitude}
+                </ThemedText>
               </View>
-              {location && (
-                <ThemedText type="caption" style={{ opacity: 0.8, marginBottom: Spacing.sm }}>
-                  مختصات: {location.latitude.toFixed(6)} , {location.longitude.toFixed(6)}
-                </ThemedText>
-              )}
-              {!!locError && (
-                <ThemedText type="caption" style={{ color: 'red', marginBottom: Spacing.sm }}>
-                  {locError}
-                </ThemedText>
-              )}
-            </>
-          )}
+            )}
+          </View>
+        </ScrollView>
 
-          <Button title="ثبت" onPress={onSubmit} fullWidth loading={loading} />
-        </ThemedView>
+        <View style={styles.footer}>
+          <Button
+            title={loading ? 'در حال ثبت...' : 'ثبت اطلاعات'}
+            onPress={handleSubmit}
+            disabled={loading}
+            style={styles.submitButton}
+          />
+
+          <Button
+            title="انتخاب موقعیت در نقشه"
+            onPress={() => router.push('/admin/register/map')}
+            variant="outline"
+            style={styles.mapButton}
+          />
+        </View>
       </KeyboardAwareContainer>
     </ThemedView>
   );
 }
 
 const styles = StyleSheet.create({
-  content: {
-    padding: Spacing.xl,
+  container: {
+    flex: 1,
+  },
+  scrollView: {
+    flex: 1,
+  },
+  form: {
+    padding: Spacing.lg,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginTop: Spacing.lg,
+    marginBottom: Spacing.md,
+  },
+  locationInfo: {
+    marginTop: Spacing.md,
+    padding: Spacing.md,
+    backgroundColor: 'rgba(76, 175, 80, 0.1)',
+    borderRadius: BorderRadius.md,
+  },
+  locationLabel: {
+    fontWeight: 'bold',
+    marginBottom: Spacing.xs,
+  },
+  locationText: {
+    fontSize: 14,
+    opacity: 0.8,
+  },
+  footer: {
+    padding: Spacing.lg,
+    gap: Spacing.md,
+  },
+  submitButton: {
+    marginBottom: Spacing.sm,
+  },
+  mapButton: {
+    marginBottom: Spacing.sm,
   },
 });

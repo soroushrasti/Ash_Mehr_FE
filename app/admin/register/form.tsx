@@ -32,6 +32,8 @@ const baseFields: FieldDef[] = [
   { key: 'lastName', label: 'نام خانوادگی', placeholder: 'نام خانوادگی خود را وارد کنید', required: true },
   { key: 'phone', label: 'شماره تلفن', placeholder: '09xxxxxxxxx', required: true, type: 'phone' },
   { key: 'nationalId', label: 'کد ملی', placeholder: 'کد ملی ۱۰ رقمی', required: true, type: 'number' },
+  { key: 'birthDate', label: 'تاریخ تولد', placeholder: 'تاریخ تولد خود را وارد کنید', required: true },
+  { key: 'nameFather', label: 'نام پدر', placeholder: 'نام پدر خود را وارد کنید', required: true },
   { key: 'email', label: 'ایمیل', placeholder: 'example@email.com', required: false, type: 'email' },
   { key: 'province', label: 'استان', placeholder: 'استان محل سکونت', required: true },
   { key: 'city', label: 'شهر', placeholder: 'شهر محل سکونت', required: true },
@@ -39,7 +41,6 @@ const baseFields: FieldDef[] = [
 ];
 
 const needyFamilyFields: FieldDef[] = [
-  { key: 'age', label: 'سن', placeholder: 'سن به سال', required: false, type: 'number' },
   { key: 'region', label: 'منطقه', placeholder: 'منطقه شهری', required: false },
   { key: 'gender', label: 'جنسیت', placeholder: 'انتخاب کنید', required: false, type: 'select', options: [
     { label: 'مرد', value: 'Male' },
@@ -60,20 +61,29 @@ const needyFamilyFields: FieldDef[] = [
     { label: 'فوق‌لیسانس', value: 'Master' },
     { label: 'دکتری', value: 'PhD' },
   ]},
-  { key: 'incomeAmount', label: 'میزان درآمد ماهانه', placeholder: 'درآمد به تومان', required: false, type: 'number' },
+  { key: 'incomeForm', label: 'میزان درآمد ماهانه', placeholder: 'درآمد به تومان', required: false, type: 'number' },
+  {key: 'underWhichAdmin', label: 'تحت حمایت کدام نماینده', placeholder: '', required: false, type: 'select', options: [
+
+  ]}
 ];
 
 function validateField(field: FieldDef, value: string): string {
   if (field.required && (!value || value.trim() === '')) return `${field.label} الزامی است`;
   if (field.type === 'email' && value && !/^\S+@\S+\.\S+$/.test(value)) return 'فرمت ایمیل نادرست است';
-  if (field.type === 'phone' && value && !/^09\d{9}$/.test(value)) return 'شماره تلفن باید با ۰۹ شروع شود و ۱۱ رقم باشد';
-  if (field.type === 'number' && value && isNaN(Number(value))) return `${field.label} باید عدد باشد`;
-  if (field.key === 'nationalId' && value && (!/^\d{10}$/.test(value) || !isValidNationalId(value))) return 'کد ملی نادرست است';
+  if (field.type === 'phone' && value && !/^(۰۹|09)[۰-۹0-9]{9}$/.test(value.replace(/[^۰-۹0-9]/g, ''))) {
+    return 'شماره تلفن باید با ۰۹ یا 09 شروع شود و ۱۱ رقم باشد';
+  }
+  if (field.type === 'number' && value && !/^[۰-۹0-9]+$/.test(value)) {
+    return `${field.label} باید عدد باشد`;
+  }
   return '';
 }
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 function isValidNationalId(nationalId: string): boolean {
+  // تبدیل کد ملی به اعداد انگلیسی
+  nationalId = nationalId.replace(/[۰-۹]/g, (char) => String(char.charCodeAt(0) - 1776));
+
   if (nationalId.length !== 10) return false;
   const check = parseInt(nationalId[9]);
   const sum = nationalId
@@ -104,11 +114,11 @@ export default function AdminRegisterForm() {
 
   switch (roleParam) {
     case 'Admin':
-      roleTitle = 'مدیر کل';
+      roleTitle = 'نماینده کل';
       roleIcon = '👨‍💼';
       break;
     case 'GroupAdmin':
-      roleTitle = 'مدیر گروه';
+      roleTitle = 'نماینده گروه';
       roleIcon = '👥';
       break;
     case 'NeedyFamily':
@@ -116,9 +126,9 @@ export default function AdminRegisterForm() {
     case 'Elderly':
     case 'Volunteer':
       fields = [...baseFields, ...needyFamilyFields];
-      roleTitle = roleParam === 'NeedyFamily' ? 'خانواده نیازمند' :
-                 roleParam === 'Child' ? 'کودک نیازمند' :
-                 roleParam === 'Elderly' ? 'سالمند نیازمند' : 'داوطلب';
+      roleTitle = roleParam === 'NeedyFamily' ? 'خانواده مددجو' :
+                 roleParam === 'Child' ? 'کودک مددجو' :
+                 roleParam === 'Elderly' ? 'سالمند مددجو' : 'داوطلب';
       roleIcon = roleParam === 'NeedyFamily' ? '🏠' :
                 roleParam === 'Child' ? '👶' :
                 roleParam === 'Elderly' ? '👴' : '🤝';
@@ -129,7 +139,7 @@ export default function AdminRegisterForm() {
   }
 
   // Group fields explicitly (avoid index slices)
-  const personalKeys = ['firstName','lastName','phone','nationalId','email'];
+  const personalKeys = ['firstName','lastName','phone','nationalId','email', 'birthDate'];
   const addressKeys = ['province','city','street'];
   const personalFields = fields.filter(f => personalKeys.includes(f.key));
   const addressFields = fields.filter(f => addressKeys.includes(f.key));
@@ -287,7 +297,7 @@ export default function AdminRegisterForm() {
 
         <ThemedView type="card" style={styles.formCard}>
           <ThemedText type="heading3" style={styles.formTitle}>
-            اطلاعات آدرس
+            اطلاعات آدرسx
           </ThemedText>
 
           {addressFields.map(field => (
@@ -411,7 +421,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
     fontSize: 16,
     fontFamily: 'Arial',
-    direction: 'rtl',
+    writingDirection: 'rtl',
   },
   errorText: {
     marginTop: Spacing.xs,

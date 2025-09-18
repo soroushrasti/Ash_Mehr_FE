@@ -3,7 +3,7 @@ import * as SecureStore from 'expo-secure-store';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Platform } from 'react-native';
 
-export type UserType = 'Admin' | 'GroupAdmin' | null;
+export type UserType = 'Admin' | 'GroupAdmin' | 'Needy' | null;
 
 interface AuthState {
   userType: UserType;

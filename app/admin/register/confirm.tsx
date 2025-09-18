@@ -14,8 +14,13 @@ import { NeedyCreateWithChildren } from '@/types/api';
 
 export default function AdminRegisterConfirm() {
   const router = useRouter();
-  const { formData, roleTitle, roleIcon, location } = useLocalSearchParams();
-  const { userId, userType } = useAuth();
+  const { formData, roleTitle, roleIcon, location, role, registerId, editMode } = useLocalSearchParams();
+  console.log('Form Data:', formData);
+  console.log('Location Data:', location);
+  console.log('Role:', role, 'Role Title:', roleTitle, 'Role Icon:', roleIcon, 'Register ID:', registerId, 'Edit Mode:', editMode);
+  const roleParam = Array.isArray(role) ? role[0] : role;
+  const registerIdString = Array.isArray(registerId) ? registerId[0] : registerId;
+  const { userId } = useAuth();
   const [loading, setLoading] = useState(false);
 
   const successColor = useThemeColor({}, 'success');
@@ -25,28 +30,28 @@ export default function AdminRegisterConfirm() {
 
   // Organize form data for display
   const personalInfo = [
-    { label: 'نام', value: parsedFormData.firstName },
-    { label: 'نام خانوادگی', value: parsedFormData.lastName },
-    { label: 'شماره تلفن', value: parsedFormData.phone },
-    { label: 'کد ملی', value: parsedFormData.nationalId },
-    { label: 'ایمیل', value: parsedFormData.email },
+    { label: 'نام', value: parsedFormData.FirstName },
+    { label: 'نام خانوادگی', value: parsedFormData.LastName },
+    { label: 'شماره تلفن', value: parsedFormData.Phone },
+    { label: 'کد ملی', value: parsedFormData.NationalID },
+    { label: 'ایمیل', value: parsedFormData.Email },
   ];
 
   const addressInfo = [
-    { label: 'استان', value: parsedFormData.province },
-    { label: 'شهر', value: parsedFormData.city },
-    { label: 'آدرس', value: parsedFormData.street },
+    { label: 'استان', value: parsedFormData.Province },
+    { label: 'شهر', value: parsedFormData.City },
+    { label: 'آدرس', value: parsedFormData.Street },
   ];
 
   const additionalInfo = [
-    { label: 'سن', value: parsedFormData.age },
-    { label: 'جنسیت', value: parsedFormData.gender === 'Male' ? 'مرد' : parsedFormData.gender === 'Female' ? 'زن' : parsedFormData.gender },
-    { label: 'منطقه', value: parsedFormData.region },
-    { label: 'سطح تحصیلات', value: getEducationLabel(parsedFormData.educationLevel) },
-    { label: 'درآمد ماهانه', value: parsedFormData.incomeAmount ? `${parsedFormData.incomeAmount} تومان` : '' },
-    { label: 'نام همسر', value: parsedFormData.housebandFirstName && parsedFormData.housebandLastName ? `${parsedFormData.housebandFirstName} ${parsedFormData.housebandLastName}` : '' },
-    { label: 'دلیل غیبت همسر', value: parsedFormData.reasonMissingHouseband },
-    { label: 'سازمان حامی', value: parsedFormData.underOrganizationName },
+    { label: 'سن', value: parsedFormData.Age },
+    { label: 'جنسیت', value: parsedFormData.Gender === 'Male' ? 'مرد' : parsedFormData.gender === 'Female' ? 'زن' : parsedFormData.gender },
+    { label: 'منطقه', value: parsedFormData.Region },
+    { label: 'سطح تحصیلات', value: getEducationLabel(parsedFormData.EducationLevel) },
+    { label: 'درآمد ماهانه', value: parsedFormData.IncomeAmount ? `${parsedFormData.IncomeAmount} تومان` : '' },
+    { label: 'نام همسر', value: parsedFormData.HousebandLastName && parsedFormData.HousebandFirstName ? `${parsedFormData.HousebandFirstName} ${parsedFormData.HousebandLastName}` : '' },
+    { label: 'دلیل غیبت همسر', value: parsedFormData.ReasonMissingHusband },
+    { label: 'سازمان حامی', value: parsedFormData.UnderOrganizationName },
   ].filter(item => item.value); // Only show fields with values
 
   function getEducationLabel(value: string) {
@@ -74,64 +79,125 @@ export default function AdminRegisterConfirm() {
   };
 
   const handleSubmit = async () => {
+    if (!userId) {
+      Alert.alert('خطا', 'شناسه کاربر ثبت‌کننده موجود نیست. لطفاً دوباره وارد شوید.');
+      return;
+    }
     setLoading(true);
 
     try {
-      // Map form data to RegisterCreateWithChildren schema
-      const numericUserId = typeof userId === 'string' && !isNaN(Number(userId)) ? Number(userId) : undefined;
-      const registerData: NeedyCreateWithChildren = {
-        FirstName: parsedFormData.firstName || '',
-        LastName: parsedFormData.lastName || '',
-        Phone: parsedFormData.phone || undefined,
-        Email: parsedFormData.email || undefined,
-        City: parsedFormData.city || undefined,
-        Province: parsedFormData.province || undefined,
-        Street: parsedFormData.street || undefined,
-        NameFather: parsedFormData.nameFather || undefined,
-        NationalID: parsedFormData.nationalId || undefined,
-        CreatedBy: numericUserId,
-        Age: parsedFormData.age ? Number(parsedFormData.age) : undefined,
-        Region: parsedFormData.region || undefined,
-        Gender: parsedFormData.gender || undefined,
-        HusbandFirstName: parsedFormData.housebandFirstName || undefined,
-        HusbandLastName: parsedFormData.housebandLastName || undefined,
-        ReasonMissingHusband: parsedFormData.reasonMissingHouseband || undefined,
-        UnderOrganizationName: parsedFormData.underOrganizationName || undefined,
-        EducationLevel: parsedFormData.educationLevel || undefined,
-        IncomeForm: parsedFormData.incomeAmount ? String(parsedFormData.incomeAmount) : undefined,
-        Latitude: parsedLocation.latitude?.toString() || undefined,
-        Longitude: parsedLocation.longitude?.toString() || undefined,
-        children_of_registre: null,
-      } as NeedyCreateWithChildren;
+        console.log('Submitting with editMode:', editMode);
+      const isAdminRole = roleParam === 'Admin' || roleParam === 'GroupAdmin';
 
-      const result = await apiService.createNeedyPerson(registerData);
-
-      if (!result.success) {
-        Alert.alert('خطا', result.error || 'در ثبت‌نام خطایی رخ داد.');
-        return;
+      if (isAdminRole && editMode !== 'true') {
+        // Validate password
+        if (!parsedFormData.Password || parsedFormData.Password.length < 6) {
+          Alert.alert('خطا', 'رمز عبور معتبر وارد نشده است.');
+          setLoading(false);
+          return;
+        }
+        const adminPayload = {
+          ...parsedFormData,
+          UserRole: roleParam === 'GroupAdmin' ? 'GroupAdmin' : 'Admin',
+          CreatedBy: Number(userId),
+          BirthDate: parsedFormData.BirthDate || undefined,
+          Latitude: parsedLocation.latitude?.toString() || parsedFormData.Latitude || undefined,
+          Longitude: parsedLocation.longitude?.toString() || parsedFormData.Longitude || undefined,
+        };
+        const result = await apiService.createAdmin(adminPayload as any);
+        if (!result.success) {
+          Alert.alert('خطا', result.error || 'ثبت نماینده ناموفق بود');
+          setLoading(false);
+          return;
+        }
       }
 
-      Alert.alert(
-        'ثبت‌نام موفق',
-        `${roleTitle} با موفقیت در سیستم ثبت شد.`,
-        [
-          {
-            text: 'تأیید',
-            onPress: () => {
-              // Navigate back to appropriate dashboard
-              if (userType === 'Admin') {
-                router.replace('/admin');
-              } else if (userType === 'GroupAdmin') {
-                router.replace('/group-admin');
-              }
+        if (isAdminRole && editMode === 'true' && registerIdString) {
+            // Validate password
+            if (!parsedFormData.Password || parsedFormData.Password.length < 6) {
+                Alert.alert('خطا', 'رمز عبور معتبر وارد نشده است.');
+                setLoading(false);
+                return;
             }
-          }
-        ]
-      );
+            const adminPayload = {
+                ...parsedFormData,
+                UserRole: roleParam === 'GroupAdmin' ? 'GroupAdmin' : 'Admin',
+                CreatedBy: Number(userId),
+                BirthDate: parsedFormData.BirthDate || undefined,
+                Latitude: parsedLocation.latitude?.toString() || parsedFormData.Latitude || undefined,
+                Longitude: parsedLocation.longitude?.toString() || parsedFormData.Longitude || undefined,
+            };
+            const result = await apiService.editAdmin(registerIdString, adminPayload as any);
+            if (!result.success) {
+                Alert.alert('خطا', result.error || 'ثبت نماینده ناموفق بود');
+                setLoading(false);
+                return;
+            }
+        }
+
+
+      // Needy roles flow
+        const isNeedy = roleParam === 'Needy' || roleParam === 'needy';
+
+        if (isNeedy && !registerId) {
+            const registerData: NeedyCreateWithChildren = {
+                ...parsedFormData,
+                CreatedBy: Number(userId),
+                Latitude: parsedLocation.latitude?.toString() || undefined,
+                Longitude: parsedLocation.longitude?.toString() || undefined,
+                children_of_registre: null,
+            } as NeedyCreateWithChildren;
+            const result = await apiService.createNeedyPerson(registerData);
+
+            if (!result.success) {
+                Alert.alert('خطا', result.error || 'در ذخیره خطایی رخ داد.');
+                setLoading(false);
+                return;
+            }
+
+        }
+        if (isNeedy && editMode === 'true' && registerIdString) {
+            console.log(isNeedy, editMode, registerIdString);
+            const registerData: NeedyCreateWithChildren = {
+                ...parsedFormData,
+                CreatedBy: Number(userId),
+                Latitude: parsedLocation.latitude?.toString() || undefined,
+                Longitude: parsedLocation.longitude?.toString() || undefined,
+                children_of_registre: null,
+            } as NeedyCreateWithChildren;
+            const result = await apiService.editNeedy(registerIdString, registerData);
+            console.log('Edit needy result:', result);
+            if (!result.success) {
+                Alert.alert('خطا', result.error || 'در ذخیره خطایی رخ داد.');
+                setLoading(false);
+                return;
+            }
+
+
+        }
+
+        if (Platform.OS === 'web') {
+            alert(`${roleTitle} با موفقیت در سیستم ویرایش شد.`);
+        }
+        Alert.alert(
+            'ذخیره موفق',
+            `${roleTitle} با موفقیت در سیستم ویرایش شد.`,
+            [
+                {
+                    text: 'تأیید',
+                    onPress: () => {
+                        router.replace('/admin');
+                    }
+                }
+            ]
+        );
+        router.replace('/admin');
+        setLoading(false);
+        return;
 
     } catch (error) {
       console.error('Registration error:', error);
-      Alert.alert('خطا', error instanceof Error ? error.message : 'در ثبت‌نام خطایی رخ داد. لطفاً دوباره تلاش کنید.');
+      Alert.alert('خطا', error instanceof Error ? error.message : 'در ذخیره خطایی رخ داد. لطفاً دوباره تلاش کنید.');
     } finally {
       setLoading(false);
     }
@@ -182,7 +248,7 @@ export default function AdminRegisterConfirm() {
     <ThemedView type="container" style={styles.container}>
       <View style={[styles.topBar, { backgroundColor: withOpacity(successColor, 10) }]}>
         <Button
-          title="تأیید و ثبت‌نام"
+          title="تأیید و ذخیره"
           onPress={handleSubmit}
           loading={loading}
           variant="success"
@@ -210,7 +276,7 @@ export default function AdminRegisterConfirm() {
             <ThemedText style={styles.roleIcon}>{roleIcon}</ThemedText>
           </View>
           <ThemedText type="heading2" center style={styles.title}>
-            تأیید نهایی ثبت‌نام
+            تأیید نهایی
           </ThemedText>
           <ThemedText type="body" center style={styles.subtitle}>
             لطفاً اطلاعات را بررسی کرده و در صورت صحت، تأیید نمایید
@@ -223,7 +289,7 @@ export default function AdminRegisterConfirm() {
             <ThemedText style={styles.summaryIcon}>✅</ThemedText>
             <View>
               <ThemedText type="heading3" style={[styles.summaryTitle, { color: successColor }]}>
-                آماده ثبت‌نام {roleTitle}
+                آماده ذخیره {roleTitle}
               </ThemedText>
               <ThemedText type="caption" style={styles.summarySubtitle}>
                 همه اطلاعات تکمیل شده است
@@ -278,11 +344,6 @@ export default function AdminRegisterConfirm() {
               <ThemedText type="caption" style={styles.infoLabel}>
                 طول جغرافیایی: {parsedLocation.longitude?.toFixed(6)}
               </ThemedText>
-              {parsedLocation.address && (
-                <ThemedText type="body" style={styles.infoValue}>
-                  {parsedLocation.address}
-                </ThemedText>
-              )}
             </View>
           </View>
         </ThemedView>
@@ -290,10 +351,9 @@ export default function AdminRegisterConfirm() {
         {/* Submit Button */}
         <View style={styles.buttonContainer}>
           <Button
-            title="تأیید و ثبت‌نام نهایی"
+            title="تأیید و ذخیره نهایی"
             onPress={handleSubmit}
             loading={loading}
-            fullWidth
             variant="success"
             icon={<ThemedText>🎉</ThemedText>}
           />
@@ -318,7 +378,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: Spacing['3xl'],
+    marginBottom: Spacing.xxl,
     paddingHorizontal: Spacing.xl,
   },
   progressStep: {
@@ -339,7 +399,7 @@ const styles = StyleSheet.create({
   },
   header: {
     alignItems: 'center',
-    marginBottom: Spacing['3xl'],
+    marginBottom: Spacing.xxl,
   },
   roleIconContainer: {
     width: 80,
@@ -365,18 +425,20 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(76, 175, 80, 0.2)',
   },
   summaryHeader: {
-    flexDirection: 'row',
+    flexDirection: 'row-reverse', // RTL layout for Persian text
     alignItems: 'center',
   },
   summaryIcon: {
-    fontSize: 32,
-    marginLeft: Spacing.md,
+    fontSize: 24, // Reduced from 32 to 24 for better proportion
+    marginRight: Spacing.md, // Changed from marginLeft to marginRight for RTL
   },
   summaryTitle: {
     marginBottom: Spacing.xs,
+    textAlign: 'right', // Right align for Persian text
   },
   summarySubtitle: {
     opacity: 0.7,
+    textAlign: 'right', // Right align for Persian text
   },
   infoCard: {
     marginBottom: Spacing.lg,
@@ -389,19 +451,25 @@ const styles = StyleSheet.create({
   },
   cardTitle: {
     color: '#2E7D32',
+    textAlign: 'right',
   },
   infoRow: {
-    flexDirection: 'row',
+    flexDirection: 'row-reverse', // RTL layout
     marginBottom: Spacing.md,
     alignItems: 'flex-start',
+    textAlign: 'right',
   },
   infoLabel: {
     width: '35%',
     opacity: 0.7,
+    textAlign: 'right',
+    paddingLeft: Spacing.sm,
   },
   infoValue: {
     flex: 1,
     fontWeight: '500',
+    textAlign: 'right',
+    paddingRight: Spacing.sm,
   },
   locationInfo: {
     flexDirection: 'row',
@@ -417,6 +485,6 @@ const styles = StyleSheet.create({
   },
   buttonContainer: {
     marginTop: Spacing.xl,
-    marginBottom: Spacing['4xl'],
+    marginBottom: Spacing.xxl,
   },
 });

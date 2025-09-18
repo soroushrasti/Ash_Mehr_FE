@@ -1,196 +1,532 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
+import { View, StyleSheet, Platform } from 'react-native';
+import { Config } from '../constants/Config';
+
+interface MapPoint {
+  id: string;
+  lat: number;
+  lng: number;
+  name?: string;
+  info?: string;
+  group_name?: string;
+  phone?: string;
+}
 
 interface GoogleMapWebProps {
-  onLocationSelect: (location: { latitude: number; longitude: number; address: string }) => void;
-  initialLocation?: { latitude: number; longitude: number };
-  apiKey: string;
-  city?: string; // center by city when provided
-  zoom?: number; // initial zoom level
-  showControls?: boolean; // toggle map UI controls
+  points: MapPoint[];
+  onLocationSelect?: (location: { latitude: number; longitude: number }) => void;
+  selectedLocation?: { latitude: number; longitude: number } | null;
+  initialRegion?: {
+    latitude: number;
+    longitude: number;
+    latitudeDelta: number;
+    longitudeDelta: number;
+  };
+  style?: any;
+  showCurrentLocation?: boolean;
 }
 
-export default function GoogleMapWeb({ onLocationSelect, initialLocation, apiKey, city, zoom = 13, showControls = true }: GoogleMapWebProps) {
-  const mapRef = useRef<HTMLDivElement>(null);
-  const [address, setAddress] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [map, setMap] = useState<any>(null);
-  const [marker, setMarker] = useState<any>(null);
-  const markerRef = useRef<any>(null);
+declare global {
+  interface Window {
+    google: any;
+    initGoogleMaps: () => void;
+    googleMapsCallback: () => void;
+  }
+}
 
+const GoogleMapWeb: React.FC<GoogleMapWebProps> = ({
+  points = [],
+  onLocationSelect,
+  selectedLocation,
+  initialRegion = {
+    latitude: 35.6892,
+    longitude: 51.3890,
+    latitudeDelta: 0.1,
+    longitudeDelta: 0.1,
+  },
+  style,
+  showCurrentLocation = false,
+}) => {
+    console.log('GoogleMapWeb props:', { points, selectedLocation, initialRegion });
+  const mapRef = useRef<HTMLDivElement>(null);
+  const mapInstanceRef = useRef<any>(null);
+  const markersRef = useRef<any[]>([]);
+  const clustererRef = useRef<any>(null);
+  const selectedMarkerRef = useRef<any>(null);
+  const [isMapLoaded, setIsMapLoaded] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const initTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Clear any existing timeouts on unmount
   useEffect(() => {
-    if (!(window as any).google) {
-      const sExisting = document.querySelector('script[data-google-maps]') as HTMLScriptElement | null;
-      if (!sExisting) {
-        const script = document.createElement('script');
-        script.dataset.googleMaps = 'true';
-        script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places,marker&loading=async`;
-        script.async = true;
-        script.onload = () => { console.debug('[Map] Google script loaded'); initMap(); };
-        script.onerror = () => { console.error('[Map] Google script failed to load'); };
-        document.body.appendChild(script);
-      } else {
-        sExisting.onload = () => { initMap(); };
-        sExisting.onerror = () => { /* no-op */ };
+    return () => {
+      if (initTimeoutRef.current) {
+        clearTimeout(initTimeoutRef.current);
       }
-    } else {
-      initMap();
-    }
-    // eslint-disable-next-line
+    };
   }, []);
 
-  // Recenter based on city changes
-  useEffect(() => {
-    if (!map || !city || !(window as any).google) return;
-    const geocoder = new (window as any).google.maps.Geocoder();
-    geocoder.geocode({ address: city, region: 'IR' }, (results: any, status: any) => {
-      if (status === 'OK' && results && results[0]) {
-        const res = results[0];
-        if (res.geometry?.viewport) {
-          map.fitBounds(res.geometry.viewport);
-        } else if (res.geometry?.location) {
-          map.panTo(res.geometry.location);
-          map.setZoom(Math.max(11, Math.min(16, zoom)));
-        }
-      }
-    });
-  }, [city, map, zoom]);
+  // Load Google Maps script with better error handling
+  const loadGoogleMaps = useCallback(() => {
+    if (typeof window === 'undefined' || Platform.OS !== 'web') return;
 
-  const removeMarker = (m: any) => {
-    if (!m) return;
-    try {
-      if (typeof m.setMap === 'function') {
-        m.setMap(null);
-      } else if ('map' in m) {
-        (m as any).map = null;
-      }
-    } catch {}
-  };
-
-  const createMarker = (position: any, gMap: any, title?: string) => {
-    try {
-      if (position && typeof position.lat !== 'function') {
-        const latN = Number(position.lat);
-        const lngN = Number(position.lng);
-        position = { lat: isFinite(latN) ? latN : 0, lng: isFinite(lngN) ? lngN : 0 };
-      }
-      const adv = (window as any).google?.maps?.marker?.AdvancedMarkerElement;
-      if (adv) {
-        return new adv({ map: gMap, position, title });
-      }
-      return new (window as any).google.maps.Marker({ position, map: gMap, title });
-    } catch {
-      return null;
+    // Check if already loaded
+    if (window.google && window.google.maps) {
+      setIsMapLoaded(true);
+      return Promise.resolve();
     }
-  };
 
-  const initMap = () => {
-    try {
-      if (!mapRef.current || !(window as any).google?.maps) {
+    return new Promise<void>((resolve, reject) => {
+      // Check if script is already being loaded
+      const existingScript = document.querySelector('script[src*="maps.googleapis.com"]');
+      if (existingScript) {
+        // Wait for existing script to load
+        const checkLoaded = () => {
+          if (window.google && window.google.maps) {
+            setIsMapLoaded(true);
+            resolve();
+          } else {
+            setTimeout(checkLoaded, 100);
+          }
+        };
+        checkLoaded();
         return;
       }
-      const centerRaw = initialLocation || { latitude: 35.6892, longitude: 51.389 };
-      const latN = Number((centerRaw as any).latitude);
-      const lngN = Number((centerRaw as any).longitude);
-      const center = { lat: isFinite(latN) ? latN : 35.6892, lng: isFinite(lngN) ? lngN : 51.389 };
 
-      const gMap = new (window as any).google.maps.Map(mapRef.current, {
-        center,
-        zoom: Math.max(3, Math.min(20, zoom || 13)),
-        mapTypeControl: !!showControls,
-        zoomControl: !!showControls,
-        streetViewControl: false,
-        fullscreenControl: !!showControls,
-      });
-      setMap(gMap);
+      // Create callback function name
+      const callbackName = 'googleMapsCallback' + Date.now();
 
-      // Add marker if initialLocation
-      if (initialLocation) {
-        const m = createMarker(center, gMap);
-        markerRef.current = m;
-        setMarker(m);
-      }
-
-      // Add click listener
-      gMap.addListener('click', (e: any) => {
-        placeMarker(e.latLng, gMap);
-      });
-
-      // Add search box if Places library is available
-      const placesNS = (window as any).google?.maps?.places;
-      if (placesNS && placesNS.SearchBox) {
-        const input = document.createElement('input');
-        input.type = 'text';
-        input.placeholder = 'جستجوی آدرس...';
-        input.style.cssText = 'width:300px;margin:8px;padding:8px;border-radius:4px;border:1px solid #ccc;direction:rtl;';
-        gMap.controls[(window as any).google.maps.ControlPosition.TOP_LEFT].push(input);
-        const searchBox = new placesNS.SearchBox(input);
-        searchBox.addListener('places_changed', () => {
-          const places = searchBox.getPlaces();
-          if (places && places.length > 0) {
-            const place = places[0];
-            if (place.geometry && place.geometry.location) {
-              gMap.panTo(place.geometry.location);
-              gMap.setZoom(15);
-              placeMarker(place.geometry.location, gMap, place.formatted_address);
-            }
+      // Set up callback
+      (window as any)[callbackName] = () => {
+        try {
+          if (window.google && window.google.maps) {
+            setIsMapLoaded(true);
+            setLoadError(null);
+            resolve();
+          } else {
+            throw new Error('Google Maps API not properly loaded');
           }
-        });
-      }
+        } catch (error) {
+          console.error('Google Maps callback error:', error);
+          setLoadError('Failed to initialize Google Maps');
+          reject(error);
+        } finally {
+          // Cleanup callback
+          delete (window as any)[callbackName];
+        }
+      };
 
-      // If city was provided initially, center to it
-      if (city) {
-        const geocoder = new (window as any).google.maps.Geocoder();
-        geocoder.geocode({ address: city, region: 'IR' }, (results: any, status: any) => {
-          if (status === 'OK' && results && results[0]) {
-            const res = results[0];
-            if (res.geometry?.viewport) {
-              gMap.fitBounds(res.geometry.viewport);
-            } else if (res.geometry?.location) {
-              gMap.panTo(res.geometry.location);
-              gMap.setZoom(Math.max(11, Math.min(16, zoom)));
-            }
-          }
-        });
-      }
-    } catch {}
-  };
+      // Create and load script
+      const script = document.createElement('script');
+      script.src = `https://maps.googleapis.com/maps/api/js?key=${Config.GOOGLE_MAPS_API_KEY}&libraries=geometry,places&callback=${callbackName}`;
+      script.async = true;
+      script.defer = true;
 
-  const placeMarker = (latLng: any, gMap: any, addr?: string) => {
+      script.onerror = () => {
+        setLoadError('Failed to load Google Maps API');
+        reject(new Error('Failed to load Google Maps script'));
+      };
+
+      // Set timeout for loading
+      const timeout = setTimeout(() => {
+        setLoadError('Google Maps API loading timeout');
+        reject(new Error('Google Maps loading timeout'));
+      }, 10000);
+
+      script.onload = () => {
+        clearTimeout(timeout);
+      };
+
+      document.head.appendChild(script);
+    });
+  }, []);
+
+  // Initialize map with proper error handling
+  const initializeMap = useCallback(() => {
+    if (!isMapLoaded || !mapRef.current || mapInstanceRef.current) return;
+
     try {
-      removeMarker(markerRef.current);
-      const m = createMarker(latLng, gMap, addr);
-      markerRef.current = m;
-      setMarker(m);
-      setLoading(true);
-      const lat = typeof latLng.lat === 'function' ? latLng.lat() : latLng.lat;
-      const lng = typeof latLng.lng === 'function' ? latLng.lng() : latLng.lng;
-      console.debug('[Map] placeMarker', { lat, lng, addr });
-      // Get address from latLng
-      const geocoder = new (window as any).google.maps.Geocoder();
-      geocoder.geocode({ location: latLng }, (results: any, status: any) => {
-        setLoading(false);
-        const formatted = (status === 'OK' && results && results[0]) ? (addr || results[0].formatted_address) : '';
-        if (!formatted) console.warn('[Map] reverse geocode failed', { status });
-        setAddress(formatted);
-        onLocationSelect({ latitude: Number(lat), longitude: Number(lng), address: formatted });
-      });
-    } catch (err) {
-      setLoading(false);
-      console.error('[Map] placeMarker error', err);
+      // Verify Google Maps is properly loaded
+      if (!window.google || !window.google.maps || !window.google.maps.Map) {
+        throw new Error('Google Maps API not properly initialized');
+      }
+
+      const mapOptions = {
+        center: {
+          lat: initialRegion.latitude,
+          lng: initialRegion.longitude
+        },
+        zoom: 12,
+        mapTypeId: window.google.maps.MapTypeId.ROADMAP,
+        gestureHandling: 'cooperative',
+        zoomControl: true,
+        mapTypeControl: false,
+        streetViewControl: false,
+        fullscreenControl: true,
+        styles: [], // Add custom styles if needed
+      };
+
+      mapInstanceRef.current = new window.google.maps.Map(mapRef.current, mapOptions);
+
+      // Add click listener for location selection with better handling
+      if (onLocationSelect) {
+        mapInstanceRef.current.addListener('click', (event: any) => {
+          try {
+            const lat = event.latLng.lat();
+            const lng = event.latLng.lng();
+            console.log('Map clicked at:', { lat, lng });
+            onLocationSelect({ latitude: lat, longitude: lng });
+          } catch (error) {
+            console.error('Error handling map click:', error);
+          }
+        });
+      }
+
+      console.log('Google Maps initialized successfully with click listener');
+      setLoadError(null);
+
+      // Trigger updateMarkers after map is fully initialized
+      setTimeout(() => {
+        console.log('Triggering updateMarkers after map initialization...');
+        updateMarkers();
+      }, 100);
+    } catch (error) {
+      console.error('Error initializing map:', error);
+      setLoadError('Failed to initialize map');
     }
-  };
+  }, [isMapLoaded, initialRegion, onLocationSelect]);
+
+  // Load Google Maps on component mount
+  useEffect(() => {
+    console.log('Loading Google Maps, Platform.OS:', Platform.OS);
+    if (Platform.OS === 'web') {
+      loadGoogleMaps().catch((error) => {
+        console.error('Failed to load Google Maps:', error);
+        setLoadError('Failed to load Google Maps API');
+      });
+    }
+  }, [loadGoogleMaps]);
+
+  // Initialize map when loaded
+  useEffect(() => {
+    console.log('Map loaded state changed:', { isMapLoaded, mapInstance: !!mapInstanceRef.current });
+    if (isMapLoaded) {
+      // Small delay to ensure DOM is ready
+      initTimeoutRef.current = setTimeout(() => {
+        console.log('Attempting to initialize map...');
+        initializeMap();
+      }, 100);
+    }
+  }, [isMapLoaded, initializeMap]);
+
+  // Update markers when points change
+  const updateMarkers = useCallback(() => {
+    if (!mapInstanceRef.current || !window.google || !isMapLoaded) return;
+
+    try {
+      // Clear existing markers
+      markersRef.current.forEach(marker => {
+        try {
+          if (marker && marker.setMap) {
+            marker.setMap(null);
+          }
+        } catch (error) {
+          console.error('Error removing marker:', error);
+        }
+      });
+      markersRef.current = [];
+
+      // Clear existing clusterer
+      if (clustererRef.current) {
+        try {
+          if (clustererRef.current.clearMarkers) {
+            clustererRef.current.clearMarkers();
+          }
+        } catch (error) {
+          console.error('Error clearing clusterer:', error);
+        }
+      }
+
+      // Filter valid points
+      console.log('All received points:', points);
+      const validPoints = points.filter(point =>
+        point &&
+        typeof point.lat === 'number' &&
+        typeof point.lng === 'number' &&
+        !isNaN(point.lat) &&
+        !isNaN(point.lng) &&
+        point.lat >= -90 &&
+        point.lat <= 90 &&
+        point.lng >= -180 &&
+        point.lng <= 180
+      );
+
+      console.log(`Creating ${validPoints.length} valid markers from ${points.length} points`);
+      console.log('Valid points details:', validPoints);
+
+      if (validPoints.length === 0) return;
+
+      // Create markers with error handling
+      const markers = validPoints.map(point => {
+        try {
+          console.log('Creating marker for point:', point);
+          const marker = new window.google.maps.Marker({
+            position: { lat: point.lat, lng: point.lng },
+            map: mapInstanceRef.current,
+            title: point.name || `Location ${point.id}`,
+            icon: {
+              path: window.google.maps.SymbolPath.CIRCLE,
+              scale: 8,
+              fillColor: '#FF4444',
+              fillOpacity: 0.8,
+              strokeColor: '#FFFFFF',
+              strokeWeight: 2,
+            }
+          });
+
+          console.log('Marker created successfully at:', point.lat, point.lng);
+
+          // Add info window with error handling
+          if (point.info || point.name) {
+            const infoWindow = new window.google.maps.InfoWindow({
+              content: `
+                <div style="padding: 8px; font-family: Arial, sans-serif;">
+                  <h3 style="margin: 0 0 8px 0; font-size: 14px; color: #333;">${point.name || 'Location'}</h3>
+                  ${point.info ? `<p style="margin: 0; font-size: 12px; color: #666;">${point.info}</p>` : ''}
+                </div>
+              `
+            });
+
+            marker.addListener('click', () => {
+              try {
+                infoWindow.open(mapInstanceRef.current, marker);
+              } catch (error) {
+                console.error('Error opening info window:', error);
+              }
+            });
+          }
+
+          return marker;
+        } catch (error) {
+          console.error('Error creating marker for point:', point, error);
+          return null;
+        }
+      }).filter(Boolean);
+
+      markersRef.current = markers;
+      console.log('Total markers created:', markers.length);
+
+      // --- Clustering (standard) -------------------------------------------------
+      // Clear any existing clusterer safely
+      if (clustererRef.current) {
+        try {
+          clustererRef.current.clearMarkers();
+        } catch (e) {
+          console.warn('Failed clearing previous clusterer', e);
+        }
+        clustererRef.current = null;
+      }
+
+      // Only cluster if we have more than one data marker
+      if (markers.length > 1) {
+        import('@googlemaps/markerclusterer')
+          .then(({ MarkerClusterer, SuperClusterAlgorithm }) => {
+            try {
+              clustererRef.current = new MarkerClusterer({
+                map: mapInstanceRef.current,
+                markers,
+                // SuperClusterAlgorithm gives nice collapsing / expanding behavior
+                algorithm: new SuperClusterAlgorithm({
+                  radius: 80, // tweak if clusters look too dense / too sparse
+                  maxZoom: 19,
+                })
+              });
+            } catch (clusterErr) {
+              console.error('Error creating clusterer', clusterErr);
+            }
+          })
+          .catch(err => console.error('Error loading markerclusterer lib', err));
+      }
+      // ---------------------------------------------------------------------------
+
+      // Fit bounds to show all markers (skip if none)
+      if (markers.length > 0) {
+        try {
+          const bounds = new window.google.maps.LatLngBounds();
+          markers.forEach(marker => {
+            if (marker && marker.getPosition) bounds.extend(marker.getPosition());
+          });
+          if (!bounds.isEmpty()) {
+            mapInstanceRef.current.fitBounds(bounds);
+            const listener = window.google.maps.event.addListener(mapInstanceRef.current, 'bounds_changed', () => {
+              if (mapInstanceRef.current.getZoom() > 15) {
+                mapInstanceRef.current.setZoom(15);
+              }
+              window.google.maps.event.removeListener(listener);
+            });
+          }
+        } catch (boundsError) {
+          console.error('Error fitting bounds:', boundsError);
+        }
+      }
+
+    } catch (error) {
+      console.error('Error updating markers:', error);
+    }
+  }, [points, isMapLoaded]);
+
+  // Separate effect for points changes (after initial map setup)
+  useEffect(() => {
+    console.log('Points changed, checking if map is ready...', {
+      isMapLoaded,
+      hasMapInstance: !!mapInstanceRef.current,
+      pointsLength: points.length,
+      hasGoogleMaps: !!(window.google && window.google.maps)
+    });
+
+    if (isMapLoaded && mapInstanceRef.current && points.length > 0) {
+      console.log('Calling updateMarkers for points change...');
+      // Small delay to ensure map is fully ready
+      setTimeout(() => {
+        updateMarkers();
+      }, 50);
+    }
+  }, [points, isMapLoaded]); // Remove updateMarkers from dependencies to prevent infinite loop
+
+  // Handle selected location
+  useEffect(() => {
+    if (!mapInstanceRef.current || !window.google || !selectedLocation || !isMapLoaded) return;
+
+    try {
+      // Remove previous selected marker
+      if (selectedMarkerRef.current) {
+        selectedMarkerRef.current.setMap(null);
+        selectedMarkerRef.current = null;
+      }
+
+      // Create a more visible selected marker with custom icon
+      selectedMarkerRef.current = new window.google.maps.Marker({
+        position: {
+          lat: selectedLocation.latitude,
+          lng: selectedLocation.longitude
+        },
+        map: mapInstanceRef.current,
+        title: 'Selected Location',
+        // Use a more visible icon for selected location
+        icon: {
+          url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
+            <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="20" cy="20" r="18" fill="#4CAF50" stroke="#FFFFFF" stroke-width="4"/>
+              <circle cx="20" cy="20" r="8" fill="#FFFFFF"/>
+              <circle cx="20" cy="20" r="4" fill="#4CAF50"/>
+            </svg>
+          `),
+          scaledSize: new window.google.maps.Size(40, 40),
+          anchor: new window.google.maps.Point(20, 20),
+        },
+        zIndex: 1000, // Make sure it appears above other markers
+      });
+
+      // Add info window for selected location
+      const infoWindow = new window.google.maps.InfoWindow({
+        content: `
+          <div style="padding: 8px; font-family: Arial, sans-serif; direction: rtl;">
+            <h3 style="margin: 0 0 8px 0; font-size: 14px; color: #4CAF50;">📍 موقعیت انتخاب شده</h3>
+            <p style="margin: 0; font-size: 12px; color: #666;">
+              عرض جغرافیایی: ${selectedLocation.latitude.toFixed(6)}<br/>
+              طول جغرافیایی: ${selectedLocation.longitude.toFixed(6)}
+            </p>
+          </div>
+        `
+      });
+
+      // Show info window when marker is clicked
+      selectedMarkerRef.current.addListener('click', () => {
+        infoWindow.open(mapInstanceRef.current, selectedMarkerRef.current);
+      });
+
+      // Center map on selected location with slight zoom
+      mapInstanceRef.current.setCenter({
+        lat: selectedLocation.latitude,
+        lng: selectedLocation.longitude
+      });
+
+      // Set appropriate zoom level
+      if (mapInstanceRef.current.getZoom() < 15) {
+        mapInstanceRef.current.setZoom(15);
+      }
+
+      console.log('Selected location marker created:', selectedLocation);
+    } catch (error) {
+      console.error('Error handling selected location:', error);
+    }
+  }, [selectedLocation, isMapLoaded]);
+
+  if (Platform.OS !== 'web') {
+    return null;
+  }
+
+  if (loadError) {
+    return (
+      <View style={[styles.container, style, styles.errorContainer]}>
+        <div style={styles.errorText}>
+          Error loading map: {loadError}
+        </div>
+      </View>
+    );
+  }
 
   return (
-    <div style={{ width: '100%', height: 350, position: 'relative', borderRadius: 12, overflow: 'hidden', marginBottom: 16 }}>
-      <div ref={mapRef} style={{ width: '100%', height: '100%' }} />
-      {loading && (
-        <div style={{ position: 'absolute', top: 8, right: 8, background: '#fff', padding: 8, borderRadius: 4 }}>در حال دریافت آدرس...</div>
-      )}
-      {address && (
-        <div style={{ position: 'absolute', bottom: 8, left: 8, background: '#fff', padding: 8, borderRadius: 4, maxWidth: 300, fontSize: 14 }}>
-          آدرس انتخاب‌شده: {address}
+    <View style={[styles.container, style]}>
+      <div
+        ref={mapRef}
+        style={{
+          width: '100%',
+          height: '100%',
+          minHeight: 300,
+          backgroundColor: '#f0f0f0',
+        }}
+      />
+      {!isMapLoaded && (
+        <div style={styles.loadingOverlay}>
+          <div style={styles.loadingText}>Loading map...</div>
         </div>
       )}
-    </div>
+    </View>
   );
-}
+};
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    minHeight: 300,
+  },
+  errorContainer: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#f5f5f5',
+  },
+  errorText: {
+    color: '#d32f2f',
+    fontSize: 14,
+    textAlign: 'center',
+    padding: 20,
+  } as any,
+  loadingOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(240, 240, 240, 0.8)',
+  } as any,
+  loadingText: {
+    fontSize: 14,
+    color: '#666',
+  } as any,
+});
+
+export default GoogleMapWeb;

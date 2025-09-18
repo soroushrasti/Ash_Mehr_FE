@@ -1,7 +1,7 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { ScrollView, StyleSheet, TouchableOpacity, View, Dimensions, Animated } from 'react-native';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Animated, RefreshControl, TouchableOpacity, ScrollView, StyleSheet, View, I18nManager } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { ThemedView } from '@/components/ThemedView';
 import { ThemedText } from '@/components/ThemedText';
 import { SignOutButton } from '@/components/SignOutButton';
@@ -9,527 +9,481 @@ import { useThemeColor } from '@/hooks/useThemeColor';
 import { Spacing, BorderRadius, Shadows, Typography } from '@/constants/Design';
 import NeedyMap from '@/components/NeedyMap';
 import { apiService } from '@/services/apiService';
-import type { NeedyPoint } from '@/components/NeedyMap';
 import type { InfoAdminResponse } from '@/types/api';
 import { useAuth } from '@/components/AuthContext';
+import { RTLPicker } from '@/components/RTLPicker';
 
-const { width } = Dimensions.get('window');
+// Force RTL layout
+if (!I18nManager.isRTL) {
+  I18nManager.allowRTL(true);
+  I18nManager.forceRTL(true);
+}
+
+// Local MapPoint type to align with API points
+interface MapPoint {
+  id: string;
+  lat: number;
+  lng: number;
+  name?: string;
+  info?: string;
+  group_name?: string;
+}
 
 export default function AdminHome() {
-   const router = useRouter();
-   const fadeAnim = useRef(new Animated.Value(0)).current;
-   const slideAnim = useRef(new Animated.Value(50)).current;
-   const { userName } = useAuth();
+  const router = useRouter();
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(50)).current;
+  const { userName } = useAuth();
 
-   const primaryColor = useThemeColor({}, 'primary');
-   const donationColor = useThemeColor({}, 'donation');
-   const volunteerColor = useThemeColor({}, 'volunteer');
-   const emergencyColor = useThemeColor({}, 'emergency');
-   const backgroundColor = useThemeColor({}, 'background');
-   const surfaceColor = useThemeColor({}, 'surface');
-   const textColor = useThemeColor({}, 'text');
-   const borderColor = useThemeColor({}, 'border');
+  // Theme colors
+  const primaryColor = useThemeColor({}, 'primary');
+  const donationColor = useThemeColor({}, 'donation');
+  const volunteerColor = useThemeColor({}, 'volunteer');
+  const backgroundColor = useThemeColor({}, 'background');
+  const surfaceColor = useThemeColor({}, 'surface');
+  const textColor = useThemeColor({}, 'text');
+  const borderColor = useThemeColor({}, 'border');
 
-   const [needyInfo, setNeedyInfo] = useState<{ numberNeedyPersons: number; LastNeedycreatedTime: string; LastNeedyNameCreated: string } | null>(null);
-   const [adminInfo, setAdminInfo] = useState<InfoAdminResponse | null>(null);
-   const [mapPoints, setMapPoints] = useState<NeedyPoint[]>([]);
-   const [adminMapPoints, setAdminMapPoints] = useState<NeedyPoint[]>([]);
+  const [needyInfo, setNeedyInfo] = useState<{ numberNeedyPersons: number; LastNeedycreatedTime: string; LastNeedyNameCreated: string } | null>(null);
+  const [adminInfo, setAdminInfo] = useState<InfoAdminResponse | null>(null);
+  const [mapPoints, setMapPoints] = useState<MapPoint[]>([]);
+  const [refreshing, setRefreshing] = useState(false);
+  const [selectedGroupFilter, setSelectedGroupFilter] = useState('');
+  const [availableGroups, setAvailableGroups] = useState<string[]>([]);
 
-   useEffect(() => {
-     (async () => {
-       const [ni, ai, ng, ag] = await Promise.all([
-         apiService.getNeedyInfo(),
-         apiService.getAdminInfo(),
-         apiService.getNeedyGeoPoints(),
-         apiService.getAdminGeoPoints(),
-       ]);
-       if (ni.success) setNeedyInfo(ni.data!);
-       if (ai.success) setAdminInfo(ai.data!);
-       if (ng.success && Array.isArray(ng.data)) setMapPoints(ng.data as any);
-       if (ag.success && Array.isArray(ag.data)) setAdminMapPoints(ag.data as any);
-     })();
-   }, []);
+  const fetchData = useCallback(async (showRefreshing = false) => {
+    if (showRefreshing) setRefreshing(true);
+    try {
+      const [ni, ai, ng] = await Promise.all([
+        apiService.getNeedyInfo(),
+        apiService.getAdminInfo(),
+        apiService.getNeedyGeoPoints(),
+      ]);
+      if (ni.success) setNeedyInfo(ni.data!);
+      if (ai.success) setAdminInfo(ai.data!);
+      if (ng.success && Array.isArray(ng.data)) {
+        const points = ng.data as unknown as MapPoint[];
+        setMapPoints(points);
+        const groups = [...new Set(
+          points
+            .map(p => p.group_name)
+            .filter((g): g is string => !!g && g.trim() !== '')
+        )];
+        setAvailableGroups(groups);
+      }
+    } catch (error) {
+      console.error('Error fetching data:', error);
+    } finally {
+      if (showRefreshing) setRefreshing(false);
+    }
+  }, []);
 
-   // Sample needy families data (replace with API data later)
-   const needyFamilies = [
-     { id: 'n1', lat: 35.7002, lng: 51.3911, name: 'خانواده احمدی', info: '۳ فرزند، نیاز به کمک غذایی' },
-     { id: 'n2', lat: 35.7108, lng: 51.4052, name: 'خانواده حسینی', info: 'اجاره معوق، نیاز فوری' },
-     { id: 'n3', lat: 35.6893, lng: 51.3924, name: 'خانواده رضایی', info: 'هزینه درمان' },
-     { id: 'n4', lat: 35.6769, lng: 51.4201, name: 'خانواده موسوی', info: 'بسته ارزاق' },
-     { id: 'n5', lat: 35.7055, lng: 51.4303, name: 'خانواده کریمی', info: 'لوازم‌التحریر دانش‌آموز' },
-     { id: 'n6', lat: 35.7182, lng: 51.3701, name: 'خانواده جعفری', info: 'کمک نقدی' },
-     { id: 'n7', lat: 35.6951, lng: 51.4452, name: 'خانواده عباسی', info: 'تعمیرات مسکن' },
-     { id: 'n8', lat: 35.6856, lng: 51.4107, name: 'خانواده شریفی', info: 'کمک دارویی' },
-   ];
-   const needyCount = needyFamilies.length;
+  const filteredMapPoints = useMemo(() => {
+      console.log('Filtering map points with group filter:', selectedGroupFilter);
+      console.log('Total map points before filtering:', mapPoints.length);
 
-   useEffect(() => {
-      Animated.parallel([
-         Animated.timing(fadeAnim, {
-            toValue: 1,
-            duration: 800,
-            useNativeDriver: true,
-         }),
-         Animated.timing(slideAnim, {
-            toValue: 0,
-            duration: 600,
-            useNativeDriver: true,
-         }),
-      ]).start();
-   }, [fadeAnim, slideAnim]);
+      const result = !selectedGroupFilter
+        ? mapPoints
+        : mapPoints.filter(p => p.group_name === selectedGroupFilter);
 
-   const quickActions = [
-      {
-         title: 'ثبت فرد جدید',
-         subtitle: 'افزودن خانواده یا مدیر به سیستم',
-         icon: '➕',
-         gradient: ['#667eea', '#764ba2'],
-         action: () => router.push('/admin/register/select-role')
-      },
-      {
-         title: 'مدیریت کمک‌ها',
-         subtitle: 'پیگیری و تخصیص کمک‌ها',
-         icon: '📦',
-         gradient: ['#f093fb', '#f5576c'],
-         action: () => {}
-      },
-      {
-         title: 'گزارش‌گیری',
-         subtitle: 'مشاهده آمار و گزارشات',
-         icon: '📊',
-         gradient: ['#4facfe', '#00f2fe'],
-         action: () => {}
-      },
-      {
-         title: 'مدیریت داوطلبان',
-         subtitle: 'هماهنگی با داوطلبان',
-         icon: '🤝',
-         gradient: ['#a8edea', '#fed6e3'],
-         action: () => {}
-      },
-   ];
+      console.log('Filtered result length:', result.length);
+      console.log('Filtered result sample:', result.slice(0, 2));
 
-   const ActionCard = ({ action }: { action: any }) => (
-      <Animated.View
-         style={{
-            opacity: fadeAnim,
-            transform: [{ translateY: slideAnim }]
-         }}
+      return result;
+  }, [mapPoints, selectedGroupFilter]);
+
+
+  // Refresh data when page comes into focus
+  useFocusEffect(
+    useCallback(() => {
+      fetchData();
+    }, [fetchData])
+  );
+
+  useEffect(() => {
+    fetchData();
+
+    // Animation
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 800,
+        useNativeDriver: true,
+      }),
+      Animated.timing(slideAnim, {
+        toValue: 0,
+        duration: 600,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, [fetchData, fadeAnim, slideAnim]);
+
+  const onRefresh = () => fetchData(true);
+
+  const needyCount = needyInfo?.numberNeedyPersons ?? mapPoints.length;
+
+  return (
+    <ThemedView style={[styles.container, { backgroundColor }]} rtl={true}>
+      <ScrollView
+        contentContainerStyle={styles.scrollContainer}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
       >
-         <TouchableOpacity
-            style={[styles.actionCard, { backgroundColor: surfaceColor, borderColor }]}
-            onPress={action.action}
-            activeOpacity={0.7}
-         >
-            {/* Background pattern */}
-            <View style={styles.actionBackground}>
-               <LinearGradient
-                  colors={[action.gradient[0], action.gradient[1], 'transparent']}
-                  style={styles.actionBackgroundGradient}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
-               />
+        {/* Header */}
+        <Animated.View
+          style={[
+            styles.header,
+            styles.rtlHeader,
+            {
+              backgroundColor: surfaceColor,
+              borderColor,
+              opacity: fadeAnim,
+              transform: [{ translateY: slideAnim }]
+            }
+          ]}
+        >
+          <View style={styles.headerContent}>
+            <View style={styles.rtlHeaderText}>
+              <ThemedText style={[styles.greeting, { color: textColor }]} rtl={true}>
+                سلام، {userName || 'نماینده'}
+              </ThemedText>
+              <ThemedText style={[styles.subtitle, { color: textColor, opacity: 0.7 }]} rtl={true}>
+                پنل مدیریت آشیانه مهر
+              </ThemedText>
             </View>
+            <SignOutButton />
+          </View>
+        </Animated.View>
 
-            {/* Icon with glow effect */}
-            <View style={styles.actionIconWrapper}>
-               <LinearGradient
-                  colors={action.gradient}
-                  style={styles.actionIconContainer}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
-               >
-                  <ThemedText style={styles.actionIcon}>{action.icon}</ThemedText>
-               </LinearGradient>
-
-               {/* Glow effect */}
-               <View style={[styles.actionGlow, {
-                  backgroundColor: action.gradient[0] + '30'
-               }]} />
-            </View>
-
-            {/* Content */}
-            <View style={styles.actionContent}>
-               <ThemedText style={[styles.actionTitle, { color: textColor }]}>
-                  {action.title}
-               </ThemedText>
-               <ThemedText style={[styles.actionSubtitle, { color: textColor, opacity: 0.7 }]}>
-                  {action.subtitle}
-               </ThemedText>
-            </View>
-
-            {/* Arrow with animation */}
-            <View style={[styles.actionArrow, { backgroundColor: primaryColor }]}>
-               <ThemedText style={styles.arrowIcon}>←</ThemedText>
-            </View>
-         </TouchableOpacity>
-      </Animated.View>
-   );
-
-   return (
-      <ThemedView style={[styles.container, { backgroundColor }]}>
-         {/* Enhanced Header with floating elements */}
-         <View style={styles.headerContainer}>
+        {/* Statistics Cards */}
+        <Animated.View
+          style={[
+            styles.statsContainer,
+            styles.rtlStatsContainer,
+            {
+              opacity: fadeAnim,
+              transform: [{ translateY: slideAnim }]
+            }
+          ]}
+        >
+          <TouchableOpacity
+            style={[styles.statCard, { backgroundColor: primaryColor }]}
+            onPress={() => router.push('')}
+          >
             <LinearGradient
-               colors={[primaryColor, '#3b82f6', '#60a5fa', '#93c5fd']}
-               style={styles.header}
-               start={{ x: 0, y: 0 }}
-               end={{ x: 1, y: 1 }}
+              colors={[primaryColor, `${primaryColor}CC`]}
+              style={styles.cardGradient}
             >
-               {/* Floating decorative circles */}
-               <View style={[styles.floatingCircle, styles.circle1]} />
-               <View style={[styles.floatingCircle, styles.circle2]} />
-               <View style={[styles.floatingCircle, styles.circle3]} />
-
-               <Animated.View style={[styles.headerContent, {
-                  opacity: fadeAnim,
-                  transform: [{ translateY: slideAnim }]
-               }]}>
-                  <View style={styles.welcomeSection}>
-                     <ThemedText style={styles.greeting}>سلام{userName ? `، ${userName}` : '، مدیر گرامی'} 👋</ThemedText>
-                     <ThemedText style={styles.welcomeText}>پنل مدیریت آشیانه مهر</ThemedText>
-                     <ThemedText style={styles.dateText}>
-                        {new Date().toLocaleDateString('fa-IR', {
-                           weekday: 'long',
-                           year: 'numeric',
-                           month: 'long',
-                           day: 'numeric'
-                        })}
-                     </ThemedText>
-                  </View>
-
-                  <SignOutButton variant="icon" size="medium" style={styles.signOutButton} />
-               </Animated.View>
+              <ThemedText style={styles.statNumber} rtl={false}>{needyCount}</ThemedText>
+              <ThemedText style={styles.statLabel} rtl={true}>خانواده مددجو</ThemedText>
             </LinearGradient>
-         </View>
+          </TouchableOpacity>
 
-         <ScrollView
-            style={styles.scrollView}
-            showsVerticalScrollIndicator={false}
-            contentContainerStyle={styles.scrollContent}
-         >
-          {/* Stats from API */}
-          <ThemedView type="card" style={{ marginBottom: 12 }}>
-            <ThemedText type="heading3" style={{ marginBottom: 8 }}>خلاصه آمار</ThemedText>
-            <ThemedText type="body">تعداد نیازمندان: {needyInfo?.numberNeedyPersons ?? '—'}</ThemedText>
-            <ThemedText type="caption" style={{ opacity: 0.8 }}>آخرین ثبت نیازمند: {needyInfo?.LastNeedyNameCreated ?? '—'} ({needyInfo?.LastNeedycreatedTime ? new Date(needyInfo.LastNeedycreatedTime).toLocaleString('fa-IR') : '—'})</ThemedText>
-            <View style={{ height: 8 }} />
-            <ThemedText type="body">مدیران کل: {adminInfo?.numberAdminPersons ?? '—'} | مدیران گروه: {adminInfo?.numberGroupAdminPersons ?? '—'}</ThemedText>
-            <ThemedText type="caption" style={{ opacity: 0.8 }}>آخرین مدیر ثبت‌شده: {adminInfo?.LastAdminNameCreated ?? '—'} ({adminInfo?.LastAdminCreatedTime ? new Date(adminInfo.LastAdminCreatedTime).toLocaleString('fa-IR') : '—'})</ThemedText>
-          </ThemedView>
 
-          {/* Map + count section replacing previous stats */}
-          <Animated.View style={[styles.section, { opacity: fadeAnim, transform: [{ translateY: slideAnim }]}]}>
-            <View style={styles.sectionHeader}>
-              <ThemedText style={[styles.sectionTitle, { color: textColor }]}>🗺️ نقشه خانواده‌های نیازمند</ThemedText>
-              <View style={styles.sectionDivider} />
-            </View>
-            <ThemedView type="card" style={{ padding: 0, overflow: 'hidden' }}>
-              <NeedyMap points={mapPoints} adminPoints={adminMapPoints} />
-            </ThemedView>
-            <ThemedText type="caption" style={{ marginTop: 8, opacity: 0.8 }}>
-              تعداد خانواده‌های نیازمند: {mapPoints.length}
-            </ThemedText>
-          </Animated.View>
+          <TouchableOpacity
+            style={[styles.statCard, { backgroundColor: volunteerColor }]}
+            onPress={() => router.push('')}
+          >
+            <LinearGradient
+              colors={[volunteerColor, `${volunteerColor}CC`]}
+              style={styles.cardGradient}
+            >
+              <ThemedText style={styles.statNumber} rtl={false}>
+                {adminInfo?.numberGroupAdminPersons || 0}
+              </ThemedText>
+              <ThemedText style={styles.statLabel} rtl={true}>نماینده گروه</ThemedText>
+            </LinearGradient>
+          </TouchableOpacity>
 
-          {/* Enhanced Quick Actions */}
-          <Animated.View style={[styles.section, {
-             opacity: fadeAnim,
-             transform: [{ translateY: slideAnim }]
-          }]}>
-             <View style={styles.sectionHeader}>
-                <ThemedText style={[styles.sectionTitle, { color: textColor }]}>
-                   ⚡ عملیات سریع
+            <TouchableOpacity
+                style={[styles.statCard, { backgroundColor: donationColor }]}
+                onPress={() => router.push('')}
+            >
+                <LinearGradient
+                    colors={[donationColor, `${donationColor}CC`]}
+                    style={styles.cardGradient}
+                >
+                    <ThemedText style={styles.statNumber} rtl={false}>
+                        {adminInfo?.numberAdminPersons || 0}
+                    </ThemedText>
+                    <ThemedText style={styles.statLabel} rtl={true}>مدیر</ThemedText>
+                </LinearGradient>
+            </TouchableOpacity>
+
+        </Animated.View>
+
+        {/* Map Section */}
+        <Animated.View
+          style={[
+            styles.mapSection,
+            styles.rtlSection,
+            { backgroundColor: surfaceColor, borderColor, opacity: fadeAnim, transform: [{ translateY: slideAnim }] },
+          ]}
+        >
+          <ThemedText style={[styles.sectionTitle, { color: textColor }]} rtl={true}>نقشه</ThemedText>
+          <ThemedText style={[styles.sectionSubtitle, { color: textColor, opacity: 0.7 }]} rtl={true}>
+            موقعیت جغرافیایی مددجوها بر اساس نمایندگان
+          </ThemedText>
+
+          {/* Group Filter Picker */}
+          <View style={styles.filterContainer}>
+            <RTLPicker
+              style={styles.rtlPicker}
+              items={[{ label: 'همه نمایندگان', value: '' }, ...availableGroups.map(g => ({ label: g, value: g }))]}
+              selectedValue={selectedGroupFilter}
+              onValueChange={(val) => setSelectedGroupFilter(val)}
+              placeholder="انتخاب نماینده"
+            />
+          </View>
+
+          <View style={styles.mapContainer}>
+            <NeedyMap
+              points={filteredMapPoints}
+              initialRegion={{
+                latitude: 35.6892,
+                longitude: 51.3890,
+                latitudeDelta: 0.1,
+                longitudeDelta: 0.1,
+              }}
+              style={styles.map}
+            />
+          </View>
+        </Animated.View>
+
+        {/* Quick Actions */}
+        <Animated.View
+          style={[
+            styles.actionsSection,
+            styles.rtlSection,
+            {
+              opacity: fadeAnim,
+              transform: [{ translateY: slideAnim }]
+            }
+          ]}
+        >
+          <ThemedText style={[styles.sectionTitle, { color: textColor }]} rtl={true}>
+            دسترسی سریع
+          </ThemedText>
+
+          <View style={styles.actionGrid}>
+            {/* Registration Actions */}
+            <TouchableOpacity
+              style={[styles.actionCard, styles.registrationCard, styles.rtlActionCard, { backgroundColor: primaryColor, borderColor: primaryColor }]}
+              onPress={() => router.push('/admin/register/needy-form')}
+            >
+              <View style={styles.actionCardHeader}>
+                <ThemedText style={[styles.actionTitle, { color: '#FFFFFF' }]} rtl={true}>
+                  ثبت خانواده مددجو
                 </ThemedText>
-                <View style={styles.sectionDivider} />
-             </View>
+                <ThemedText style={styles.registrationIcon}>👨‍👩‍👧‍👦</ThemedText>
+              </View>
+              <ThemedText style={[styles.actionDescription, { color: '#FFFFFF', opacity: 0.9 }]} rtl={true}>
+                افزودن خانواده مددجو جدید به سیستم
+              </ThemedText>
+            </TouchableOpacity>
 
-             <View style={styles.actionsContainer}>
-                {quickActions.map((action, index) => (
-                   <ActionCard key={index} action={action} />
-                ))}
-             </View>
-          </Animated.View>
-
-          {/* Enhanced Recent Activity */}
-          <Animated.View style={[styles.section, {
-             opacity: fadeAnim,
-             transform: [{ translateY: slideAnim }]
-          }]}>
-             <View style={styles.sectionHeader}>
-                <ThemedText style={[styles.sectionTitle, { color: textColor }]}>
-                   🕒 فعالیت‌های اخیر
+            <TouchableOpacity
+              style={[styles.actionCard, styles.registrationCard, styles.rtlActionCard, { backgroundColor: volunteerColor, borderColor: volunteerColor }]}
+              onPress={() => router.push('/admin/register/group-admin-form')}
+            >
+              <View style={styles.actionCardHeader}>
+                <ThemedText style={[styles.actionTitle, { color: '#FFFFFF' }]} rtl={true}>
+                  ثبت نماینده جدید
                 </ThemedText>
-                <View style={styles.sectionDivider} />
-             </View>
+                <ThemedText style={styles.registrationIcon}>👨‍💼</ThemedText>
+              </View>
+              <ThemedText style={[styles.actionDescription, { color: '#FFFFFF', opacity: 0.9 }]} rtl={true}>
+                افزودن نماینده گروه جدید
+              </ThemedText>
+            </TouchableOpacity>
 
-             <View style={[styles.activityCard, { backgroundColor: surfaceColor, borderColor }]}>
-                <View style={styles.activityItem}>
-                   <View style={styles.activityIconContainer}>
-                      <View style={[styles.activityDot, { backgroundColor: primaryColor }]} />
-                      <View style={[styles.activityPulse, { backgroundColor: primaryColor + '20' }]} />
-                   </View>
-                   <View style={styles.activityContent}>
-                      <ThemedText style={[styles.activityTitle, { color: textColor }]}>
-                         👪 ثبت نیازمند جدید: {needyInfo?.LastNeedyNameCreated ?? '—'}
-                      </ThemedText>
-                      <ThemedText style={[styles.activityTime, { color: textColor, opacity: 0.6 }]}>
-                         {needyInfo?.LastNeedycreatedTime ? new Date(needyInfo.LastNeedycreatedTime).toLocaleString('fa-IR') : '—'}
-                      </ThemedText>
-                   </View>
-                </View>
+            <TouchableOpacity
+              style={[styles.actionCard, styles.registrationCard, styles.rtlActionCard, { backgroundColor: donationColor, borderColor: donationColor }]}
+              onPress={() => router.push('/admin/register/admin-form')}
+            >
+              <View style={styles.actionCardHeader}>
+                <ThemedText style={[styles.actionTitle, { color: '#FFFFFF' }]} rtl={true}>
+                  ثبت مدیر
+                </ThemedText>
+                <ThemedText style={styles.registrationIcon}>👑</ThemedText>
+              </View>
+              <ThemedText style={[styles.actionDescription, { color: '#FFFFFF', opacity: 0.9 }]} rtl={true}>
+                افزودن مدیر جدید
+              </ThemedText>
+            </TouchableOpacity>
 
-                <View style={styles.activityDivider} />
+            {/* Management Actions */}
+            <TouchableOpacity
+              style={[styles.actionCard, styles.rtlActionCard, { backgroundColor: surfaceColor, borderColor }]}
+              onPress={() => router.push('/admin/info-management')}
+            >
+              <View style={styles.actionCardHeader}>
+                <ThemedText style={[styles.actionTitle, { color: primaryColor }]} rtl={true}>
+                  مدیریت اطلاعات
+                </ThemedText>
+                <ThemedText style={styles.managementIcon}>📋</ThemedText>
+              </View>
+              <ThemedText style={[styles.actionDescription, { color: textColor, opacity: 0.7 }]} rtl={true}>
+                مشاهده و مدیریت اطلاعات
+              </ThemedText>
+            </TouchableOpacity>
 
-                <View style={styles.activityItem}>
-                   <View style={styles.activityIconContainer}>
-                      <View style={[styles.activityDot, { backgroundColor: volunteerColor }]} />
-                      <View style={[styles.activityPulse, { backgroundColor: volunteerColor + '20' }]} />
-                   </View>
-                   <View style={styles.activityContent}>
-                      <ThemedText style={[styles.activityTitle, { color: textColor }]}>
-                         🧑‍💼 ثبت مدیر جدید: {adminInfo?.LastAdminNameCreated ?? '—'}
-                      </ThemedText>
-                      <ThemedText style={[styles.activityTime, { color: textColor, opacity: 0.6 }]}>
-                         {adminInfo?.LastAdminCreatedTime ? new Date(adminInfo.LastAdminCreatedTime).toLocaleString('fa-IR') : '—'}
-                      </ThemedText>
-                   </View>
-                </View>
-             </View>
-          </Animated.View>
-        </ScrollView>
-      </ThemedView>
-   );
+          </View>
+        </Animated.View>
+      </ScrollView>
+    </ThemedView>
+  );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  headerContainer: {
-    position: 'relative',
-    overflow: 'hidden',
-  },
+  container: { flex: 1 },
+  scrollContainer: { paddingBottom: Spacing.xl },
   header: {
-    paddingTop: 60,
-    paddingHorizontal: Spacing.lg,
-    paddingBottom: Spacing.xl + 10,
-    borderBottomLeftRadius: BorderRadius.xxl,
-    borderBottomRightRadius: BorderRadius.xxl,
-    position: 'relative',
+    padding: Spacing.lg,
+    borderBottomWidth: 1,
+    borderRadius: BorderRadius.lg,
+    margin: Spacing.md,
+    marginBottom: Spacing.sm,
+    ...Shadows.small,
   },
-  floatingCircle: {
-    position: 'absolute',
-    backgroundColor: 'rgba(255,255,255,0.1)',
-    borderRadius: BorderRadius.full,
-  },
-  circle1: {
-    width: 120,
-    height: 120,
-    top: -60,
-    right: -40,
-  },
-  circle2: {
-    width: 80,
-    height: 80,
-    top: 20,
-    left: -20,
-  },
-  circle3: {
-    width: 60,
-    height: 60,
-    bottom: -10,
-    right: 50,
+  rtlHeader: {
+    direction: 'rtl',
   },
   headerContent: {
-    flexDirection: 'row',
+    flexDirection: 'row-reverse',
     justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    zIndex: 10,
+    alignItems: 'center',
   },
-  welcomeSection: {
-    flex: 1,
+  rtlHeaderText: {
+    alignItems: 'flex-end',
   },
   greeting: {
-    ...Typography.caption,
-    color: 'rgba(255,255,255,0.9)',
-    marginBottom: 6,
-    fontSize: 16,
+    fontSize: Typography.sizes.xl,
+    fontWeight: Typography.weights.bold as any,
+    marginBottom: Spacing.xs,
+    textAlign: 'right',
   },
-  welcomeText: {
-    ...Typography.h2,
-    color: 'white',
-    fontWeight: '700',
-    marginBottom: 4,
+  subtitle: {
+    fontSize: Typography.sizes.sm,
+    textAlign: 'right',
   },
-  dateText: {
-    ...Typography.small,
-    color: 'rgba(255,255,255,0.8)',
-    marginTop: 4,
+  statsContainer: {
+    flexDirection: 'row-reverse',
+    paddingHorizontal: Spacing.md,
+    gap: Spacing.sm,
+    marginBottom: Spacing.md,
   },
-  profileButton: {
-    padding: Spacing.sm,
+  rtlStatsContainer: {
+    writingDirection: 'rtl',
   },
-  profileIcon: {
-    width: 56,
-    height: 56,
-    borderRadius: BorderRadius.full,
-    justifyContent: 'center',
-    alignItems: 'center',
-    overflow: 'hidden',
-  },
-  profileText: {
-    fontSize: 28,
-  },
-  scrollView: {
+  statCard: {
     flex: 1,
+    borderRadius: BorderRadius.lg,
+    overflow: 'hidden',
+    ...Shadows.medium,
   },
-  scrollContent: {
+  cardGradient: {
+    padding: Spacing.md,
+    alignItems: 'center',
+  },
+  statNumber: {
+    fontSize: Typography.sizes.xxl,
+    fontWeight: Typography.weights.bold as any,
+    color: '#FFFFFF',
+    marginBottom: Spacing.xs,
+    textAlign: 'center',
+  },
+  statLabel: {
+    fontSize: Typography.sizes.sm,
+    color: '#FFFFFF',
+    textAlign: 'center',
+  },
+  mapSection: {
+    margin: Spacing.md,
     padding: Spacing.lg,
-    paddingBottom: Spacing.xxxl,
+    borderRadius: BorderRadius.lg,
+    borderWidth: 1,
+    ...Shadows.small,
   },
-  section: {
-    marginBottom: Spacing.xl + 8,
-  },
-  sectionHeader: {
-    marginBottom: Spacing.lg,
+  rtlSection: {
+    writingDirection: 'rtl',
   },
   sectionTitle: {
-    ...Typography.h3,
-    fontWeight: '700',
-    marginBottom: Spacing.sm,
+    fontSize: Typography.sizes.lg,
+    fontWeight: Typography.weights.semibold as any,
+    marginBottom: Spacing.xs,
+    textAlign: 'right',
   },
-  sectionDivider: {
-    height: 3,
-    backgroundColor: '#3b82f6',
-    borderRadius: BorderRadius.sm,
-    width: 40,
+  sectionSubtitle: {
+    fontSize: Typography.sizes.sm,
+    marginBottom: Spacing.md,
+    textAlign: 'right',
   },
-  actionsContainer: {
-    gap: Spacing.md,
+  filterContainer: {
+    marginBottom: Spacing.md,
   },
-  actionCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: Spacing.lg,
-    borderRadius: BorderRadius.xl,
+  rtlPicker: {
     borderWidth: 1,
-    ...Shadows.md,
-    position: 'relative',
+    borderRadius: BorderRadius.lg,
+  },
+  mapContainer: {
+    height: 300,
+    borderRadius: BorderRadius.md,
     overflow: 'hidden',
   },
-  actionBackground: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-  },
-  actionBackgroundGradient: {
+  map: {
     flex: 1,
-    opacity: 0.03,
   },
-  actionIconWrapper: {
-    position: 'relative',
-    marginRight: Spacing.lg,
-    zIndex: 2,
+  actionsSection: {
+    paddingHorizontal: Spacing.md,
   },
-  actionIconContainer: {
-    width: 56,
-    height: 56,
+  actionGrid: {
+    gap: Spacing.md,
+    marginTop: Spacing.md,
+  },
+  actionCard: {
+    padding: Spacing.lg,
     borderRadius: BorderRadius.lg,
+    borderWidth: 1,
+    ...Shadows.small,
+  },
+  rtlActionCard: {
+    direction: 'rtl',
+    alignItems: 'flex-end',
+  },
+  registrationCard: {
+    flexDirection: 'column',
     justifyContent: 'center',
+    alignItems: 'flex-end',
+  },
+  actionCardHeader: {
+    flexDirection: 'row-reverse',
     alignItems: 'center',
+    justifyContent: 'flex-end',
+    marginBottom: Spacing.xs,
+    width: '100%',
   },
-  actionIcon: {
-    fontSize: 26,
+  registrationIcon: {
+    fontSize: 24,
+    marginLeft: Spacing.md,
   },
-  actionGlow: {
-    position: 'absolute',
-    top: -4,
-    left: -4,
-    right: -4,
-    bottom: -4,
-    borderRadius: BorderRadius.lg + 4,
-    zIndex: -1,
-  },
-  actionContent: {
-    flex: 1,
-    zIndex: 1,
+  managementIcon: {
+    fontSize: 20,
+    marginLeft: Spacing.md,
   },
   actionTitle: {
-    ...Typography.body,
-    fontWeight: '700',
-    marginBottom: 6,
-    fontSize: 17,
-  },
-  actionSubtitle: {
-    ...Typography.caption,
-    fontSize: 13,
-  },
-  actionArrow: {
-    width: 36,
-    height: 36,
-    borderRadius: BorderRadius.md,
-    justifyContent: 'center',
-    alignItems: 'center',
-    zIndex: 1,
-  },
-  arrowIcon: {
-    color: 'white',
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
-  activityCard: {
-    borderRadius: BorderRadius.xl,
-    padding: Spacing.lg,
-    borderWidth: 1,
-    ...Shadows.md,
-  },
-  activityItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: Spacing.md,
-  },
-  activityIconContainer: {
-    position: 'relative',
-    marginRight: Spacing.lg,
-  },
-  activityDot: {
-    width: 14,
-    height: 14,
-    borderRadius: BorderRadius.full,
-    zIndex: 2,
-  },
-  activityPulse: {
-    position: 'absolute',
-    top: -3,
-    left: -3,
-    width: 20,
-    height: 20,
-    borderRadius: BorderRadius.full,
-    zIndex: 1,
-  },
-  activityContent: {
+    fontSize: Typography.sizes.md,
+    fontWeight: Typography.weights.semibold as any,
+    marginBottom: Spacing.xs,
+    textAlign: 'right',
     flex: 1,
   },
-  activityTitle: {
-    ...Typography.body,
-    fontWeight: '600',
-    marginBottom: 4,
-    fontSize: 16,
-  },
-  activityTime: {
-    ...Typography.small,
-    fontSize: 12,
-  },
-  activityDivider: {
-    height: 1,
-    backgroundColor: 'rgba(156, 163, 175, 0.2)',
-    marginVertical: Spacing.sm,
-    marginLeft: 34,
-  },
-  signOutButton: {
-    // Add any specific styles for the SignOutButton here if needed
+  actionDescription: {
+    fontSize: Typography.sizes.sm,
+    lineHeight: 20,
+    textAlign: 'right',
+    width: '100%',
   },
 });

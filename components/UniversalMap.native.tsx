@@ -1,119 +1,215 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import { View, Button, Text, Platform } from 'react-native';
+import React, { useEffect, useMemo, useState, useRef } from 'react';
+import { View, Button, Text, Platform, StyleSheet } from 'react-native';
 import Constants from 'expo-constants';
 
-interface UniversalMapProps {
-  location: {
-    latitude: number;
-    longitude: number;
-    address?: string;
-    mapType?: string;
-    zoom?: number;
-  } | null;
-  onLocationSelect: (loc: {
-    latitude: number;
-    longitude: number;
-    address?: string;
-    mapType?: string;
-    zoom?: number;
-  }) => void;
-  mapType?: 'standard' | 'satellite' | 'terrain';
-  zoom?: number;
-  showControls?: boolean;
-  city?: string;
+interface MapPoint {
+  id: string;
+  lat: number;
+  lng: number;
+  name?: string;
+  info?: string;
 }
 
-export default function UniversalMap({ location, onLocationSelect, mapType = 'standard', zoom = 0.05, showControls = true }: UniversalMapProps) {
-  const [MapsMod, setMapsMod] = useState<any>(null);
+interface UniversalMapProps {
+  points: MapPoint[];
+  onLocationSelect?: (location: { latitude: number; longitude: number }) => void;
+  selectedLocation?: { latitude: number; longitude: number } | null;
+  initialRegion?: {
+    latitude: number;
+    longitude: number;
+    latitudeDelta: number;
+    longitudeDelta: number;
+  };
+  style?: any;
+  showCurrentLocation?: boolean;
+}
+
+export default function UniversalMap({
+  points = [],
+  initialRegion = {
+    latitude: 35.6892,
+    longitude: 51.3890,
+    latitudeDelta: 0.1,
+    longitudeDelta: 0.1,
+  },
+  onLocationSelect,
+  selectedLocation,
+  style,
+  showCurrentLocation = false,
+}: UniversalMapProps) {
+  const [region, setRegion] = useState(initialRegion);
+  const mapRef = useRef<any>(null);
+  const [MapView, setMapView] = useState<any>(null);
+  const [Marker, setMarker] = useState<any>(null);
   const [mapsError, setMapsError] = useState<string | null>(null);
 
   const onLayout = () => {
     // no-op layout handler
   };
 
-  const region = useMemo(() => ({
-    latitude: location?.latitude || 35.6892,
-    longitude: location?.longitude || 51.389,
-    latitudeDelta: zoom,
-    longitudeDelta: zoom,
-  }), [location, zoom]);
-
   useEffect(() => {
     const isExpoGo = Constants?.appOwnership === 'expo';
     if (isExpoGo) {
-      setMapsMod(null);
       setMapsError('react-native-maps is not available in Expo Go');
       return;
     }
+
+    // Try to load react-native-maps without clustering to avoid RNMapsAirModule error
     try {
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
-      const mod = require('react-native-maps');
-      setMapsMod(mod);
-    } catch {
-      setMapsError('react-native-maps load failed');
+      const mapModule = require('react-native-maps');
+      setMapView(() => mapModule.default);
+      setMarker(() => mapModule.Marker);
+      setMapsError(null);
+    } catch (error) {
+      console.error('react-native-maps load failed:', error);
+      setMapsError('react-native-maps load failed. Please run expo prebuild and rebuild your app.');
     }
   }, []);
 
-  if (!MapsMod) {
+  useEffect(() => {
+    // Validate points data
+    const validPoints = points.filter(point =>
+      point &&
+      typeof point.lat === 'number' &&
+      typeof point.lng === 'number' &&
+      !isNaN(point.lat) &&
+      !isNaN(point.lng)
+    );
+
+    if (validPoints.length > 0 && mapRef.current && MapView) {
+      // Fit map to show all points
+      const coordinates = validPoints.map(point => ({
+        latitude: point.lat,
+        longitude: point.lng,
+      }));
+
+      try {
+        mapRef.current.fitToCoordinates(coordinates, {
+          edgePadding: { top: 50, right: 50, bottom: 50, left: 50 },
+          animated: true,
+        });
+      } catch (error) {
+        console.error('Error fitting to coordinates:', error);
+      }
+    }
+  }, [points, MapView]);
+
+  const handleMapPress = (event: any) => {
+    if (onLocationSelect) {
+      const { latitude, longitude } = event.nativeEvent.coordinate;
+      onLocationSelect({ latitude, longitude });
+    }
+  };
+
+  const handleRegionChange = (newRegion: any) => {
+    setRegion(newRegion);
+  };
+
+  // Filter and validate points
+  const validPoints = points.filter(point =>
+    point &&
+    typeof point.lat === 'number' &&
+    typeof point.lng === 'number' &&
+    !isNaN(point.lat) &&
+    !isNaN(point.lng) &&
+    point.lat >= -90 &&
+    point.lat <= 90 &&
+    point.lng >= -180 &&
+    point.lng <= 180
+  );
+
+  if (!MapView || !Marker || mapsError) {
     return (
-      <View onLayout={onLayout} style={{ width: '100%', height: 300, borderRadius: 12, marginBottom: 16, alignItems: 'center', justifyContent: 'center', backgroundColor: '#f2f2f2', padding: 12 }}>
-        <Text style={{ textAlign: 'center' }}>نمایش نقشه در این نسخه در دسترس نیست.</Text>
-        <Text style={{ textAlign: 'center', marginTop: 6, opacity: 0.8 }}>
-          برای استفاده از نقشه، یک Development Client بسازید یا پکیج react-native-maps را در بیلد نیتیو اضافه کنید.
-        </Text>
-        {!!mapsError && (
-          <Text style={{ textAlign: 'center', marginTop: 6, fontSize: 12, color: '#666' }}>{mapsError}</Text>
-        )}
+      <View onLayout={onLayout} style={[styles.container, style]}>
+        <View style={styles.fallbackContainer}>
+          <Text style={styles.fallbackTitle}>نمایش نقشه در این نسخه در دسترس نیست</Text>
+          <Text style={styles.fallbackMessage}>
+            {mapsError || 'در حال بارگذاری نقشه...'}
+          </Text>
+          <Text style={styles.fallbackSubtext}>
+            برای استفاده از نقشه، لطفاً دستورات زیر را اجرا کنید:{'\n'}
+            1. npx expo prebuild --clean{'\n'}
+            2. npx expo run:android
+          </Text>
+        </View>
       </View>
     );
   }
 
-  const MapView = (MapsMod.default || MapsMod.MapView) as any;
-  const Marker = MapsMod.Marker as any;
-  const safeMapType = Platform.OS === 'ios' && mapType === 'terrain' ? 'standard' : mapType;
-
   return (
-    <View onLayout={onLayout}>
-      {showControls && (
-        <View style={{ flexDirection: 'row', marginBottom: 8 }}>
-          <Button title="Standard" onPress={() => onLocationSelect({ ...(location || region), latitude: region.latitude, longitude: region.longitude, mapType: 'standard', zoom })} />
-          <Button title="Satellite" onPress={() => onLocationSelect({ ...(location || region), latitude: region.latitude, longitude: region.longitude, mapType: 'satellite', zoom })} />
-          <Button title="Terrain" onPress={() => onLocationSelect({ ...(location || region), latitude: region.latitude, longitude: region.longitude, mapType: 'terrain', zoom })} />
-          <Button title="Zoom In" onPress={() => onLocationSelect({ ...(location || region), latitude: region.latitude, longitude: region.longitude, mapType, zoom: Math.max(zoom / 2, 0.002) })} />
-          <Button title="Zoom Out" onPress={() => onLocationSelect({ ...(location || region), latitude: region.latitude, longitude: region.longitude, mapType, zoom: Math.min(zoom * 2, 1) })} />
-        </View>
-      )}
-      <View style={{ width: '100%', height: 300, borderRadius: 12, overflow: 'hidden', marginBottom: 16 }}>
-        <MapView
-          style={{ flex: 1 }}
-          provider={Platform.OS === 'android' ? MapsMod.PROVIDER_GOOGLE : undefined}
-          initialRegion={region}
-          region={region}
-          mapType={safeMapType}
-          onPress={(e: any) => {
-            const coord = e.nativeEvent.coordinate;
-            onLocationSelect({
-              latitude: coord.latitude,
-              longitude: coord.longitude,
-              mapType,
-              zoom,
-            });
-          }}
-        >
-          {location && (
-            <Marker
-              coordinate={{ latitude: location.latitude, longitude: location.longitude }}
-              anchor={{ x: 0.5, y: 0.98 }}
-              tracksViewChanges={false}
-            >
-              <View style={{ alignItems: 'center' }}>
-                <View style={{ width: 28, height: 28, borderRadius: 14, backgroundColor: '#2E7D32', borderWidth: 2, borderColor: '#fff', shadowColor: '#000', shadowOpacity: 0.2, shadowRadius: 2, elevation: 3 }} />
-                <View style={{ width: 0, height: 0, borderLeftWidth: 6, borderRightWidth: 6, borderTopWidth: 8, borderLeftColor: 'transparent', borderRightColor: 'transparent', borderTopColor: '#2E7D32' }} />
-              </View>
-            </Marker>
-          )}
-        </MapView>
-      </View>
+    <View onLayout={onLayout} style={[styles.container, style]}>
+      {/* Use regular MapView without clustering to avoid RNMapsAirModule error */}
+      <MapView
+        ref={mapRef}
+        style={styles.map}
+        provider={Platform.OS === 'android' ? 'google' : undefined}
+        initialRegion={region}
+        onRegionChangeComplete={handleRegionChange}
+        onPress={handleMapPress}
+        showsUserLocation={showCurrentLocation}
+        showsMyLocationButton={showCurrentLocation}
+      >
+        {validPoints.map((point) => (
+          <Marker
+            key={point.id}
+            coordinate={{
+              latitude: point.lat,
+              longitude: point.lng
+            }}
+            title={point.name || `Location ${point.id}`}
+            description={point.info}
+            pinColor="#FF4444"
+          />
+        ))}
+
+        {selectedLocation && (
+          <Marker
+            coordinate={{
+              latitude: selectedLocation.latitude,
+              longitude: selectedLocation.longitude,
+            }}
+            title="Selected Location"
+            pinColor="#4CAF50"
+          />
+        )}
+      </MapView>
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    minHeight: 300,
+  },
+  map: {
+    flex: 1,
+    minHeight: 300,
+  },
+  fallbackContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#f2f2f2',
+    padding: 16,
+  },
+  fallbackTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#333',
+    textAlign: 'center',
+    marginBottom: 12,
+  },
+  fallbackMessage: {
+    fontSize: 14,
+    color: '#666',
+    textAlign: 'center',
+    marginBottom: 16,
+  },
+  fallbackSubtext: {
+    fontSize: 12,
+    color: '#999',
+    textAlign: 'center',
+    lineHeight: 18,
+  },
+});

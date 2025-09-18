@@ -16,6 +16,7 @@ export interface AdminCreate {
   Password: string;
   Latitude?: string;
   Longitude?: string;
+  CreatedBy?: number;
 }
 
 export interface NeedyPersonCreate {
@@ -89,6 +90,16 @@ export interface NeedyPersonLocation {
   lng: number;
   name?: string;
   info?: string;
+  group_name: string;
+}
+
+export interface AdminPersonLocation {
+    id: string;
+    lat: number;
+    lng: number;
+    name?: string;
+    info?: string;
+    role?: string;
 }
 
 export interface InfoNeedyResponse {
@@ -106,8 +117,92 @@ export interface InfoAdminResponse {
   LastGroupAdminNameCreated: string; // Firstname + lastname
 }
 
+// API Types
+export interface NeedyPerson {
+  id: number;
+  register_id: string;
+  full_name: string;
+  phone_number: string;
+  address: string;
+  latitude: number;
+  longitude: number;
+  family_members_count: number;
+  monthly_income: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface AdminUser {
+  id: number;
+  register_id: string;
+  full_name: string;
+  phone_number: string;
+  address: string;
+  latitude: number;
+  longitude: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface MapPoint {
+  id: number;
+  latitude: number;
+  longitude: number;
+  title: string;
+  description?: string;
+  type: 'needy' | 'admin';
+}
+
+export interface ApiResponse<T> {
+  success: boolean;
+  data: T;
+  message?: string;
+  error?: string;
+}
+
+export interface LoginRequest {
+  phone_number: string;
+  password: string;
+}
+
 export interface LoginResponse {
-  adminId: number | string;
-  userRole: string,
-  name: string; // firstName _ lastName
+  token: string;
+  user: AdminUser;
+  expires_at: string;
+}
+
+export interface NeedySignInRequest {
+  phone_number: string;
+}
+
+export interface NeedySignInResponse {
+  success: boolean;
+  data: NeedyPerson;
+}
+
+export interface CreateNeedyRequest {
+  full_name: string;
+  phone_number: string;
+  address: string;
+  latitude: number;
+  longitude: number;
+  family_members_count: number;
+  monthly_income: number;
+}
+
+export interface CreateAdminRequest {
+  full_name: string;
+  phone_number: string;
+  password: string;
+  address: string;
+  latitude: number;
+  longitude: number;
+}
+
+export interface UpdateNeedyRequest extends Partial<CreateNeedyRequest> {
+  register_id: string;
+}
+
+export interface UpdateAdminRequest extends Partial<CreateAdminRequest> {
+  register_id: string;
 }

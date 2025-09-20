@@ -30,6 +30,40 @@ export default function AdminUserRegister() {
     const params = useLocalSearchParams();
     const { userId } = useAuth();
     const errorColor = useThemeColor({}, 'danger');
+    const [formChildData, setFormChildData] = useState({
+      childrenCount: 0, // تعداد فرزندان
+      children: [] // آرایه خالی از فرزندان
+    });
+   const handleChildrenCountChange = (count) => {
+   const numCount = parseInt(count) || 0;
+
+  setFormChildData(prev => {
+    // اگر تعداد کاهش یافت، فرزندان اضافی را حذف کن
+    const newChildren = numCount < prev.children.length
+      ? prev.children.slice(0, numCount)
+      : [
+          ...prev.children,
+          ...Array(Math.max(0, numCount - prev.children.length))
+            .fill()
+            .map(() => ({ FirstName: '', LastName: '' , NationalID:'', Gender:'', Age:'', EducationLevel:''}))
+        ];
+
+    return {
+      ...prev,
+      childrenCount: numCount,
+      children: newChildren
+    };
+  });
+};
+
+const handleChildFieldChange = (index, field, value) => {
+  setFormChildData(prev => ({
+    ...prev,
+    children: prev.children.map((child, i) =>
+      i === index ? { ...child, [field]: value } : child
+    )
+  }));
+};
 
     const [formData, setFormData] = useState<ExtendedNeedyForm>({
         FirstName: '',
@@ -55,7 +89,16 @@ export default function AdminUserRegister() {
         IncomeForm: '',
         Latitude: params.latitude ? String(params.latitude) : '',
         Longitude: params.longitude ? String(params.longitude) : '',
-        children_of_registre: null,
+        children_of_registre : [
+          {
+              FirstName: '',
+              LastName: '',
+              Age: '',
+              Gender: '',
+              NationalID: '',
+              EducationLevel: ''
+          }
+      ]
     });
 
     const [loading, setLoading] = useState(false);
@@ -208,7 +251,7 @@ export default function AdminUserRegister() {
                             label="شماره موبایل"
                             value={formData.Phone || ''}
                             onChangeText={(text) => handleFieldChange('Phone', text)}
-                            placeholder="09123456789"
+                            placeholder=" "
                             keyboardType="phone-pad"
                             error={fieldErrors.Phone}
                         />
@@ -307,9 +350,74 @@ export default function AdminUserRegister() {
                             multiline
                         />
 
+                        <ThemedText style={styles.sectionTitle}>اطلاعات فرزندان</ThemedText>
+
+                        <InputField
+                           label= "تعدادفرزندان"
+                           value={formChildData.childrenCount.toString()}
+                           onChangeText={handleChildrenCountChange}
+                           placeholder = "تعداد فرزندان را وارد کنید"
+                           keyboardType="\numeric"
+                        />
+                           {formChildData.children.map((child, index) => (
+                             <View key={index} style={styles.childContainer}>
+                               <ThemedText style={styles.childTitle}>فرزند {index + 1}</ThemedText>
+                                   <InputField
+                                     label = "نام"
+                                     value={child.FirstName}
+                                     onChangeText={(text) => handleChildFieldChange(index, 'FirstName', text)}
+                                     placeholder = "نام فرزند"
+                                   />
+
+                                   <InputField
+                                     label = "نام خانوادگی"
+                                     value={child.LastName}
+                                     onChangeText={(text) => handleChildFieldChange(index, 'LastName', text)}
+                                     placeholder = "نام خانوادگی فرزند"
+                                   />
+                                   <InputField
+                                     label="کد ملی "
+                                     value={child.NationalID}
+                                     onChangeText={(text) => handleChildFieldChange(index, 'NationalID', text)}
+                                     placeholder="کد ملی فرزند"
+                                   />
+                                   <InputField
+                                     label="سن "
+                                     value={child.Age}
+                                     onChangeText={(text) => handleChildFieldChange(index, 'Age', text)}
+                                     placeholder="سن فرزند"
+                                   />
+                                   <InputField
+                                      label="جنسیت "
+                                      value={child.Gender}
+                                      onChangeText={(text) => handleChildFieldChange(index, 'Gender', text)}
+                                      placeholder="جنسیت فرزند"
+                                   />
+                                   <ThemedText style={styles.childTitle}>تحصیلات فرزند</ThemedText>
+                                       <RTLPicker
+                                         items={[
+                                          { label: "انتخاب کنید", value: "" },
+                                          { label: "بی‌سواد", value: "None" },
+                                          { label: "ابتدایی", value: "Primary" },
+                                          { label: "راهنمایی", value: "Secondary" },
+                                          { label: "دبیرستان", value: "High School" },
+                                          { label: "دیپلم", value: "Diploma" },
+                                          { label: "فوق‌دیپلم", value: "Associate Degree" },
+                                          { label: "لیسانس", value: "Bachelor" },
+                                          { label: "فوق‌لیسانس", value: "Master" },
+                                          { label: "دکتری", value: "PhD" }
+                                          ]}
+                                       selectedValue={child.EducationLevel}
+                                       onValueChange={(value) => handleChildFieldChange('EducationLevel', value)}
+                                       placeholder="انتخاب کنید"
+                                       style={styles.pickerContainer}
+                                   />
+                                 </View>
+                               ))}
+
                         <ThemedText style={styles.sectionTitle}>اطلاعات تحصیلی و شغلی</ThemedText>
 
-                        <ThemedText style={styles.fieldLabel}>سطح تحصیلات</ThemedText>
+                        <ThemedText style={styles.childTitle}>سطح تحصیلات</ThemedText>
                         <RTLPicker
                             items={[
                                 { label: "انتخاب کنید", value: "" },
@@ -382,7 +490,7 @@ export default function AdminUserRegister() {
                                 pathname: '/admin/register/map',
                                 params: {
                                     formData: JSON.stringify(formData),
-                                    roleTitle: 'ممددجو',
+                                    roleTitle: 'مددجو',
                                     roleIcon: '👤',
                                     role: 'needy',
                                     city: formData.City || '',

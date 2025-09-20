@@ -203,12 +203,12 @@ export default function AdminManagementPage() {
             <ThemedText style={styles.actionButtonText}>✏️</ThemedText>
           </TouchableOpacity>
 
-          <TouchableOpacity
-            style={[styles.actionButton, { backgroundColor: dangerColor }]}
-            onPress={() => handleDelete(record)}
-          >
-            <ThemedText style={styles.actionButtonText}>🗑️</ThemedText>
-          </TouchableOpacity>
+           <TouchableOpacity
+               style={[styles.actionButton, { backgroundColor: '#ff0000' }]}
+               onPress={() => handleDelete(record)}
+           >
+               <ThemedText style={styles.actionButtonText}>🗑️</ThemedText>
+           </TouchableOpacity>
         </View>
       )}
 

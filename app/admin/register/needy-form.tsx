@@ -251,7 +251,7 @@ const handleChildFieldChange = (index, field, value) => {
                             label="شماره موبایل"
                             value={formData.Phone || ''}
                             onChangeText={(text) => handleFieldChange('Phone', text)}
-                            placeholder=" "
+                            placeholder="09xxxxxxxxx"
                             keyboardType="phone-pad"
                             error={fieldErrors.Phone}
                         />

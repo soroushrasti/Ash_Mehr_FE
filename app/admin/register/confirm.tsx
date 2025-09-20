@@ -177,11 +177,11 @@ export default function AdminRegisterConfirm() {
         }
 
         if (Platform.OS === 'web') {
-            alert(`${roleTitle} با موفقیت در سیستم ویرایش شد.`);
+            alert(`${roleTitle} با موفقیت در سیستم ثبت شد.`);
         }
         Alert.alert(
             'ذخیره موفق',
-            `${roleTitle} با موفقیت در سیستم ویرایش شد.`,
+            `${roleTitle} با موفقیت در سیستم ثبت شد.`,
             [
                 {
                     text: 'تأیید',

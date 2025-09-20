@@ -75,7 +75,6 @@ class ApiService {
       endpoint: Config.ENDPOINTS.CREATE_NEEDY,
       method: 'POST',
       body: needyData,
-      successMessage: 'ثبت مددجو با موفقیت انجام شد',
       redirectOnSuccessTo: '/',
       showErrorAlert: true,
     });
@@ -92,7 +91,6 @@ class ApiService {
       endpoint: Config.ENDPOINTS.CREATE_ADMIN,
       method: 'POST',
       body: adminData,
-      successMessage: 'ثبت نماینده با موفقیت انجام شد',
       redirectOnSuccessTo: '/',
       showErrorAlert: true,
     });

@@ -31,39 +31,9 @@ export default function AdminUserRegister() {
     const { userId } = useAuth();
     const errorColor = useThemeColor({}, 'danger');
     const [formChildData, setFormChildData] = useState({
-      childrenCount: 0, // تعداد فرزندان
+      childrenCount: '', // تعداد فرزندان
       children: [] // آرایه خالی از فرزندان
     });
-   const handleChildrenCountChange = (count) => {
-   const numCount = parseInt(count) || 0;
-
-  setFormChildData(prev => {
-    // اگر تعداد کاهش یافت، فرزندان اضافی را حذف کن
-    const newChildren = numCount < prev.children.length
-      ? prev.children.slice(0, numCount)
-      : [
-          ...prev.children,
-          ...Array(Math.max(0, numCount - prev.children.length))
-            .fill()
-            .map(() => ({ FirstName: '', LastName: '' , NationalID:'', Gender:'', Age:'', EducationLevel:''}))
-        ];
-
-    return {
-      ...prev,
-      childrenCount: numCount,
-      children: newChildren
-    };
-  });
-};
-
-const handleChildFieldChange = (index, field, value) => {
-  setFormChildData(prev => ({
-    ...prev,
-    children: prev.children.map((child, i) =>
-      i === index ? { ...child, [field]: value } : child
-    )
-  }));
-};
 
     const [formData, setFormData] = useState<ExtendedNeedyForm>({
         FirstName: '',
@@ -90,17 +60,53 @@ const handleChildFieldChange = (index, field, value) => {
         Latitude: params.latitude ? String(params.latitude) : '',
         Longitude: params.longitude ? String(params.longitude) : '',
         children_of_registre : [
-          {
-              FirstName: '',
-              LastName: '',
-              Age: '',
-              Gender: '',
-              NationalID: '',
-              EducationLevel: ''
-          }
-      ]
+            {
+                FirstName: '',
+                LastName: '',
+                NationalID: '',
+                EducationLevel:'',
+                Age: '',
+                Gender:''
+                }
+            ]
     });
 
+const handleChildrenCountChange = (count) => {
+  const numCount = parseInt(count) || 0;
+
+  setFormData(prev => {
+    // اگر تعداد کاهش یافت، فرزندان اضافی را حذف کن
+    const newChildren = numCount < prev.children_of_registre.length
+      ? prev.children_of_registre.slice(0, numCount)
+      : [
+          ...prev.children_of_registre,
+          ...Array(Math.max(0, numCount - prev.children_of_registre.length))
+            .fill()
+            .map(() => ({
+              FirstName: '',
+              LastName: '',
+              NationalID: '',
+              Gender: '',
+              Age: '',
+              EducationLevel: ''
+            }))
+        ];
+
+    return {
+      ...prev,
+      children_of_registre: newChildren
+    };
+  });
+};
+
+const handleChildFieldChange = (index, field, value) => {
+  setFormData(prev => ({
+    ...prev,
+    children_of_registre: prev.children_of_registre.map((child, i) =>
+      i === index ? { ...child, [field]: value } : child
+    )
+  }));
+};
     const [loading, setLoading] = useState(false);
     const [validationErrors, setValidationErrors] = useState<string[]>([]);
     const [fieldErrors, setFieldErrors] = useState<{[key: string]: string}>({});
@@ -180,7 +186,7 @@ const handleChildFieldChange = (index, field, value) => {
     };
 
     // Clear validation errors when user starts typing
-    const handleFieldChange = (field: keyof ExtendedNeedyForm, value: string | number | undefined) => {
+    const handleFieldChange = (field: keyof ExtendedNeedyForm, value: string | number | undefined | Child[]) => {
         setFormData(prev => ({ ...prev, [field]: value }));
 
         // Clear field-specific error when user starts typing
@@ -349,48 +355,48 @@ const handleChildFieldChange = (index, field, value) => {
                             placeholder="در صورت غیبت همسر، دلیل را شرح دهید"
                             multiline
                         />
-
                         <ThemedText style={styles.sectionTitle}>اطلاعات فرزندان</ThemedText>
 
                         <InputField
                            label= "تعدادفرزندان"
-                           value={formChildData.childrenCount.toString()}
+                           value={formChildData.childrenCount ? formChildData.childrenCount.toString() : ''}
                            onChangeText={handleChildrenCountChange}
                            placeholder = "تعداد فرزندان را وارد کنید"
                            keyboardType="\numeric"
                         />
-                           {formChildData.children.map((child, index) => (
+                           {formData.children_of_registre.map((child, index) => (
                              <View key={index} style={styles.childContainer}>
                                <ThemedText style={styles.childTitle}>فرزند {index + 1}</ThemedText>
+
                                    <InputField
                                      label = "نام"
-                                     value={child.FirstName}
-                                     onChangeText={(text) => handleChildFieldChange(index, 'FirstName', text)}
+                                     value={formData.children_of_registre.FirstName}
+                                     onChangeText={(text) => handleFieldChange(index, 'FirstName', text)}
                                      placeholder = "نام فرزند"
                                    />
 
                                    <InputField
                                      label = "نام خانوادگی"
-                                     value={child.LastName}
-                                     onChangeText={(text) => handleChildFieldChange(index, 'LastName', text)}
+                                     value={formData.children_of_registre.LastName}
+                                     onChangeText={(text) => handleFieldChange(index, 'LastName', text)}
                                      placeholder = "نام خانوادگی فرزند"
                                    />
                                    <InputField
                                      label="کد ملی "
-                                     value={child.NationalID}
-                                     onChangeText={(text) => handleChildFieldChange(index, 'NationalID', text)}
+                                     value={formData.children_of_registre.NationalID}
+                                     onChangeText={(text) => handleFieldChange(index, 'NationalID', text)}
                                      placeholder="کد ملی فرزند"
                                    />
                                    <InputField
                                      label="سن "
-                                     value={child.Age}
-                                     onChangeText={(text) => handleChildFieldChange(index, 'Age', text)}
+                                     value={formData.children_of_registre.Age}
+                                     onChangeText={(text) => handleFieldChange(index, 'Age', text)}
                                      placeholder="سن فرزند"
                                    />
                                    <InputField
                                       label="جنسیت "
-                                      value={child.Gender}
-                                      onChangeText={(text) => handleChildFieldChange(index, 'Gender', text)}
+                                      value={formData.children_of_registre.Gender}
+                                      onChangeText={(text) => handleFieldChange(index, 'Gender', text)}
                                       placeholder="جنسیت فرزند"
                                    />
                                    <ThemedText style={styles.childTitle}>تحصیلات فرزند</ThemedText>
@@ -407,8 +413,8 @@ const handleChildFieldChange = (index, field, value) => {
                                           { label: "فوق‌لیسانس", value: "Master" },
                                           { label: "دکتری", value: "PhD" }
                                           ]}
-                                       selectedValue={child.EducationLevel}
-                                       onValueChange={(value) => handleChildFieldChange('EducationLevel', value)}
+                                       selectedValue={formData.children_of_registre.EducationLevel}
+                                       onValueChange={(value) => handleFieldChange('EducationLevel', value)}
                                        placeholder="انتخاب کنید"
                                        style={styles.pickerContainer}
                                    />
@@ -482,7 +488,6 @@ const handleChildFieldChange = (index, field, value) => {
                 </ScrollView>
 
                 <View style={styles.footer}>
-
                     <Button
                         title="انتخاب موقعیت در نقشه"
                         onPress={() => {

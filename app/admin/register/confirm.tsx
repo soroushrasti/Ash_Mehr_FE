@@ -54,6 +54,15 @@ export default function AdminRegisterConfirm() {
     { label: 'سازمان حامی', value: parsedFormData.UnderOrganizationName },
   ].filter(item => item.value); // Only show fields with values
 
+   const childInfo = [
+      { label: 'نام', value: parsedFormData.children_of_registre.FirstName },
+      { label: 'نام خانوادگی', value: parsedFormData.children_of_registre.LastName },
+      { label: 'سن', value: parsedFormData.children_of_registre.Age },
+      { label: 'جنسیت', value: parsedFormData.children_of_registre.Gender },
+      { label: 'کد ملی', value: parsedFormData.children_of_registre.NationalID },
+      { label: 'تحصیلات', value: parsedFormData.children_of_registre.EducationLevel },
+    ].filter(item => item.value);
+
   function getEducationLabel(value: string) {
     const educationMap = {
       'None': 'بی‌سواد',
@@ -140,12 +149,15 @@ export default function AdminRegisterConfirm() {
         const isNeedy = roleParam === 'Needy' || roleParam === 'needy';
 
         if (isNeedy && !registerId) {
+             const validChildren = parsedFormData.children_of_registre.filter(child =>
+                    child.FirstName && child.LastName && child.NationalID && child.EducationLevel && child.Age && child.Gender
+                );
             const registerData: NeedyCreateWithChildren = {
                 ...parsedFormData,
                 CreatedBy: Number(userId),
                 Latitude: parsedLocation.latitude?.toString() || undefined,
                 Longitude: parsedLocation.longitude?.toString() || undefined,
-                children_of_registre: null,
+                children_of_registre: validChildren,
             } as NeedyCreateWithChildren;
             const result = await apiService.createNeedyPerson(registerData);
 
@@ -313,6 +325,14 @@ export default function AdminRegisterConfirm() {
           onEdit={handleEditForm}
           editTitle="ویرایش"
         />
+
+         {/* children Information */}
+         <InfoSection
+           title="اطلاعات فرزندان"
+           data={childInfo}
+           onEdit={handleEditForm}
+           editTitle="ویرایش"
+         />
 
         {/* Additional Information (for needy families) */}
         {additionalInfo.length > 0 && (

@@ -149,15 +149,11 @@ export default function AdminRegisterConfirm() {
         const isNeedy = roleParam === 'Needy' || roleParam === 'needy';
 
         if (isNeedy && !registerId) {
-             const validChildren = parsedFormData.children_of_registre.filter(child =>
-                    child.FirstName && child.LastName && child.NationalID && child.EducationLevel && child.Age && child.Gender
-                );
             const registerData: NeedyCreateWithChildren = {
                 ...parsedFormData,
                 CreatedBy: Number(userId),
                 Latitude: parsedLocation.latitude?.toString() || undefined,
                 Longitude: parsedLocation.longitude?.toString() || undefined,
-                children_of_registre: validChildren,
             } as NeedyCreateWithChildren;
             const result = await apiService.createNeedyPerson(registerData);
 
@@ -175,7 +171,6 @@ export default function AdminRegisterConfirm() {
                 CreatedBy: Number(userId),
                 Latitude: parsedLocation.latitude?.toString() || undefined,
                 Longitude: parsedLocation.longitude?.toString() || undefined,
-                children_of_registre: null,
             } as NeedyCreateWithChildren;
             const result = await apiService.editNeedy(registerIdString, registerData);
             console.log('Edit needy result:', result);

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, View, Alert, ScrollView } from 'react-native';
+import { StyleSheet, View, Alert, ScrollView, TouchableOpacity } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { ThemedView } from '@/components/ThemedView';
 import { ThemedText } from '@/components/ThemedText';
@@ -30,10 +30,11 @@ export default function AdminUserRegister() {
     const params = useLocalSearchParams();
     const { userId } = useAuth();
     const errorColor = useThemeColor({}, 'danger');
-    const [formChildData, setFormChildData] = useState({
-      childrenCount: '', // تعداد فرزندان
-      children: [] // آرایه خالی از فرزندان
-    });
+    const primaryColor = useThemeColor({}, 'primary');
+    const successColor = useThemeColor({}, 'success');
+    const warningColor = useThemeColor({}, 'warning');
+
+    const [childrenCount, setChildrenCount] = useState(0);
 
     const [formData, setFormData] = useState<ExtendedNeedyForm>({
         FirstName: '',
@@ -59,54 +60,43 @@ export default function AdminUserRegister() {
         IncomeForm: '',
         Latitude: params.latitude ? String(params.latitude) : '',
         Longitude: params.longitude ? String(params.longitude) : '',
-        children_of_registre : [
-            {
-                FirstName: '',
-                LastName: '',
-                NationalID: '',
-                EducationLevel:'',
-                Age: '',
-                Gender:''
-                }
-            ]
+        children_of_registre: []
     });
 
-const handleChildrenCountChange = (count) => {
-  const numCount = parseInt(count) || 0;
+    const handleChildrenCountChange = (count: number) => {
+        const numCount = Math.max(0, Math.min(count, 10)); // Limit to 0-10 children
+        setChildrenCount(numCount);
 
-  setFormData(prev => {
-    // اگر تعداد کاهش یافت، فرزندان اضافی را حذف کن
-    const newChildren = numCount < prev.children_of_registre.length
-      ? prev.children_of_registre.slice(0, numCount)
-      : [
-          ...prev.children_of_registre,
-          ...Array(Math.max(0, numCount - prev.children_of_registre.length))
-            .fill()
-            .map(() => ({
-              FirstName: '',
-              LastName: '',
-              NationalID: '',
-              Gender: '',
-              Age: '',
-              EducationLevel: ''
-            }))
-        ];
+        setFormData(prev => {
+            const newChildren = Array(numCount).fill(null).map((_, index) => {
+                // Keep existing data if available
+                const existingChild = prev.children_of_registre[index];
+                return existingChild || {
+                    FirstName: '',
+                    LastName: '',
+                    NationalID: '',
+                    Gender: '',
+                    Age: '',
+                    EducationLevel: ''
+                };
+            });
 
-    return {
-      ...prev,
-      children_of_registre: newChildren
+            return {
+                ...prev,
+                children_of_registre: newChildren
+            };
+        });
     };
-  });
-};
 
-const handleChildFieldChange = (index, field, value) => {
-  setFormData(prev => ({
-    ...prev,
-    children_of_registre: prev.children_of_registre.map((child, i) =>
-      i === index ? { ...child, [field]: value } : child
-    )
-  }));
-};
+    const handleChildFieldChange = (index: number, field: string, value: string) => {
+        setFormData(prev => ({
+            ...prev,
+            children_of_registre: prev.children_of_registre.map((child, i) =>
+                i === index ? { ...child, [field]: value } : child
+            )
+        }));
+    };
+
     const [loading, setLoading] = useState(false);
     const [validationErrors, setValidationErrors] = useState<string[]>([]);
     const [fieldErrors, setFieldErrors] = useState<{[key: string]: string}>({});
@@ -150,6 +140,31 @@ const handleChildFieldChange = (index, field, value) => {
                 errors.push('فرمت ایمیل صحیح نیست');
                 fieldErrs.Email = 'فرمت ایمیل صحیح نیست';
             }
+        }
+
+        if (!formData.Phone.trim()) {
+            errors.push('شماره موبایل الزامی است');
+            fieldErrs.LastName = 'شماره موبایل الزامی است';
+        }
+
+        if (!formData.Region.trim()) {
+            errors.push('منطقه الزامی است');
+            fieldErrs.LastName = 'منطقه الزامی است';
+        }
+
+        if (!formData.City.trim()) {
+            errors.push('شهر الزامی است');
+            fieldErrs.LastName = 'شهر الزامی است';
+        }
+
+        if (!formData.Gender.trim()) {
+            errors.push('جنسیت الزامی است');
+            fieldErrs.LastName = 'جنسیت الزامی است';
+        }
+
+        if (!formData.Province.trim()) {
+            errors.push('استان الزامی است');
+            fieldErrs.LastName = 'استان الزامی است';
         }
 
         // Phone validation (if provided)
@@ -254,7 +269,7 @@ const handleChildFieldChange = (index, field, value) => {
                         />
 
                         <InputField
-                            label="شماره موبایل"
+                            label="شماره موبایل*"
                             value={formData.Phone || ''}
                             onChangeText={(text) => handleFieldChange('Phone', text)}
                             placeholder="09xxxxxxxxx"
@@ -288,7 +303,7 @@ const handleChildFieldChange = (index, field, value) => {
                             placeholder="۱۴۰۰/۰۱/۰۱"
                         />
 
-                        <ThemedText style={styles.fieldLabel}>جنسیت</ThemedText>
+                        <ThemedText style={styles.fieldLabel}>جنسیت*</ThemedText>
                         <RTLPicker
                             items={[
                                 { label: "انتخاب کنید", value: "" },
@@ -304,28 +319,28 @@ const handleChildFieldChange = (index, field, value) => {
                         <ThemedText style={styles.sectionTitle}>اطلاعات آدرس</ThemedText>
 
                         <InputField
-                            label="استان"
+                            label="استان*"
                             value={formData.Province || ''}
                             onChangeText={(text) => handleFieldChange('Province', text)}
                             placeholder="نام استان"
                         />
 
                         <InputField
-                            label="شهر"
+                            label="شهر*"
                             value={formData.City || ''}
                             onChangeText={(text) => handleFieldChange('City', text)}
                             placeholder="نام شهر"
                         />
 
                         <InputField
-                            label="منطقه"
+                            label="منطقه*"
                             value={formData.Region || ''}
                             onChangeText={(text) => handleFieldChange('Region', text)}
                             placeholder="منطقه یا ناحیه"
                         />
 
                         <InputField
-                            label="آدرس"
+                            label="آدرس*"
                             value={formData.Street || ''}
                             onChangeText={(text) => handleFieldChange('Street', text)}
                             placeholder="آدرس کامل"
@@ -357,69 +372,149 @@ const handleChildFieldChange = (index, field, value) => {
                         />
                         <ThemedText style={styles.sectionTitle}>اطلاعات فرزندان</ThemedText>
 
-                        <InputField
-                           label= "تعدادفرزندان"
-                           value={formChildData.childrenCount ? formChildData.childrenCount.toString() : ''}
-                           onChangeText={handleChildrenCountChange}
-                           placeholder = "تعداد فرزندان را وارد کنید"
-                           keyboardType="\numeric"
-                        />
-                           {formData.children_of_registre.map((child, index) => (
-                             <View key={index} style={styles.childContainer}>
-                               <ThemedText style={styles.childTitle}>فرزند {index + 1}</ThemedText>
+                        {/* Enhanced Children Count Section */}
+                        <View style={styles.childrenCountSection}>
+                            <ThemedText style={[styles.fieldLabel, styles.rtlText]}>تعداد فرزندان</ThemedText>
 
-                                   <InputField
-                                     label = "نام"
-                                     value={formData.children_of_registre.FirstName}
-                                     onChangeText={(text) => handleFieldChange(index, 'FirstName', text)}
-                                     placeholder = "نام فرزند"
-                                   />
+                            <View style={styles.counterContainer}>
+                                <TouchableOpacity
+                                    style={[
+                                        styles.counterButton,
+                                        {
+                                            backgroundColor: childrenCount > 0 ? '#DC3545' : '#E0E0E0',
+                                            borderWidth: 1,
+                                            borderColor: childrenCount > 0 ? '#C82333' : '#CCCCCC'
+                                        }
+                                    ]}
+                                    onPress={() => handleChildrenCountChange(childrenCount - 1)}
+                                    disabled={childrenCount <= 0}
+                                >
+                                    <ThemedText style={[
+                                        styles.counterButtonText,
+                                        { color: childrenCount > 0 ? '#FFFFFF' : '#999999' }
+                                    ]}>−</ThemedText>
+                                </TouchableOpacity>
 
-                                   <InputField
-                                     label = "نام خانوادگی"
-                                     value={formData.children_of_registre.LastName}
-                                     onChangeText={(text) => handleFieldChange(index, 'LastName', text)}
-                                     placeholder = "نام خانوادگی فرزند"
-                                   />
-                                   <InputField
-                                     label="کد ملی "
-                                     value={formData.children_of_registre.NationalID}
-                                     onChangeText={(text) => handleFieldChange(index, 'NationalID', text)}
-                                     placeholder="کد ملی فرزند"
-                                   />
-                                   <InputField
-                                     label="سن "
-                                     value={formData.children_of_registre.Age}
-                                     onChangeText={(text) => handleFieldChange(index, 'Age', text)}
-                                     placeholder="سن فرزند"
-                                   />
-                                   <InputField
-                                      label="جنسیت "
-                                      value={formData.children_of_registre.Gender}
-                                      onChangeText={(text) => handleFieldChange(index, 'Gender', text)}
-                                      placeholder="جنسیت فرزند"
-                                   />
-                                   <ThemedText style={styles.childTitle}>تحصیلات فرزند</ThemedText>
-                                       <RTLPicker
-                                         items={[
-                                          { label: "انتخاب کنید", value: "" },
-                                          { label: "بی‌سواد", value: "None" },
-                                          { label: "ابتدایی", value: "Primary" },
-                                          { label: "راهنمایی", value: "Secondary" },
-                                          { label: "دبیرستان", value: "High School" },
-                                          { label: "دیپلم", value: "Diploma" },
-                                          { label: "فوق‌دیپلم", value: "Associate Degree" },
-                                          { label: "لیسانس", value: "Bachelor" },
-                                          { label: "فوق‌لیسانس", value: "Master" },
-                                          { label: "دکتری", value: "PhD" }
-                                          ]}
-                                       selectedValue={formData.children_of_registre.EducationLevel}
-                                       onValueChange={(value) => handleFieldChange('EducationLevel', value)}
-                                       placeholder="انتخاب کنید"
-                                       style={styles.pickerContainer}
-                                   />
-                                 </View>
-                               ))}
+                                <View style={styles.countDisplay}>
+                                    <ThemedText style={styles.countNumber}>{childrenCount}</ThemedText>
+                                    <ThemedText style={[styles.countLabel, styles.rtlText]}>فرزند</ThemedText>
+                                </View>
+
+                                <TouchableOpacity
+                                    style={[
+                                        styles.counterButton,
+                                        {
+                                            backgroundColor: childrenCount < 10 ? '#28A745' : '#E0E0E0',
+                                            borderWidth: 1,
+                                            borderColor: childrenCount < 10 ? '#1E7E34' : '#CCCCCC'
+                                        }
+                                    ]}
+                                    onPress={() => handleChildrenCountChange(childrenCount + 1)}
+                                    disabled={childrenCount >= 10}
+                                >
+                                    <ThemedText style={[
+                                        styles.counterButtonText,
+                                        { color: childrenCount < 10 ? '#FFFFFF' : '#999999' }
+                                    ]}>+</ThemedText>
+                                </TouchableOpacity>
+                            </View>
+
+                            {childrenCount > 0 && (
+                                <View style={styles.childrenCountInfo}>
+                                    <ThemedText style={[styles.infoText, styles.rtlText, { color: primaryColor }]}>
+                                        📝 لطفاً اطلاعات {childrenCount} فرزند را وارد کنید
+                                    </ThemedText>
+                                </View>
+                            )}
+
+                            {childrenCount >= 8 && (
+                                <View style={styles.warningContainer}>
+                                    <ThemedText style={[styles.warningText, styles.rtlText, { color: warningColor }]}>
+                                        ⚠️ تعداد فرزندان بالا می‌باشد. در صورت نیاز با مدیر تماس بگیرید.
+                                    </ThemedText>
+                                </View>
+                            )}
+                        </View>
+
+                        {/* Children Information Forms */}
+                        {formData.children_of_registre.map((child, index) => (
+                            <View key={index} style={styles.childContainer}>
+                                <View style={styles.childHeader}>
+                                    <ThemedText style={[styles.childTitle, styles.rtlText]}>
+                                        👶 فرزند {index + 1}
+                                    </ThemedText>
+                                    <View style={styles.childNumber}>
+                                        <ThemedText style={styles.childNumberText}>{index + 1}</ThemedText>
+                                    </View>
+                                </View>
+
+                                <InputField
+                                    label="نام *"
+                                    value={child.FirstName}
+                                    onChangeText={(text) => handleChildFieldChange(index, 'FirstName', text)}
+                                    placeholder="نام فرزند"
+                                    required
+                                />
+
+                                <InputField
+                                    label="نام خانوادگی *"
+                                    value={child.LastName}
+                                    onChangeText={(text) => handleChildFieldChange(index, 'LastName', text)}
+                                    placeholder="نام خانوادگی فرزند"
+                                    required
+                                />
+
+                                <InputField
+                                    label="کد ملی"
+                                    value={child.NationalID}
+                                    onChangeText={(text) => handleChildFieldChange(index, 'NationalID', text)}
+                                    placeholder="کد ملی ۱۰ رقمی"
+                                    keyboardType="numeric"
+                                    maxLength={10}
+                                />
+
+                                <InputField
+                                    label="سن"
+                                    value={child.Age}
+                                    onChangeText={(text) => handleChildFieldChange(index, 'Age', text)}
+                                    placeholder="سن فرزند"
+                                    keyboardType="numeric"
+                                />
+
+                                <ThemedText style={styles.fieldLabel}>جنسیت</ThemedText>
+                                <RTLPicker
+                                    items={[
+                                        { label: "انتخاب کنید", value: "" },
+                                        { label: "پسر", value: "Male" },
+                                        { label: "دختر", value: "Female" }
+                                    ]}
+                                    selectedValue={child.Gender}
+                                    onValueChange={(value) => handleChildFieldChange(index, 'Gender', value)}
+                                    placeholder="انتخاب جنسیت"
+                                    style={styles.pickerContainer}
+                                />
+
+                                <ThemedText style={styles.fieldLabel}>سطح تحصیلات</ThemedText>
+                                <RTLPicker
+                                    items={[
+                                        { label: "انتخاب کنید", value: "" },
+                                        { label: "مهدکودک", value: "Kindergarten" },
+                                        { label: "ابتدایی", value: "Primary" },
+                                        { label: "راهنمایی", value: "Secondary" },
+                                        { label: "دبیرستان", value: "High School" },
+                                        { label: "دیپلم", value: "Diploma" },
+                                        { label: "فوق‌دیپلم", value: "Associate Degree" },
+                                        { label: "لیسانس", value: "Bachelor" },
+                                        { label: "فوق‌لیسانس", value: "Master" },
+                                        { label: "دکتری", value: "PhD" }
+                                    ]}
+                                    selectedValue={child.EducationLevel}
+                                    onValueChange={(value) => handleChildFieldChange(index, 'EducationLevel', value)}
+                                    placeholder="انتخاب سطح تحصیلات"
+                                    style={styles.pickerContainer}
+                                />
+                            </View>
+                        ))}
 
                         <ThemedText style={styles.sectionTitle}>اطلاعات تحصیلی و شغلی</ThemedText>
 
@@ -590,5 +685,120 @@ const styles = StyleSheet.create({
     picker: {
         height: 50,
         width: '100%',
+    },
+    childrenCountSection: {
+        marginBottom: Spacing.lg,
+        padding: Spacing.md,
+        borderRadius: BorderRadius.md,
+        backgroundColor: '#F9F9F9',
+        borderWidth: 1,
+        borderColor: '#E0E0E0',
+    },
+    counterContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        marginBottom: Spacing.sm,
+    },
+    counterButton: {
+        width: 40,
+        height: 40,
+        borderRadius: BorderRadius.md,
+        alignItems: 'center',
+        justifyContent: 'center',
+        elevation: 2,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 2,
+    },
+    counterButtonText: {
+        fontSize: 18,
+        fontWeight: 'bold',
+    },
+    countDisplay: {
+        flex: 1,
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginHorizontal: Spacing.md,
+    },
+    countNumber: {
+        fontSize: 28,
+        fontWeight: 'bold',
+        color: '#2E7D32',
+    },
+    countLabel: {
+        fontSize: 14,
+        color: '#666',
+        marginTop: 2,
+    },
+    childrenCountInfo: {
+        marginTop: Spacing.sm,
+        padding: Spacing.md,
+        borderRadius: BorderRadius.md,
+        backgroundColor: 'rgba(76, 175, 80, 0.1)',
+        borderWidth: 1,
+        borderColor: 'rgba(76, 175, 80, 0.3)',
+    },
+    infoText: {
+        fontSize: 14,
+        fontWeight: '500',
+        textAlign: 'center',
+    },
+    warningContainer: {
+        marginTop: Spacing.sm,
+        padding: Spacing.md,
+        borderRadius: BorderRadius.md,
+        backgroundColor: 'rgba(255, 193, 7, 0.1)',
+        borderWidth: 1,
+        borderColor: 'rgba(255, 193, 7, 0.3)',
+    },
+    warningText: {
+        fontSize: 14,
+        fontWeight: 'bold',
+        textAlign: 'center',
+    },
+    childContainer: {
+        marginBottom: Spacing.lg,
+        padding: Spacing.md,
+        borderRadius: BorderRadius.md,
+        backgroundColor: '#FFFFFF',
+        borderWidth: 1,
+        borderColor: '#E0E0E0',
+        elevation: 2,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+    },
+    childHeader: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        marginBottom: Spacing.md,
+        paddingBottom: Spacing.sm,
+        borderBottomWidth: 1,
+        borderBottomColor: '#F0F0F0',
+    },
+    childTitle: {
+        fontSize: 16,
+        fontWeight: 'bold',
+        color: '#2E7D32',
+    },
+    childNumber: {
+        width: 30,
+        height: 30,
+        borderRadius: 15,
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: '#2E7D32',
+    },
+    childNumberText: {
+        color: '#FFFFFF',
+        fontWeight: 'bold',
+        fontSize: 14,
+    },
+    rtlText: {
+        textAlign: 'right',
     },
 });

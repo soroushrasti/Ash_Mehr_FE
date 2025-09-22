@@ -217,7 +217,6 @@ export default function NeedyDetailsPage() {
           <DetailRow label="شهر" value={needyDetails.City} />
           <DetailRow label="منطقه" value={needyDetails.Region} />
           <DetailRow label="آدرس" value={needyDetails.Street} />
-          <DetailRow label="کد پستی" value={needyDetails.PostCode} />
           {needyDetails.Latitude && needyDetails.Longitude && (
             <>
               <DetailRow
@@ -255,7 +254,6 @@ export default function NeedyDetailsPage() {
           <DetailRow label="سازمان حامی" value={needyDetails.UnderOrganizationName} />
         </DetailSection>
 
-        {/* Children Information */}
         {needyDetails.children && needyDetails.children.length > 0 && (
           <DetailSection title="اطلاعات فرزندان" icon="👨‍👩‍👧‍👦">
             {needyDetails.children.map((child, index) => (

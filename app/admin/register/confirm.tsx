@@ -56,14 +56,15 @@ export default function AdminRegisterConfirm() {
     { label: 'تحت حمایت نماینده', value: parsedFormData.UnderWhichAdmin },
   ].filter(item => item.value); // Only show fields with values
 
- const childInfo = [
-      { label: 'نام', value: parsedFormData.children_of_registre.FirstName },
-      { label: 'نام خانوادگی', value: parsedFormData.children_of_registre.LastName },
-      { label: 'سن', value: parsedFormData.children_of_registre.Age },
-      { label: 'جنسیت', value: parsedFormData.children_of_registre.Gender },
-      { label: 'کد ملی', value: parsedFormData.children_of_registre.NationalID },
-      { label: 'تحصیلات', value: parsedFormData.children_of_registre.EducationLevel },
-    ].filter(item => item.value);
+ const childInfo = parsedFormData.children_of_registre.map((child, index) => [
+   { label: 'نام', value: child.FirstName },
+   { label: 'نام خانوادگی', value: child.LastName },
+   { label: 'سن', value: child.Age },
+   { label: 'جنسیت', value: child.Gender },
+   { label: 'کد ملی', value: child.NationalID },
+   { label: 'تحصیلات', value: child.EducationLevel },
+ ].filter(item => item.value));
+
 
 
   function getEducationLabel(value: string) {
@@ -317,12 +318,23 @@ export default function AdminRegisterConfirm() {
         />
 
          {/* children Information */}
-         <InfoSection
-           title="اطلاعات فرزندان"
-           data={childInfo}
-           onEdit={handleEditForm}
-           editTitle="ویرایش"
-         />
+         {parsedFormData.children_of_registre?.map((child, index) => (
+           <InfoSection
+             key={index}
+             title="اطلاعات فرزندان"
+             data={[
+               { label: 'نام', value: child.FirstName },
+               { label: 'نام خانوادگی', value: child.LastName },
+               { label: 'سن', value: child.Age },
+               { label: 'جنسیت', value: child.Gender },
+               { label: 'کد ملی', value: child.NationalID },
+               { label: 'تحصیلات', value: child.EducationLevel },
+             ].filter(item => item.value)}
+             onEdit={handleEditForm}
+          editTitle="ویرایش"
+             />
+         ))}
+
 
         {/* Address Information */}
         <InfoSection

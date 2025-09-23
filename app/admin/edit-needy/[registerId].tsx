@@ -13,6 +13,8 @@ import KeyboardAwareContainer from '@/components/KeyboardAwareContainer';
 import { RTLPicker } from '@/components/RTLPicker';
 import { AdminPersonLocation, NeedyCreateWithChildren } from '@/types/api';
 import { useAuth } from '@/components/AuthContext';
+import { withOpacity } from '@/utils/colorUtils';
+
 
 interface ExtendedNeedyEditForm extends NeedyCreateWithChildren {
   BirthDate?: string;
@@ -49,7 +51,16 @@ export default function EditNeedyPage() {
     IncomeForm: '',
     Latitude: '',
     Longitude: '',
-    children_of_registre: null,
+    children: [
+        {
+            FirstName:'',
+            LastName:'',
+            Age:'',
+            Gender:'',
+            NationalID:'',
+            EducationLevel:''
+            }
+        ],
   });
 
   const [loading, setLoading] = useState(true);
@@ -103,7 +114,7 @@ export default function EditNeedyPage() {
           IncomeForm: data.income?.toString() || '',
           Latitude: data.Latitude?.toString() || '',
           Longitude: data.Longitude?.toString() || '',
-          children_of_registre: null,
+          children: data.children,
         });
       } else {
         Alert.alert('خطا', 'دریافت اطلاعات مددجو با خطا مواجه شد');
@@ -117,6 +128,41 @@ export default function EditNeedyPage() {
       setLoading(false);
     }
   };
+ const handleChildrenCountChange = (count: number) => {
+        const numCount = Math.max(0, Math.min(count, 10)); // Limit to 0-10 children
+        setChildrenCount(numCount);
+
+        setFormData(prev => {
+            const newChildren = Array(numCount).fill(null).map((_, index) => {
+                // Keep existing data if available
+                const existingChild = prev.children[index];
+                return existingChild || {
+                    FirstName: '',
+                    LastName: '',
+                    NationalID: '',
+                    Gender: '',
+                    Age: '',
+                    EducationLevel: ''
+                };
+            });
+
+            return {
+                ...prev,
+                children: newChildren
+            };
+        });
+    };
+
+   const handleChildFieldChange = (childIndex, field, value) => {
+     setFormData(prevData => ({
+       ...prevData,
+       children: prevData.children.map((child, index) =>
+         index === childIndex
+           ? { ...child, [field]: value }
+           : child
+       )
+     }));
+   };
 
   const loadAdmins = async () => {
     try {
@@ -366,8 +412,93 @@ export default function EditNeedyPage() {
               multiline
             />
 
-            <ThemedText style={styles.sectionTitle}>اطلاعات تحصیلی و شغلی</ThemedText>
+            {formData.children && formData.children.length > 0 && (
+            <view>
+             <ThemedText style={[styles.sectionTitle]}>اطلاعات فرزندان</ThemedText>
+              <View>
+                {formData.children.map((child, index) => (
+                  <View key={index} style={[styles.childCard, { backgroundColor: withOpacity(primaryColor, 5), borderColor: withOpacity(primaryColor, 20) }]}>
+                    <ThemedText style={[styles.childTitle, { color: primaryColor }]}>
+                      👶 فرزند {index + 1}
+                    </ThemedText>
+                    <InputField
+                      label= "نام فرزند"
+                      value={child.FirstName || ''}
+                      onChangeText={(text) => handleChildFieldChange(index, 'FirstName', text)}
+                      placeholder= "نام"
+                      />
 
+                    <InputField
+                       label= "نام خانوادگی "
+                       value={child.LastName || ''}
+                       onChangeText={(text) => handleChildFieldChange(index, 'LastName', text)}
+                       placeholder= "  نام خانوادگی"
+                    />
+
+                    <InputField
+                       label= "سن فرزند"
+                       value={child.Age || ''}
+                       onChangeText={(text) => handleChildFieldChange(index, 'Age', text)}
+                       placeholder= "سن فرزند"
+                       keyboardType="numeric"
+
+                    />
+
+                    <InputField
+                       label= "کد ملی فرزند"
+                       value={child.NationalID || ''}
+                       onChangeText={(text) => handleChildFieldChange(index, 'NationalID', text)}
+                       placeholder= "کد ملی ۱۰ رقمی"
+                       keyboardType="numeric"
+                       maxLength={10}
+                    />
+
+                    <InputField
+                       label= "کد ملی فرزند"
+                       value={child.NationalID || ''}
+                       onChangeText={(text) => handleChildFieldChange(index, 'NationalID', text)}
+                       placeholder= "کد ملی فرزند"
+                    />
+
+                      <ThemedText style={styles.fieldLabel}>جنسیت</ThemedText>
+                          <RTLPicker
+                          items={[
+                               { label: "انتخاب کنید", value: "" },
+                               { label: "پسر", value: "Male" },
+                               { label: "دختر", value: "Female" }
+                              ]}
+                          selectedValue={child.Gender}
+                          onValueChange={(value) => handleChildFieldChange(index, 'Gender', value)}
+                          placeholder="انتخاب جنسیت"
+                          style={styles.pickerContainer}
+                      />
+
+                    <ThemedText style={styles.fieldLabel}>سطح تحصیلات</ThemedText>
+                       <RTLPicker
+                       items={[
+                            { label: "انتخاب کنید", value: "" },
+                            { label: "مهدکودک", value: "Kindergarten" },
+                            { label: "ابتدایی", value: "Primary" },
+                            { label: "راهنمایی", value: "Secondary" },
+                            { label: "دبیرستان", value: "High School" },
+                            { label: "دیپلم", value: "Diploma" },
+                            { label: "فوق‌دیپلم", value: "Associate Degree" },
+                            { label: "لیسانس", value: "Bachelor" },
+                            { label: "فوق‌لیسانس", value: "Master" },
+                            { label: "دکتری", value: "PhD" }
+                            ]}
+                        selectedValue={child.EducationLevel}
+                        onValueChange={(value) => handleChildFieldChange(index, 'EducationLevel', value)}
+                        placeholder="انتخاب سطح تحصیلات"
+                         style={styles.pickerContainer}
+                       />
+                  </View>
+                ))}
+              </View>
+            </view>
+            )}
+
+            <ThemedText style={styles.sectionTitle}>اطلاعات تحصیلی و شغلی</ThemedText>
             <ThemedText style={styles.fieldLabel}>سطح تحصیلات</ThemedText>
             <RTLPicker
               items={[
@@ -507,6 +638,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   sectionTitle: {
+    textAlign: 'right',
     fontSize: 18,
     fontWeight: 'bold',
     marginTop: Spacing.lg,

@@ -55,12 +55,12 @@ export default function AdminRegisterConfirm() {
   ].filter(item => item.value); // Only show fields with values
 
    const childInfo = [
-      { label: 'نام', value: parsedFormData.children_of_registre.FirstName },
-      { label: 'نام خانوادگی', value: parsedFormData.children_of_registre.LastName },
-      { label: 'سن', value: parsedFormData.children_of_registre.Age },
-      { label: 'جنسیت', value: parsedFormData.children_of_registre.Gender },
-      { label: 'کد ملی', value: parsedFormData.children_of_registre.NationalID },
-      { label: 'تحصیلات', value: parsedFormData.children_of_registre.EducationLevel },
+      { label: 'نام', value: parsedFormData.children.FirstName },
+      { label: 'نام خانوادگی', value: parsedFormData.children.LastName },
+      { label: 'سن', value: parsedFormData.children.Age },
+      { label: 'جنسیت', value: parsedFormData.children.Gender },
+      { label: 'کد ملی', value: parsedFormData.children.NationalID },
+      { label: 'تحصیلات', value: parsedFormData.children.EducationLevel },
     ].filter(item => item.value);
 
   function getEducationLabel(value: string) {

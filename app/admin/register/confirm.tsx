@@ -56,14 +56,15 @@ export default function AdminRegisterConfirm() {
     { label: 'تحت حمایت نماینده', value: parsedFormData.UnderWhichAdmin },
   ].filter(item => item.value); // Only show fields with values
 
-   const childInfo = [
-      { label: 'نام', value: parsedFormData.children_of_register.FirstName },
-      { label: 'نام خانوادگی', value: parsedFormData.children_of_register.LastName },
-      { label: 'سن', value: parsedFormData.children_of_register.Age },
-      { label: 'جنسیت', value: parsedFormData.children_of_register.Gender },
-      { label: 'کد ملی', value: parsedFormData.children_of_register.NationalID },
-      { label: 'تحصیلات', value: parsedFormData.children_of_register.EducationLevel },
+ const childInfo = [
+      { label: 'نام', value: parsedFormData.children_of_registre.FirstName },
+      { label: 'نام خانوادگی', value: parsedFormData.children_of_registre.LastName },
+      { label: 'سن', value: parsedFormData.children_of_registre.Age },
+      { label: 'جنسیت', value: parsedFormData.children_of_registre.Gender },
+      { label: 'کد ملی', value: parsedFormData.children_of_registre.NationalID },
+      { label: 'تحصیلات', value: parsedFormData.children_of_registre.EducationLevel },
     ].filter(item => item.value);
+
 
   function getEducationLabel(value: string) {
     const educationMap = {
@@ -181,6 +182,7 @@ export default function AdminRegisterConfirm() {
                 setLoading(false);
                 return;
             }
+
 
         }
 
@@ -314,6 +316,14 @@ export default function AdminRegisterConfirm() {
           editTitle="ویرایش"
         />
 
+         {/* children Information */}
+         <InfoSection
+           title="اطلاعات فرزندان"
+           data={childInfo}
+           onEdit={handleEditForm}
+           editTitle="ویرایش"
+         />
+
         {/* Address Information */}
         <InfoSection
           title="اطلاعات آدرس"
@@ -322,13 +332,6 @@ export default function AdminRegisterConfirm() {
           editTitle="ویرایش"
         />
 
-         {/* children Information */}
-         <InfoSection
-           title="اطلاعات فرزندان"
-           data={childInfo}
-           onEdit={handleEditForm}
-           editTitle="ویرایش"
-         />
 
         {/* Additional Information (for needy families) */}
         {additionalInfo.length > 0 && (

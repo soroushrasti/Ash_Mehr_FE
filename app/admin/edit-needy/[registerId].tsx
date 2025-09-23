@@ -51,16 +51,7 @@ export default function EditNeedyPage() {
     IncomeForm: '',
     Latitude: '',
     Longitude: '',
-    children_of_register: [
-        {
-            FirstName:'',
-            LastName:'',
-            Age:'',
-            Gender:'',
-            NationalID:'',
-            EducationLevel:''
-            }
-        ],
+    children_of_registre: [],
   });
 
   const [loading, setLoading] = useState(true);
@@ -114,7 +105,7 @@ export default function EditNeedyPage() {
           IncomeForm: data.income?.toString() || '',
           Latitude: data.Latitude?.toString() || '',
           Longitude: data.Longitude?.toString() || '',
-          children_of_register: data.children,
+          children_of_registre: data.children,
         });
       } else {
         Alert.alert('خطا', 'دریافت اطلاعات مددجو با خطا مواجه شد');
@@ -128,14 +119,14 @@ export default function EditNeedyPage() {
       setLoading(false);
     }
   };
- const handleChildrenCountChange = (count: number) => {
+    const handleChildrenCountChange = (count: number) => {
         const numCount = Math.max(0, Math.min(count, 10)); // Limit to 0-10 children
         setChildrenCount(numCount);
 
         setFormData(prev => {
             const newChildren = Array(numCount).fill(null).map((_, index) => {
                 // Keep existing data if available
-                const existingChild = prev.children_of_register[index];
+                const existingChild = prev.children_of_registre[index];
                 return existingChild || {
                     FirstName: '',
                     LastName: '',
@@ -148,21 +139,20 @@ export default function EditNeedyPage() {
 
             return {
                 ...prev,
-                children_of_register: newChildren
+                children_of_registre: newChildren
             };
         });
     };
 
-   const handleChildFieldChange = (childIndex, field, value) => {
-     setFormData(prevData => ({
-       ...prevData,
-       children_of_register: prevData.children_of_register.map((child, index) =>
-         index === childIndex
-           ? { ...child, [field]: value }
-           : child
-       )
-     }));
-   };
+    const handleChildFieldChange = (index: number, field: string, value: string) => {
+        setFormData(prev => ({
+            ...prev,
+            children_of_registre: prev.children_of_registre.map((child, i) =>
+                i === index ? { ...child, [field]: value } : child
+            )
+        }));
+    };
+
 
   const loadAdmins = async () => {
     try {
@@ -412,13 +402,15 @@ export default function EditNeedyPage() {
               multiline
             />
 
-            {formData.children_of_register && formData.children_of_register.length > 0 && (
+            {formData.children_of_registre && formData.children_of_registre.length > 0 && (
+
               <View>
                 <ThemedText style={[styles.sectionTitle, {textAlign: 'right'}]}>
                   اطلاعات فرزندان
+
                 </ThemedText>
 
-                {formData.children_of_register.map((child, index) => (
+                {formData.children_of_registre.map((child, index) => (
                   <View key={index} style={[styles.childCard, { backgroundColor: withOpacity(primaryColor, 5), borderColor: withOpacity(primaryColor, 20) }]}>
                     <ThemedText style={[styles.childTitle, { color: primaryColor, textAlign: 'right' }]}>
                       👶 فرزند {index + 1}

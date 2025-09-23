@@ -34,6 +34,8 @@ export default function AdminRegisterConfirm() {
     { label: 'نام خانوادگی', value: parsedFormData.LastName },
     { label: 'شماره تلفن', value: parsedFormData.Phone },
     { label: 'کد ملی', value: parsedFormData.NationalID },
+    { label: 'تاریخ تولد', value: parsedFormData.BirthDate },
+    { label: 'نام پدر', value: parsedFormData.NameFather },
     { label: 'ایمیل', value: parsedFormData.Email },
   ];
 
@@ -41,26 +43,26 @@ export default function AdminRegisterConfirm() {
     { label: 'استان', value: parsedFormData.Province },
     { label: 'شهر', value: parsedFormData.City },
     { label: 'آدرس', value: parsedFormData.Street },
+    { label: 'منطقه', value: parsedFormData.Region },
   ];
 
   const additionalInfo = [
-    { label: 'سن', value: parsedFormData.Age },
     { label: 'جنسیت', value: parsedFormData.Gender === 'Male' ? 'مرد' : parsedFormData.gender === 'Female' ? 'زن' : parsedFormData.gender },
-    { label: 'منطقه', value: parsedFormData.Region },
     { label: 'سطح تحصیلات', value: getEducationLabel(parsedFormData.EducationLevel) },
     { label: 'درآمد ماهانه', value: parsedFormData.IncomeAmount ? `${parsedFormData.IncomeAmount} تومان` : '' },
     { label: 'نام همسر', value: parsedFormData.HousebandLastName && parsedFormData.HousebandFirstName ? `${parsedFormData.HousebandFirstName} ${parsedFormData.HousebandLastName}` : '' },
     { label: 'دلیل غیبت همسر', value: parsedFormData.ReasonMissingHusband },
     { label: 'سازمان حامی', value: parsedFormData.UnderOrganizationName },
+    { label: 'تحت حمایت نماینده', value: parsedFormData.UnderWhichAdmin },
   ].filter(item => item.value); // Only show fields with values
 
    const childInfo = [
-      { label: 'نام', value: parsedFormData.children.FirstName },
-      { label: 'نام خانوادگی', value: parsedFormData.children.LastName },
-      { label: 'سن', value: parsedFormData.children.Age },
-      { label: 'جنسیت', value: parsedFormData.children.Gender },
-      { label: 'کد ملی', value: parsedFormData.children.NationalID },
-      { label: 'تحصیلات', value: parsedFormData.children.EducationLevel },
+      { label: 'نام', value: parsedFormData.children_of_register.FirstName },
+      { label: 'نام خانوادگی', value: parsedFormData.children_of_register.LastName },
+      { label: 'سن', value: parsedFormData.children_of_register.Age },
+      { label: 'جنسیت', value: parsedFormData.children_of_register.Gender },
+      { label: 'کد ملی', value: parsedFormData.children_of_register.NationalID },
+      { label: 'تحصیلات', value: parsedFormData.children_of_register.EducationLevel },
     ].filter(item => item.value);
 
   function getEducationLabel(value: string) {
@@ -179,7 +181,6 @@ export default function AdminRegisterConfirm() {
                 setLoading(false);
                 return;
             }
-
 
         }
 

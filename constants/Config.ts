@@ -43,6 +43,7 @@ export const Config = {
   // API Endpoints
   ENDPOINTS: {
     CREATE_NEEDY: '/signup-register',
+    CREATE_CHILD_NEEDY: '/signup-child-register',
     CREATE_ADMIN: '/signup-admin',
     FIND_NEEDY: '/find-needy',
     FIND_ADMIN: '/find-admin',
@@ -57,6 +58,7 @@ export const Config = {
     GET_ADMIN: '/get-admin',
     EDIT_NEEDY: '/edit-needy',
     DELETE_NEEDY: '/delete-needy',
+    DELETE_CHILD_NEEDY: '/delete-child-needy',
     DELETE_ADMIN: '/delete-admin',
   }
 };

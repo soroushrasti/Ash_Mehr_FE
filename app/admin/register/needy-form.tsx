@@ -49,6 +49,7 @@ export default function AdminUserRegister() {
         CreatedBy: Number(userId) || 0,
         BirthDate: '',
         UnderWhichAdmin: undefined,
+        UnderSecondAdminID: undefined,
         Age: undefined,
         Region: '',
         Gender: '',
@@ -567,6 +568,21 @@ export default function AdminUserRegister() {
                             placeholder="انتخاب نماینده"
                             style={styles.pickerContainer}
                         />
+
+                            <ThemedText style={styles.fieldLabel}>تحت نظارت نماینده فرعی</ThemedText>
+                                                <RTLPicker
+                                                    items={[
+                                                        { label: "انتخاب نماینده", value: 0 },
+                                                        ...adminOptions.map(admin => ({
+                                                            label: `${admin.name} ${admin.info ? admin.info : ''}` || `نماینده ${admin.id}`,
+                                                            value: admin.id
+                                                        }))
+                                                    ]}
+                                                    selectedValue={formData.UnderSecondAdminID || 0}
+                                                    onValueChange={(value) => handleFieldChange('UnderSecondAdminID', value || undefined)}
+                                                    placeholder="انتخاب نماینده"
+                                                    style={styles.pickerContainer}
+                                             />
 
                         {params.latitude && params.longitude && (
                             <View style={styles.locationInfo}>

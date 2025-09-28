@@ -42,6 +42,7 @@ export default function EditNeedyPage() {
     CreatedBy: Number(userId) || 0,
     BirthDate: '',
     UnderWhichAdmin: undefined,
+    UnderSecondAdminID: undefined,
     Age: undefined,
     Region: '',
     Gender: '',
@@ -96,6 +97,7 @@ export default function EditNeedyPage() {
           CreatedBy: Number(userId) || 0,
           BirthDate: data.birthDate || '',
           UnderWhichAdmin: data.UnderWhichAdmin || undefined,
+          UnderSecondAdminID: data.UnderSecondAdminID || undefined,
           Age: data.Age || undefined,
           Region: data.Region || '',
           Gender: data.Gender || '',
@@ -651,6 +653,21 @@ const handleSaveChildren = async () => {
               placeholder="انتخاب نماینده"
               style={styles.pickerContainer}
             />
+
+             <ThemedText style={styles.fieldLabel}>تحت نظارت نماینده فرعی</ThemedText>
+                        <RTLPicker
+                          items={[
+                            { label: "انتخاب نماینده", value: 0 },
+                            ...adminOptions.map(admin => ({
+                              label: `${admin.name} ${admin.info ? admin.info : ''}` || `نماینده ${admin.id}`,
+                              value: admin.id
+                            }))
+                          ]}
+                          selectedValue={formData.UnderSecondAdminID || 0}
+                          onValueChange={(value) => handleFieldChange('UnderSecondAdminID', value || undefined)}
+                          placeholder="انتخاب نماینده"
+                          style={styles.pickerContainer}
+                        />
 
             {/* Location Section */}
             <ThemedText style={styles.sectionTitle}>موقعیت جغرافیایی</ThemedText>

@@ -39,6 +39,7 @@ interface NeedyDetails {
   birthDate?: string;
   incomeForm?: number;
   underWhichAdmin: string;
+  underSecondAdminId: string;
   latitude?: number;
   longitude?: number;
   createdAt?: string;
@@ -275,6 +276,7 @@ export default function NeedyDetailsPage() {
         {/* System Information */}
         <DetailSection title="اطلاعات سیستم" icon="⚙️">
           <DetailRow label="شناسه ثبت" value={needyDetails.RegisterID} />
+          <DetailRow label="شناسه ثبت فرعی" value={needyDetails.UnderSecondAdminID} />
           <DetailRow label="تاریخ ثبت" value={needyDetails.CreatedDate} />
           <DetailRow label="آخرین به‌روزرسانی" value={needyDetails.UpdatedDate} />
         </DetailSection>

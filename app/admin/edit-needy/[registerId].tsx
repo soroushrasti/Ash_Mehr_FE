@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, ScrollView, Alert, ActivityIndicator } from 'react-native';
+import { View, StyleSheet, ScrollView, Alert, ActivityIndicator, TouchableOpacity } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { ThemedView } from '@/components/ThemedView';
 import { ThemedText } from '@/components/ThemedText';
@@ -13,6 +13,8 @@ import KeyboardAwareContainer from '@/components/KeyboardAwareContainer';
 import { RTLPicker } from '@/components/RTLPicker';
 import { AdminPersonLocation, NeedyCreateWithChildren } from '@/types/api';
 import { useAuth } from '@/components/AuthContext';
+import { withOpacity } from '@/utils/colorUtils';
+
 
 interface ExtendedNeedyEditForm extends NeedyCreateWithChildren {
   BirthDate?: string;
@@ -24,6 +26,8 @@ export default function EditNeedyPage() {
   const router = useRouter();
   const { userId } = useAuth();
   const errorColor = useThemeColor({}, 'danger');
+
+  const [childrenCount, setChildrenCount] = useState(0);
 
   const [formData, setFormData] = useState<ExtendedNeedyEditForm>({
     FirstName: '',
@@ -38,6 +42,7 @@ export default function EditNeedyPage() {
     CreatedBy: Number(userId) || 0,
     BirthDate: '',
     UnderWhichAdmin: undefined,
+    UnderSecondAdminID: undefined,
     Age: undefined,
     Region: '',
     Gender: '',
@@ -49,7 +54,7 @@ export default function EditNeedyPage() {
     IncomeForm: '',
     Latitude: '',
     Longitude: '',
-    children_of_registre: null,
+    children_of_registre: [],
   });
 
   const [loading, setLoading] = useState(true);
@@ -92,6 +97,7 @@ export default function EditNeedyPage() {
           CreatedBy: Number(userId) || 0,
           BirthDate: data.birthDate || '',
           UnderWhichAdmin: data.UnderWhichAdmin || undefined,
+          UnderSecondAdminID: data.UnderSecondAdminID || undefined,
           Age: data.Age || undefined,
           Region: data.Region || '',
           Gender: data.Gender || '',
@@ -103,7 +109,7 @@ export default function EditNeedyPage() {
           IncomeForm: data.income?.toString() || '',
           Latitude: data.Latitude?.toString() || '',
           Longitude: data.Longitude?.toString() || '',
-          children_of_registre: null,
+          children_of_registre: data.children,
         });
       } else {
         Alert.alert('خطا', 'دریافت اطلاعات مددجو با خطا مواجه شد');
@@ -117,6 +123,118 @@ export default function EditNeedyPage() {
       setLoading(false);
     }
   };
+
+    const handleAddNewChild = () => {
+      const currentChildren = formData.children_of_registre || [];
+
+      const newChild = {
+          RegisterID: '',
+        FirstName: '',
+        LastName: '',
+        Age: '',
+        NationalID: '',
+        EducationLevel:'',
+        Gender:'',
+      };
+
+      const newChildren = [...currentChildren, newChild];
+      setFormData({...formData, children_of_registre: newChildren});
+    };
+
+const handleSaveChildren = async () => {
+  try {
+    const newChildren = formData.children_of_registre.filter(child =>
+      !child.ChildrenOfRegisterID && child.FirstName && child.LastName
+    );
+
+    if (newChildren.length === 0) {
+      alert('هیچ فرزند جدید معتبری برای ذخیره وجود ندارد');
+      return;
+    }
+
+    const savePromises = newChildren.map((child, index) => {
+      const childData = {
+        ...child,
+        RegisterID: registerId,
+        Age: child.Age ? parseInt(child.Age) : null
+      };
+      console.log(`در حال ذخیره فرزند جدید شماره ${index + 1} از ${newChildren.length}`);
+      return apiService.createChildNeedyPerson(childData);
+    });
+
+    await Promise.all(savePromises);
+    alert(`${newChildren.length} فرزند جدید با موفقیت ذخیره شد`);
+
+  } catch (error) {
+    console.error('خطا در ذخیره فرزندان:', error);
+    alert('خطا در ذخیره فرزندان: ' + error.message);
+  }
+};
+
+    const handleChildrenCountChange = (count: number) => {
+        const numCount = Math.max(0, Math.min(count, 10)); // Limit to 0-10 children
+        setChildrenCount(numCount);
+
+        setFormData(prev => {
+            const newChildren = Array(numCount).fill(null).map((_, index) => {
+                // Keep existing data if available
+                const existingChild = prev.children_of_registre[index];
+                return existingChild || {
+                    FirstName: '',
+                    LastName: '',
+                    NationalID: '',
+                    Gender: '',
+                    Age: '',
+                    EducationLevel: ''
+                };
+            });
+
+            return {
+                ...prev,
+                children_of_registre: newChildren
+            };
+        });
+    };
+
+    const handleChildFieldChange = (index: number, field: string, value: string) => {
+        setFormData(prev => ({
+            ...prev,
+            children_of_registre: prev.children_of_registre.map((child, i) =>
+                i === index ? { ...child, [field]: value } : child
+            )
+        }));
+    };
+
+
+  const handleDeleteChild = async (index) => {
+    try {
+      // حذف از دیتابیس (اگر فرزند قبلاً ذخیره شده)
+      if (formData.children_of_registre[index].ChildrenOfRegisterID) {
+        await apiService.deleteChildNeedy(formData.children_of_registre[index].ChildrenOfRegisterID);
+      }
+
+      // حذف از state
+      const updatedChildren = formData.children_of_registre.filter((_, i) => i !== index);
+      setFormData({
+        ...formData,
+        children_of_registre: updatedChildren
+      });
+
+    } catch (error) {
+                      console.error('Error deleting needy:', error);
+                      if (Platform.OS === 'web') {
+                          // eslint-disable-next-line no-alert
+                          window.alert('خطا در حذف مددجو');
+                      } else {
+                          Alert.alert('خطا', 'خطا در حذف مددجو');
+                      }
+                  }
+  };
+
+  const handleAddChild = async (index) => {
+       await apiService.createChildNeedyPerson(formData.children_of_registre[index].ChildrenOfRegisterID);
+      };
+
 
   const loadAdmins = async () => {
     try {
@@ -366,8 +484,126 @@ export default function EditNeedyPage() {
               multiline
             />
 
-            <ThemedText style={styles.sectionTitle}>اطلاعات تحصیلی و شغلی</ThemedText>
+            {formData.children_of_registre && formData.children_of_registre.length > 0 && (
 
+              <View>
+                <ThemedText style={[styles.sectionTitle, {textAlign: 'right'}]}>
+                  اطلاعات فرزندان
+
+                </ThemedText>
+
+                {formData.children_of_registre.map((child, index) => (
+                  <View key={index} style={[styles.childCard, { backgroundColor: withOpacity(primaryColor, 5), borderColor: withOpacity(primaryColor, 20) }]}>
+
+                    {/* هدر کارت فرزند با دکمه حذف */}
+                    <View style={styles.childHeader}>
+
+                      {/* دکمه حذف */}
+                      <TouchableOpacity
+                        onPress={() => handleDeleteChild(index)}
+                        style={styles.deleteButton}
+                      >
+                        <ThemedText style={styles.deleteText}>🗑️ حذف فرزند</ThemedText>
+                      </TouchableOpacity>
+                      <ThemedText style={[styles.childTitle, { color: primaryColor, textAlign: 'right' }]}>
+                        👶 فرزند {index + 1}
+                      </ThemedText>
+
+                    </View>
+
+                    <InputField
+                      label= "نام فرزند *"
+                      value={child.FirstName || ''}
+                      onChangeText={(text) => handleChildFieldChange(index, 'FirstName', text)}
+                      placeholder = "نام"
+                      textAlign = "right"
+                    />
+
+                    <InputField
+                     label= "نام خانوادگی *"
+                     value={child.LastName || ''}
+                     onChangeText={(text) => handleChildFieldChange(index, 'LastName', text)}
+                     placeholder= "  نام خانوادگی"
+                     textAlign = "right"
+                    />
+
+                    <InputField
+                       label= "سن فرزند"
+                       value={child.Age || ''}
+                       onChangeText={(text) => handleChildFieldChange(index, 'Age', text)}
+                       placeholder= "سن فرزند"
+                       keyboardType="numeric"
+
+                    />
+
+                    <InputField
+                       label= "کد ملی فرزند"
+                       value={child.NationalID || ''}
+                       onChangeText={(text) => handleChildFieldChange(index, 'NationalID', text)}
+                       placeholder= "کد ملی ۱۰ رقمی"
+                       keyboardType="numeric"
+                       maxLength={10}
+                    />
+                     <ThemedText style={styles.fieldLabel}>جنسیت</ThemedText>
+                          <RTLPicker
+                          items={[
+                         { label: "انتخاب کنید", value: "" },
+                         { label: "پسر", value: "Male" },
+                         { label: "دختر", value: "Female" }
+                         ]}
+                       selectedValue={child.Gender}
+                       onValueChange={(value) => handleChildFieldChange(index, 'Gender', value)}
+                       placeholder="انتخاب جنسیت"
+                       style={styles.pickerContainer}
+                     />
+
+                     <ThemedText style={styles.fieldLabel}>سطح تحصیلات</ThemedText>
+                          <RTLPicker
+                         items={[
+                          { label: "انتخاب کنید", value: "" },
+                          { label: "مهدکودک", value: "Kindergarten" },
+                          { label: "ابتدایی", value: "Primary" },
+                          { label: "راهنمایی", value: "Secondary" },
+                          { label: "دبیرستان", value: "High School" },
+                          { label: "دیپلم", value: "Diploma" },
+                          { label: "فوق‌دیپلم", value: "Associate Degree" },
+                          { label: "لیسانس", value: "Bachelor" },
+                          { label: "فوق‌لیسانس", value: "Master" },
+                          { label: "دکتری", value: "PhD" }
+                          ]}
+                      selectedValue={child.EducationLevel}
+                      onValueChange={(value) => handleChildFieldChange(index, 'EducationLevel', value)}
+                       placeholder="انتخاب سطح تحصیلات"
+                       style={styles.pickerContainer}
+                    />
+                  </View>
+                ))}
+              </View>
+            )}
+
+
+
+<View style={styles.childrenButtonsContainer}>
+  {/* دکمه افزودن فرزند جدید */}
+  <TouchableOpacity
+    style={[styles.addButton, { backgroundColor: primaryColor }]}
+    onPress={handleAddNewChild}
+  >
+    <ThemedText style={styles.addButtonText}>+ افزودن فرزند جدید</ThemedText>
+  </TouchableOpacity>
+
+  {/* دکمه ذخیره فرزندان در دیتابیس */}
+  {formData.children_of_registre && formData.children_of_registre.length > 0 && (
+    <TouchableOpacity
+      style={[styles.saveButton, { backgroundColor: '#28a745' }]}
+      onPress={handleSaveChildren}
+    >
+      <ThemedText style={styles.saveButtonText}>💾 ذخیره فرزندان </ThemedText>
+    </TouchableOpacity>
+  )}
+</View>
+
+            <ThemedText style={styles.sectionTitle}>اطلاعات تحصیلی و شغلی</ThemedText>
             <ThemedText style={styles.fieldLabel}>سطح تحصیلات</ThemedText>
             <RTLPicker
               items={[
@@ -417,6 +653,21 @@ export default function EditNeedyPage() {
               placeholder="انتخاب نماینده"
               style={styles.pickerContainer}
             />
+
+             <ThemedText style={styles.fieldLabel}>تحت نظارت نماینده فرعی</ThemedText>
+                        <RTLPicker
+                          items={[
+                            { label: "انتخاب نماینده", value: 0 },
+                            ...adminOptions.map(admin => ({
+                              label: `${admin.name} ${admin.info ? admin.info : ''}` || `نماینده ${admin.id}`,
+                              value: admin.id
+                            }))
+                          ]}
+                          selectedValue={formData.UnderSecondAdminID || 0}
+                          onValueChange={(value) => handleFieldChange('UnderSecondAdminID', value || undefined)}
+                          placeholder="انتخاب نماینده"
+                          style={styles.pickerContainer}
+                        />
 
             {/* Location Section */}
             <ThemedText style={styles.sectionTitle}>موقعیت جغرافیایی</ThemedText>
@@ -507,6 +758,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   sectionTitle: {
+    textAlign: 'right',
     fontSize: 18,
     fontWeight: 'bold',
     marginTop: Spacing.lg,
@@ -561,4 +813,57 @@ const styles = StyleSheet.create({
     fontSize: 14,
     marginBottom: Spacing.xs,
   },
+   childHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: 10,
+    },
+    deleteButton: {
+      padding: 8,
+      backgroundColor: '#ff4444',
+      borderRadius: 5,
+    },
+    deleteText: {
+      color: 'white',
+      fontSize: 12,
+    },
+   addChildSection: {
+       marginTop: 20,
+       alignItems: 'center'
+     },
+   addButtonText: {
+       color: '#FFFFFF',
+       fontSize: 16,
+       fontWeight: 'bold'
+     },
+ childrenButtonsContainer: {
+     marginTop: 20,
+     gap: 15,
+     alignItems: 'center'
+   },
+   addButton: {
+     paddingVertical: 12,
+     paddingHorizontal: 24,
+     borderRadius: 8,
+     alignItems: 'center',
+     minWidth: 200
+   },
+   saveButton: {
+     paddingVertical: 12,
+     paddingHorizontal: 24,
+     borderRadius: 8,
+     alignItems: 'center',
+     minWidth: 200
+   },
+   addButtonText: {
+     color: '#FFFFFF',
+     fontSize: 16,
+     fontWeight: 'bold'
+   },
+   saveButtonText: {
+     color: '#FFFFFF',
+     fontSize: 16,
+     fontWeight: 'bold'
+   },
 });

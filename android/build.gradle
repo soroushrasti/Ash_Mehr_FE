@@ -3,21 +3,23 @@
 buildscript {
     ext {
         buildToolsVersion = findProperty('android.buildToolsVersion') ?: '34.0.0'
-        minSdkVersion = Integer.parseInt(findProperty('android.minSdkVersion') ?: '23')
-        compileSdkVersion = Integer.parseInt(findProperty('android.compileSdkVersion') ?: '34')
+        minSdkVersion = Integer.parseInt(findProperty('android.minSdkVersion') ?: '24')
+        compileSdkVersion = Integer.parseInt(findProperty('android.compileSdkVersion') ?: '35')
         targetSdkVersion = Integer.parseInt(findProperty('android.targetSdkVersion') ?: '34')
-        ndkVersion = findProperty('android.ndkVersion') ?: '25.1.8937393'
+        ndkVersion = findProperty('android.ndkVersion') ?: '26.1.10909125'
 
-        expoLibs = libs
         hermesEnabled = (findProperty('expo.jsEngine') ?: "hermes") == "hermes"
-
-        kotlinVersion = findProperty('android.kotlinVersion') ?: '1.9.10'
         frescoVersion = findProperty('expo.frescoVersion') ?: '3.1.3'
     }
+    repositories {
+        google()
+        mavenCentral()
+        gradlePluginPortal()
+    }
     dependencies {
-        classpath('com.android.tools.build:gradle')
-        classpath('com.facebook.react:react-native-gradle-plugin')
-        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion")
+        classpath("com.android.tools.build:gradle:8.5.2")
+        classpath("com.facebook.react:react-native-gradle-plugin:0.79.5")
+        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:2.0.21")
     }
 }
 

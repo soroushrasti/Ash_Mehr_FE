@@ -157,15 +157,17 @@ dependencies {
 
     if (isGifEnabled) {
         // For animated gif support
-        implementation("com.facebook.fresco:animated-gif:${expoLibs.versions.fresco.get()}")
+        def resolvedFrescoVersion = rootProject.ext.has('frescoVersion') ? rootProject.ext.frescoVersion : '3.1.3'
+        implementation("com.facebook.fresco:animated-gif:${resolvedFrescoVersion}")
     }
 
     if (isWebpEnabled) {
         // For webp support
-        implementation("com.facebook.fresco:webpsupport:${expoLibs.versions.fresco.get()}")
+        def resolvedFrescoVersion = rootProject.ext.has('frescoVersion') ? rootProject.ext.frescoVersion : '3.1.3'
+        implementation("com.facebook.fresco:webpsupport:${resolvedFrescoVersion}")
         if (isWebpAnimatedEnabled) {
             // Animated webp support
-            implementation("com.facebook.fresco:animated-webp:${expoLibs.versions.fresco.get()}")
+            implementation("com.facebook.fresco:animated-webp:${resolvedFrescoVersion}")
         }
     }
 
@@ -187,5 +189,3 @@ dependencies {
     }
     debugImplementation("com.facebook.flipper:flipper-fresco-plugin:${FLIPPER_VERSION}")
 }
-
-apply from: file("../../node_modules/@react-native-community/cli-platform-android/native_modules.gradle"); applyNativeModulesAppBuildGradle(project)

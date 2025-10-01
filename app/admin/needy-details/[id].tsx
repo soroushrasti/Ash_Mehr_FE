@@ -39,6 +39,7 @@ interface NeedyDetails {
   birthDate?: string;
   incomeForm?: number;
   underWhichAdmin: string;
+  underSecondAdminId: string;
   latitude?: number;
   longitude?: number;
   createdAt?: string;
@@ -217,7 +218,6 @@ export default function NeedyDetailsPage() {
           <DetailRow label="شهر" value={needyDetails.City} />
           <DetailRow label="منطقه" value={needyDetails.Region} />
           <DetailRow label="آدرس" value={needyDetails.Street} />
-          <DetailRow label="کد پستی" value={needyDetails.PostCode} />
           {needyDetails.Latitude && needyDetails.Longitude && (
             <>
               <DetailRow
@@ -255,7 +255,6 @@ export default function NeedyDetailsPage() {
           <DetailRow label="سازمان حامی" value={needyDetails.UnderOrganizationName} />
         </DetailSection>
 
-        {/* Children Information */}
         {needyDetails.children && needyDetails.children.length > 0 && (
           <DetailSection title="اطلاعات فرزندان" icon="👨‍👩‍👧‍👦">
             {needyDetails.children.map((child, index) => (
@@ -277,6 +276,7 @@ export default function NeedyDetailsPage() {
         {/* System Information */}
         <DetailSection title="اطلاعات سیستم" icon="⚙️">
           <DetailRow label="شناسه ثبت" value={needyDetails.RegisterID} />
+          <DetailRow label="شناسه ثبت فرعی" value={needyDetails.UnderSecondAdminID} />
           <DetailRow label="تاریخ ثبت" value={needyDetails.CreatedDate} />
           <DetailRow label="آخرین به‌روزرسانی" value={needyDetails.UpdatedDate} />
         </DetailSection>

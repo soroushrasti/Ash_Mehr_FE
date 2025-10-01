@@ -1,7 +1,7 @@
 import { Config, buildApiUrl, getApiHeaders } from '@/constants/Config';
 import {
     AdminCreate, ApiResponse, NeedyCreateWithChildren, InfoNeedyResponse, InfoAdminResponse, NeedyPersonLocation,
-    AdminPersonLocation
+    AdminPersonLocation, NeedyChildCreate
 } from '@/types/api';
 import { apiRequest } from './apiClient';
 
@@ -75,13 +75,20 @@ class ApiService {
       endpoint: Config.ENDPOINTS.CREATE_NEEDY,
       method: 'POST',
       body: needyData,
-      successMessage: 'ثبت مددجو با موفقیت انجام شد',
       redirectOnSuccessTo: '/',
       showErrorAlert: true,
     });
   }
 
-
+  async createChildNeedyPerson(needyData: NeedyChildCreate): Promise<ApiResponse> {
+    return apiRequest({
+      endpoint: Config.ENDPOINTS.CREATE_CHILD_NEEDY,
+      method: 'POST',
+      body: needyData,
+      redirectOnSuccessTo: '/',
+      showErrorAlert: true,
+    });
+  }
 
   /**
    * Signup Admin - POST /signup-admin
@@ -92,7 +99,6 @@ class ApiService {
       endpoint: Config.ENDPOINTS.CREATE_ADMIN,
       method: 'POST',
       body: adminData,
-      successMessage: 'ثبت نماینده با موفقیت انجام شد',
       redirectOnSuccessTo: '/',
       showErrorAlert: true,
     });
@@ -158,6 +164,16 @@ class ApiService {
     });
   }
 
+ /** DELETE /delete-child-needy/{register_id} - Delete child needy record */
+  async deleteChildNeedy(registerId: string): Promise<ApiResponse> {
+    return apiRequest({
+      endpoint: `${Config.ENDPOINTS.DELETE_CHILD_NEEDY}/${registerId}`,
+      method: 'DELETE',
+      includeAuth: true,
+      successMessage: 'فرزند با موفقیت حذف شد',
+      showErrorAlert: true,
+    });
+  }
 
   /** GET /get-admin/{admin_id} - Get detailed admin information */
   async getAdminDetails(adminId: string): Promise<ApiResponse<any>> {

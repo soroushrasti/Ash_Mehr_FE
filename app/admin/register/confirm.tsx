@@ -34,6 +34,8 @@ export default function AdminRegisterConfirm() {
     { label: 'نام خانوادگی', value: parsedFormData.LastName },
     { label: 'شماره تلفن', value: parsedFormData.Phone },
     { label: 'کد ملی', value: parsedFormData.NationalID },
+    { label: 'تاریخ تولد', value: parsedFormData.BirthDate },
+    { label: 'نام پدر', value: parsedFormData.NameFather },
     { label: 'ایمیل', value: parsedFormData.Email },
   ];
 
@@ -41,18 +43,29 @@ export default function AdminRegisterConfirm() {
     { label: 'استان', value: parsedFormData.Province },
     { label: 'شهر', value: parsedFormData.City },
     { label: 'آدرس', value: parsedFormData.Street },
+    { label: 'منطقه', value: parsedFormData.Region },
   ];
 
   const additionalInfo = [
-    { label: 'سن', value: parsedFormData.Age },
     { label: 'جنسیت', value: parsedFormData.Gender === 'Male' ? 'مرد' : parsedFormData.gender === 'Female' ? 'زن' : parsedFormData.gender },
-    { label: 'منطقه', value: parsedFormData.Region },
     { label: 'سطح تحصیلات', value: getEducationLabel(parsedFormData.EducationLevel) },
     { label: 'درآمد ماهانه', value: parsedFormData.IncomeAmount ? `${parsedFormData.IncomeAmount} تومان` : '' },
     { label: 'نام همسر', value: parsedFormData.HousebandLastName && parsedFormData.HousebandFirstName ? `${parsedFormData.HousebandFirstName} ${parsedFormData.HousebandLastName}` : '' },
     { label: 'دلیل غیبت همسر', value: parsedFormData.ReasonMissingHusband },
     { label: 'سازمان حامی', value: parsedFormData.UnderOrganizationName },
+    { label: 'تحت حمایت نماینده', value: parsedFormData.UnderWhichAdmin },
   ].filter(item => item.value); // Only show fields with values
+
+ const childInfo = parsedFormData.children_of_registre.map((child, index) => [
+   { label: 'نام', value: child.FirstName },
+   { label: 'نام خانوادگی', value: child.LastName },
+   { label: 'سن', value: child.Age },
+   { label: 'جنسیت', value: child.Gender },
+   { label: 'کد ملی', value: child.NationalID },
+   { label: 'تحصیلات', value: child.EducationLevel },
+ ].filter(item => item.value));
+
+
 
   function getEducationLabel(value: string) {
     const educationMap = {
@@ -145,7 +158,6 @@ export default function AdminRegisterConfirm() {
                 CreatedBy: Number(userId),
                 Latitude: parsedLocation.latitude?.toString() || undefined,
                 Longitude: parsedLocation.longitude?.toString() || undefined,
-                children_of_registre: null,
             } as NeedyCreateWithChildren;
             const result = await apiService.createNeedyPerson(registerData);
 
@@ -163,7 +175,6 @@ export default function AdminRegisterConfirm() {
                 CreatedBy: Number(userId),
                 Latitude: parsedLocation.latitude?.toString() || undefined,
                 Longitude: parsedLocation.longitude?.toString() || undefined,
-                children_of_registre: null,
             } as NeedyCreateWithChildren;
             const result = await apiService.editNeedy(registerIdString, registerData);
             console.log('Edit needy result:', result);
@@ -177,11 +188,11 @@ export default function AdminRegisterConfirm() {
         }
 
         if (Platform.OS === 'web') {
-            alert(`${roleTitle} با موفقیت در سیستم ویرایش شد.`);
+            alert(`${roleTitle} با موفقیت در سیستم ثبت شد.`);
         }
         Alert.alert(
             'ذخیره موفق',
-            `${roleTitle} با موفقیت در سیستم ویرایش شد.`,
+            `${roleTitle} با موفقیت در سیستم ثبت شد.`,
             [
                 {
                     text: 'تأیید',
@@ -306,6 +317,25 @@ export default function AdminRegisterConfirm() {
           editTitle="ویرایش"
         />
 
+         {/* children Information */}
+         {parsedFormData.children_of_registre?.map((child, index) => (
+           <InfoSection
+             key={index}
+             title="اطلاعات فرزندان"
+             data={[
+               { label: 'نام', value: child.FirstName },
+               { label: 'نام خانوادگی', value: child.LastName },
+               { label: 'سن', value: child.Age },
+               { label: 'جنسیت', value: child.Gender },
+               { label: 'کد ملی', value: child.NationalID },
+               { label: 'تحصیلات', value: child.EducationLevel },
+             ].filter(item => item.value)}
+             onEdit={handleEditForm}
+          editTitle="ویرایش"
+             />
+         ))}
+
+
         {/* Address Information */}
         <InfoSection
           title="اطلاعات آدرس"
@@ -313,6 +343,7 @@ export default function AdminRegisterConfirm() {
           onEdit={handleEditForm}
           editTitle="ویرایش"
         />
+
 
         {/* Additional Information (for needy families) */}
         {additionalInfo.length > 0 && (

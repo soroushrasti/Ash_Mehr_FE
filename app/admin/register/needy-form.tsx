@@ -17,6 +17,7 @@ import { RTLPicker } from '@/components/RTLPicker';
 interface ExtendedNeedyForm extends NeedyCreateWithChildren {
     BirthDate?: string;
     UnderWhichAdmin?: number;
+    UpdatedDate?: string;
 }
 
 interface AdminOption {
@@ -35,6 +36,7 @@ export default function AdminUserRegister() {
     const warningColor = useThemeColor({}, 'warning');
 
     const [childrenCount, setChildrenCount] = useState(0);
+    const [goodsCount, setGoodsCount] = useState(0);
 
     const [formData, setFormData] = useState<ExtendedNeedyForm>({
         FirstName: '',
@@ -61,7 +63,8 @@ export default function AdminUserRegister() {
         IncomeForm: '',
         Latitude: params.latitude ? String(params.latitude) : '',
         Longitude: params.longitude ? String(params.longitude) : '',
-        children_of_registre: []
+        children_of_registre: [],
+        goods_of_registre: []
     });
 
     const handleChildrenCountChange = (count: number) => {
@@ -94,6 +97,37 @@ export default function AdminUserRegister() {
             ...prev,
             children_of_registre: prev.children_of_registre.map((child, i) =>
                 i === index ? { ...child, [field]: value } : child
+            )
+        }));
+    };
+
+const handleGoodsCountChange = (count: number) => {
+        const numCount = Math.max(0, Math.min(count, 10)); // Limit to 0-10 children
+        setGoodsCount(numCount);
+
+        setFormData(prev => {
+            const newGoods = Array(numCount).fill(null).map((_, index) => {
+                // Keep existing data if available
+                const existingGoods = prev.goods_of_registre[index];
+                return existingGoods || {
+                    TypeGood: '',
+                    NumberGood: '',
+                    GivenBy: formData.UnderWhichAdmin,
+                };
+            });
+
+            return {
+                ...prev,
+                goods_of_registre: newGoods
+            };
+        });
+    };
+
+    const handleGoodFieldChange = (index: number, field: string, value: string) => {
+        setFormData(prev => ({
+            ...prev,
+            goods_of_registre: prev.goods_of_registre.map((good, i) =>
+                i === index ? { ...good, [field]: value } : good
             )
         }));
     };
@@ -583,6 +617,93 @@ export default function AdminUserRegister() {
                                                     placeholder="انتخاب نماینده"
                                                     style={styles.pickerContainer}
                                              />
+
+                   <ThemedText style={styles.sectionTitle}>اطلاعات کمک ها</ThemedText>
+
+                                           {/* Enhanced Children Count Section */}
+                                           <View style={styles.childrenCountSection}>
+                                               <ThemedText style={[styles.fieldLabel, styles.rtlText]}>تعداد کمک ها</ThemedText>
+
+                                               <View style={styles.counterContainer}>
+                                                   <TouchableOpacity
+                                                       style={[
+                                                           styles.counterButton,
+                                                           {
+                                                               backgroundColor: childrenCount > 0 ? '#DC3545' : '#E0E0E0',
+                                                               borderWidth: 1,
+                                                               borderColor: childrenCount > 0 ? '#C82333' : '#CCCCCC'
+                                                           }
+                                                       ]}
+                                                       onPress={() => handleGoodsCountChange(goodsCount - 1)}
+                                                       disabled={goodsCount <= 0}
+                                                   >
+                                                       <ThemedText style={[
+                                                           styles.counterButtonText,
+                                                           { color: goodsCount > 0 ? '#FFFFFF' : '#999999' }
+                                                       ]}>−</ThemedText>
+                                                   </TouchableOpacity>
+
+                                                   <View style={styles.countDisplay}>
+                                                       <ThemedText style={styles.countNumber}>{goodsCount}</ThemedText>
+                                                       <ThemedText style={[styles.countLabel, styles.rtlText]}>کمک</ThemedText>
+                                                   </View>
+
+                                                   <TouchableOpacity
+                                                       style={[
+                                                           styles.counterButton,
+                                                           {
+                                                               backgroundColor: childrenCount < 10 ? '#28A745' : '#E0E0E0',
+                                                               borderWidth: 1,
+                                                               borderColor: childrenCount < 10 ? '#1E7E34' : '#CCCCCC'
+                                                           }
+                                                       ]}
+                                                       onPress={() => handleGoodsCountChange(goodsCount + 1)}
+                                                       disabled={goodsCount >= 10}
+                                                   >
+                                                       <ThemedText style={[
+                                                           styles.counterButtonText,
+                                                           { color: goodsCount < 10 ? '#FFFFFF' : '#999999' }
+                                                       ]}>+</ThemedText>
+                                                   </TouchableOpacity>
+                                               </View>
+
+                                               {goodsCount > 0 && (
+                                                   <View style={styles.childrenCountInfo}>
+                                                       <ThemedText style={[styles.infoText, styles.rtlText, { color: primaryColor }]}>
+                                                           📝 لطفاً اطلاعات {childrenCount} کمک را وارد کنید
+                                                       </ThemedText>
+                                                   </View>
+                                               )}
+
+                                           </View>
+                        {/* goods Information Forms */}
+                                                {formData.goods_of_registre.map((good, index) => (
+                                                    <View key={index} style={styles.childContainer}>
+                                                        <View style={styles.childHeader}>
+                                                            <ThemedText style={[styles.childTitle, styles.rtlText]}>
+                                                                👶 کمک {index + 1}
+                                                            </ThemedText>
+                                                            <View style={styles.childNumber}>
+                                                                <ThemedText style={styles.childNumberText}>{index + 1}</ThemedText>
+                                                            </View>
+                                                        </View>
+
+                                                        <InputField
+                                                            label="نوع کمک"
+                                                            value={good.TypeGood}
+                                                            onChangeText={(text) => handleGoodFieldChange(index, 'TypeGood', text)}
+                                                            placeholder="نوع کمک"
+                                                            required
+                                                        />
+                                                         <InputField
+                                                             label="مقدار کمک"
+                                                             value={good.NumberGood}
+                                                             onChangeText={(text) => handleGoodFieldChange(index, 'NumberGood', text)}
+                                                             placeholder="مقدار کمک"
+                                                             required
+                                                         />
+                                                    </View>
+                                            ))}
 
                         {params.latitude && params.longitude && (
                             <View style={styles.locationInfo}>

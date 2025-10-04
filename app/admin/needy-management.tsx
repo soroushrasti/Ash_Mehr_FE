@@ -99,6 +99,10 @@ export default function ReportsPage() {
         router.push(`/admin/edit-needy/${record.id}`);
     };
 
+    const handleGood = (record: NeedyRecord) => {
+        router.push(`/admin/edit-good?registerId=${record.id}`);
+    };
+
     const handleDelete = (record: NeedyRecord) => {
         console.log('Attempting to delete record:', record);
         const confirmMessage = `آیا از حذف ${record.name || 'این مددجو'} اطمینان دارید؟`;
@@ -206,6 +210,13 @@ export default function ReportsPage() {
                         onPress={() => handleDelete(record)}
                     >
                         <ThemedText style={styles.actionButtonText}>🗑️</ThemedText>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                        style={[styles.actionButton, { backgroundColor: '#9a8161' }]}
+                        onPress={() => handleGood(record)}
+                    >
+                        <ThemedText style={styles.actionButtonText}>💰</ThemedText>
                     </TouchableOpacity>
                 </View>
             )}

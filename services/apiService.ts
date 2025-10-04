@@ -142,6 +142,15 @@ class ApiService {
     });
   }
 
+    async getGoodsDetails(registerId: string): Promise<ApiResponse<any>> {
+      return apiRequest<any>({
+        endpoint: `${Config.ENDPOINTS.GET_GOODS}/${registerId}`,
+        method: 'GET',
+        includeAuth: true,
+        showErrorAlert: false,
+      });
+    }
+
   /** POST /edit-needy/{register_id} - Edit needy information */
   async editNeedy(registerId: string, needyData: any): Promise<ApiResponse> {
     return apiRequest({
@@ -152,6 +161,17 @@ class ApiService {
       showErrorAlert: true,
     });
   }
+
+   async editGood(registerId: string, needyData: any): Promise<ApiResponse> {
+      return apiRequest({
+        endpoint: `${Config.ENDPOINTS.EDIT_GOOD}/${registerId}`,
+        method: 'POST',
+        body: needyData,
+        includeAuth: true,
+        showErrorAlert: true,
+      });
+    }
+
 
   /** DELETE /delete-needy/{register_id} - Delete needy record */
   async deleteNeedy(registerId: string): Promise<ApiResponse> {

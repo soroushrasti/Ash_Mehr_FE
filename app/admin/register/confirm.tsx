@@ -36,7 +36,6 @@ export default function AdminRegisterConfirm() {
     { label: 'کد ملی', value: parsedFormData.NationalID },
     { label: 'تاریخ تولد', value: parsedFormData.BirthDate },
     { label: 'نام پدر', value: parsedFormData.NameFather },
-    { label: 'ایمیل', value: parsedFormData.Email },
   ];
 
   const addressInfo = [

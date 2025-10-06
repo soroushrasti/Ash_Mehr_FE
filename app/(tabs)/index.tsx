@@ -140,9 +140,6 @@ export default function HomeScreen() {
             📞 تلفن: ۰۲۱-۱۲۳۴۵۶۷۸
           </ThemedText>
           <ThemedText type="body" center style={[styles.contactInfo, { color: primaryColor }]}>
-            📧 ایمیل: info@ashyaneh-mehr.ir
-          </ThemedText>
-          <ThemedText type="body" center style={[styles.contactInfo, { color: primaryColor }]}>
             📍 آدرس: تهران، خیابان آزادی، پلاک ۱۲۳
           </ThemedText>
         </ThemedView>

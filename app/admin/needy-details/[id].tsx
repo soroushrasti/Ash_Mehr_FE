@@ -208,7 +208,6 @@ export default function NeedyDetailsPage() {
           <DetailRow label="کد ملی" value={needyDetails.NationalID} />
           <DetailRow label="تاریخ تولد" value={needyDetails.BirthDate} />
           <DetailRow label="شماره موبایل" value={needyDetails.Phone} />
-          <DetailRow label="ایمیل" value={needyDetails.Email} />
           <DetailRow label="جنسیت" value={getGenderLabel(needyDetails.Gender)} />
         </DetailSection>
 

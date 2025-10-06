@@ -40,7 +40,6 @@ const groupAdminFields: FieldDef[] = [
   { key: 'phone', label: 'شماره تلفن', placeholder: '09xxxxxxxxx', required: true, type: 'phone' },
   { key: 'postCode', label: 'کد پستی', placeholder: 'کد پستی خود را وارد کنید', required: true },
   { key: 'nationalId', label: 'کد ملی', placeholder: 'کد ملی ۱۰ رقمی', required: true, type: 'number' },
-  { key: 'email', label: 'ایمیل', placeholder: 'example@email.com', required: false, type: 'email' },
   { key: 'password', label: 'رمز عبور', placeholder: 'حداقل ۶ کاراکتر', required: true, type: 'password', secure: true },
   { key: 'province', label: 'استان', placeholder: 'استان تحت پوشش گروه', required: true },
   { key: 'city', label: 'شهر', placeholder: 'شهر تحت پوشش گروه', required: true },
@@ -87,9 +86,6 @@ export default function GroupAdminRegisterForm() {
       newErrors.nationalId = 'کد ملی باید ۱۰ رقم باشد';
     }
 
-    if (formData.email && formData.email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      newErrors.email = 'فرمت ایمیل صحیح نیست';
-    }
 
     if (formData.password && formData.password.length < 6) {
       newErrors.password = 'رمز عبور باید حداقل ۶ کاراکتر باشد';

@@ -80,7 +80,6 @@ export default function GroupAdminUserRegister() {
             <InputField label="نام خانوادگی *" value={formData.LastName} onChangeText={(t)=>setFormData(p=>({...p,LastName:t}))} placeholder="نام خانوادگی" />
             <InputField label="شماره موبایل" value={formData.Phone||''} onChangeText={(t)=>setFormData(p=>({...p,Phone:t}))} placeholder="09123456789" keyboardType="phone-pad" />
             <InputField label="کد ملی" value={formData.NationalID||''} onChangeText={(t)=>setFormData(p=>({...p,NationalID:t}))} placeholder="کد ملی" keyboardType="numeric" />
-            <InputField label="ایمیل" value={formData.Email||''} onChangeText={(t)=>setFormData(p=>({...p,Email:t}))} placeholder="example@email.com" keyboardType="email-address" autoCapitalize="none" />
             <InputField label="رمز عبور *" value={formData.Password} onChangeText={(t)=>setFormData(p=>({...p,Password:t}))} placeholder="حداقل ۶ کاراکتر" secureTextEntry />
             <InputField label="ایجاد شده توسط" value={formData.CreatedBy} onChangeText={(t)=>setFormData(p=>({...p,CreatedBy:t}))} placeholder="ایجاد شده توسط" />
             <ThemedText style={styles.sectionTitle}>آدرس</ThemedText>

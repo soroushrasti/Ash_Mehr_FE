@@ -11,19 +11,19 @@ import { Spacing, BorderRadius } from '@/constants/Design';
 import { apiService } from '@/services/apiService';
 import AppHeader from '@/components/AppHeader';
 import KeyboardAwareContainer from '@/components/KeyboardAwareContainer';
-import { RTLPicker } from '@/components/RTLPicker';
-import { AdminPersonLocation, NeedyCreateWithChildren } from '@/types/api';
+import { AdminPersonLocation } from '@/types/api';
 import { useAuth } from '@/components/AuthContext';
 import { withOpacity } from '@/utils/colorUtils';
+import { showAlert } from '@/utils/alert';
 
 
 interface ExtendedNeedyEditForm {
   goods_of_registre: Array<{
     GoodID?: number;
     TypeGood: string;
-    NumberGood: number;
-    GivenToWhome: number;
-    GivenBy: number;
+    NumberGood: number; // ensure always number
+    GivenToWhome: number; // register id (int)
+    GivenBy: number; // admin id (int)
     UpdatedDate?: string;
   }>;
 }
@@ -32,6 +32,13 @@ export default function EditNeedyPage() {
   const { registerId } = useLocalSearchParams();
   const router = useRouter();
   const { userId } = useAuth();
+  // compute numeric register id early
+  const numericRegisterId = React.useMemo(() => {
+    const raw = Array.isArray(registerId) ? registerId[0] : registerId;
+    const n = parseInt((raw as string) || '0', 10);
+    return isNaN(n) ? 0 : n;
+  }, [registerId]);
+
   const errorColor = useThemeColor({}, 'danger');
 
   const [goodsCount, setGoodsCount] = useState(0);
@@ -40,7 +47,7 @@ export default function EditNeedyPage() {
     goods_of_registre: [{
       TypeGood: '',
       NumberGood: 0,
-      GivenToWhome: parseInt(registerId as string),
+      GivenToWhome: numericRegisterId,
       GivenBy: userId || 0
     }]
   });
@@ -71,7 +78,7 @@ export default function EditNeedyPage() {
          ]);
        } catch (error) {
          console.error('Error loading data:', error);
-         Alert.alert('خطا', 'خطا در بارگذاری اطلاعات');
+         showAlert('خطا', 'خطا در بارگذاری اطلاعات');
        }
      }
    };
@@ -82,32 +89,35 @@ export default function EditNeedyPage() {
   const loadGoodsData = async (id: string) => {
     try {
       const response = await apiService.getGoodsDetails(id);
-      console.log('API Response:', response);
-
       if (response.success && response.data) {
         const data = response.data;
-        console.log('Goods data:', data);
-
+        const list = Array.isArray(data.goods) ? data.goods : Array.isArray(data) ? data : [];
         setFormData(prev => ({
           ...prev,
-          goods_of_registre: data.goods || data || []
+          goods_of_registre: list.map((g: any) => ({
+            GoodID: g.GoodID || g.GoodId || g.good_id,
+            TypeGood: g.TypeGood || g.type || '',
+            NumberGood: Number(g.NumberGood ?? g.number ?? 0),
+            GivenToWhome: g.GivenToWhome || numericRegisterId,
+            GivenBy: g.GivenBy || (userId || 0),
+            UpdatedDate: g.UpdatedDate || g.updated_at
+          }))
         }));
-
-        setGoodsCount(data.goods?.length || data?.length || 0);
+        setGoodsCount(list.length);
       } else {
-        console.log('No goods found, initializing empty form');
         setFormData({
           goods_of_registre: [{
             TypeGood: '',
             NumberGood: 0,
-            GivenToWhome: parseInt(id),
+            GivenToWhome: numericRegisterId,
             GivenBy: userId || 0
           }]
         });
+        setGoodsCount(1);
       }
     } catch (error) {
       console.error('Error loading goods data:', error);
-      Alert.alert('خطا', 'خطا در دریافت اطلاعات کالاها');
+      showAlert('خطا', 'خطا در دریافت اطلاعات کالاها');
     } finally {
       setLoading(false);
     }
@@ -115,59 +125,73 @@ export default function EditNeedyPage() {
 
 
     const handleAddNewGood = () => {
-      const currentGoods = formData.goods_of_registre || [];
-
-      const newGood = {
-        TypeGood: '',
-        NumberGood: '',
-        GivenToWhome: registerId,
-        GivenBy: userId,
-      };
-
-      const newGoods = [...currentGoods, newGood];
-      setFormData({...formData, goods_of_registre: newGoods});
+      setFormData(prev => ({
+        ...prev,
+        goods_of_registre: [
+          ...prev.goods_of_registre,
+          {
+            TypeGood: '',
+            NumberGood: 0,
+            GivenToWhome: numericRegisterId,
+            GivenBy: userId || 0
+          }
+        ]
+      }));
+      setGoodsCount(c => c + 1);
     };
 
-const goodPayload = {
-                  ...parsedFormData,
-                  GivenBy: Number(userId),
-                  GivenToWhome: registerId,
-              };
+const removeGoodAt = (index: number) => {
+  setFormData(prev => ({
+    ...prev,
+    goods_of_registre: prev.goods_of_registre.filter((_, i) => i !== index)
+  }));
+  setGoodsCount(c => Math.max(0, c - 1));
+};
 
-const handleEditGoods = async () => {
-    const response = await apiService.editGood(registerId, goodPayload);
-    if (response.success)
-    {
-        alert("ویرایش با موفقیت انجام شد!");
-        }
+const validateGoods = (): boolean => {
+  const errs: string[] = [];
+  formData.goods_of_registre.forEach((g, idx) => {
+    if (!g.TypeGood.trim()) errs.push(`نوع کمک ردیف ${idx + 1} خالی است`);
+    if (g.NumberGood === undefined || g.NumberGood === null || isNaN(g.NumberGood) || g.NumberGood <= 0) {
+      errs.push(`مقدار کمک ردیف ${idx + 1} باید عدد مثبت باشد`);
     }
+  });
+  setValidationErrors(errs);
+  return errs.length === 0;
+};
 
-const handleSaveGoods = async () => {
+const handleSaveAllGoods = async () => {
+  if (!numericRegisterId) {
+    showAlert('خطا', 'شناسه ثبت شونده معتبر نیست');
+    return;
+  }
+  if (!validateGoods()) {
+    showAlert('خطا', 'ابتدا خطاهای اعتبارسنجی را برطرف کنید');
+    return;
+  }
   try {
-    const newGoods = formData.goods_of_registre.filter(good =>
-      !good.GoodID && good.TypeGood && good.NumberGood
-    );
-
-    if (newGoods.length === 0) {
-      alert('هیچ کمک جدید معتبری برای ذخیره وجود ندارد');
-      return;
+    setSaving(true);
+    const payload = formData.goods_of_registre.map(g => ({
+      GoodID: g.GoodID, // backend will upsert if exists
+      TypeGood: g.TypeGood.trim(),
+      NumberGood: Number(g.NumberGood),
+      GivenBy: userId || g.GivenBy || 0,
+      // GivenToWhome inferred from path param
+    }));
+    const response = await apiService.editGood(String(numericRegisterId), payload);
+    if (response.success) {
+      showAlert('موفق', 'کالاها با موفقیت ذخیره شدند');
+      // refresh to get new GoodID values for newly created goods
+      await loadGoodsData(String(numericRegisterId));
+        router.push(`/admin/needy-management`);
+    } else {
+      showAlert('خطا', response.error || 'ذخیره با شکست مواجه شد');
     }
-
-    const savePromises = newGoods.map((good, index) => {
-      const goodData = {
-        ...good,
-        GivenToWhome: registerId,
-      };
-      console.log(`در حال ذخیره کمک جدید شماره ${index + 1} از ${newGoods.length}`);
-      return apiService.createGoodNeedy(goodData);
-    });
-
-    await Promise.all(savePromises);
-    alert(`${newGoods.length} کمک جدید با موفقیت ذخیره شد`);
-
-  } catch (error) {
-    console.error('خطا در ذخیره کمک ها:', error);
-    alert('خطا در ذخیره کمک ها: ' + error.message);
+  } catch (e: any) {
+    console.error('Save goods error', e);
+    showAlert('خطا', e.message || 'خطای ناشناخته در ذخیره');
+  } finally {
+    setSaving(false);
   }
 };
 
@@ -196,9 +220,14 @@ const handleSaveGoods = async () => {
     const handleGoodFieldChange = (index: number, field: string, value: string) => {
         setFormData(prev => ({
             ...prev,
-            goods_of_registre: prev.goods_of_registre.map((good, i) =>
-                i === index ? { ...good, [field]: value } : good
-            )
+            goods_of_registre: prev.goods_of_registre.map((good, i) => {
+                if (i !== index) return good;
+                if (field === 'NumberGood') {
+                  const num = parseInt(value, 10);
+                  return { ...good, NumberGood: isNaN(num) ? 0 : num };
+                }
+                return { ...good, [field]: value } as any;
+            })
         }));
     };
 
@@ -261,6 +290,17 @@ const handleSaveGoods = async () => {
     );
   }
 
+  if (!numericRegisterId) {
+    return (
+      <ThemedView style={styles.container}>
+        <AppHeader title="ویرایش کمک ها" showBackButton />
+        <View style={styles.loadingContainer}>
+          <ThemedText>شناسه نامعتبر است</ThemedText>
+        </View>
+      </ThemedView>
+    );
+  }
+
 
   return (
     <ThemedView style={[styles.container, { backgroundColor }]}>
@@ -292,13 +332,17 @@ const handleSaveGoods = async () => {
                 </ThemedText>
 
                 {formData.goods_of_registre.map((good, index) => (
-                  <View key={index} style={[styles.childCard, { backgroundColor: withOpacity(primaryColor, 5), borderColor: withOpacity(primaryColor, 20) }]}>
-
-                    {/* هدر کارت کمک  */}
+                  <View key={good.GoodID ?? index} style={[styles.childCard, { backgroundColor: withOpacity(primaryColor, 5), borderColor: withOpacity(primaryColor, 20) }]}>
                     <View style={styles.childHeader}>
-                      <ThemedText style={[styles.childTitle, { color: primaryColor, textAlign: 'right' }]}>
-                        👶 کمک {index + 1}
-                      </ThemedText>
+                      <ThemedText style={[styles.childTitle, { color: primaryColor, textAlign: 'right' }]}>🛍️ کمک {index + 1}</ThemedText>
+                      <View style={{ flexDirection: 'row-reverse', gap: 8 }}>
+                        {!!good.GoodID && (
+                          <ThemedText style={{ fontSize: 12, color: textColor, opacity: 0.6 }}></ThemedText>
+                        )}
+                        <TouchableOpacity onPress={() => removeGoodAt(index)} style={styles.deleteButton}>
+                          <ThemedText style={styles.deleteText}>حذف</ThemedText>
+                        </TouchableOpacity>
+                      </View>
                     </View>
 
                     <InputField
@@ -321,30 +365,24 @@ const handleSaveGoods = async () => {
               </View>
             )}
 
-        <TouchableOpacity
-              style={[styles.saveButton, { backgroundColor: '#28a745' }]}
-              onPress={handleEditGoods}
-            >
-              <ThemedText style={styles.saveButtonText}> ویرایش کمک ها </ThemedText>
-            </TouchableOpacity>
+
 
 <View style={styles.childrenButtonsContainer}>
-  {/* دکمه افزودن فرزند جدید */}
   <TouchableOpacity
-    style={[styles.addButton, { backgroundColor: primaryColor }]}
+    style={[styles.addButton, { backgroundColor: primaryColor, opacity: saving ? 0.5 : 1 }]}
+    disabled={saving}
     onPress={handleAddNewGood}
   >
-    <ThemedText style={styles.addButtonText}>+ افزودن کمک جدید</ThemedText>
+    <ThemedText style={styles.addButtonText}>+ افزودن ردیف جدید</ThemedText>
   </TouchableOpacity>
 
-
-  {/* دکمه ذخیره فرزندان در دیتابیس */}
-  {formData.goods_of_registre && formData.goods_of_registre.length > 0 && (
+  {formData.goods_of_registre.length > 0 && (
     <TouchableOpacity
-      style={[styles.saveButton, { backgroundColor: '#28a745' }]}
-      onPress={handleSaveGoods}
+      style={[styles.saveButton, { backgroundColor: '#28a745', opacity: saving ? 0.6 : 1 }]}
+      disabled={saving}
+      onPress={handleSaveAllGoods}
     >
-      <ThemedText style={styles.saveButtonText}>💾 ذخیره کمک ها </ThemedText>
+      <ThemedText style={styles.saveButtonText}>{saving ? 'در حال ذخیره...' : '💾 ذخیره همه'}</ThemedText>
     </TouchableOpacity>
   )}
 </View>
@@ -445,13 +483,16 @@ const styles = StyleSheet.create({
       marginBottom: 10,
     },
     deleteButton: {
-      padding: 8,
-      backgroundColor: '#ff4444',
-      borderRadius: 5,
+      paddingHorizontal: 10,
+      paddingVertical: 4,
+      backgroundColor: '#d9534f',
+      borderRadius: 6,
+      alignSelf: 'flex-start'
     },
     deleteText: {
       color: 'white',
       fontSize: 12,
+      fontWeight: '600'
     },
    addChildSection: {
        marginTop: 20,

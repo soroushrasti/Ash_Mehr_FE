@@ -263,13 +263,7 @@ const handleSaveChildren = async () => {
     }
 
     // Email validation (if provided)
-    if (formData.Email && formData.Email.trim()) {
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(formData.Email)) {
-        errors.push('فرمت ایمیل صحیح نیست');
-        fieldErrs.Email = 'فرمت ایمیل صحیح نیست';
-      }
-    }
+
 
     // Phone validation (if provided)
     if (formData.Phone && formData.Phone.trim()) {
@@ -399,15 +393,7 @@ const handleSaveChildren = async () => {
               maxLength={10}
             />
 
-            <InputField
-              label="ایمیل"
-              value={formData.Email || ''}
-              onChangeText={(text) => handleFieldChange('Email', text)}
-              placeholder="example@email.com"
-              keyboardType="email-address"
-              autoCapitalize="none"
-              error={fieldErrors.Email}
-            />
+
 
             <InputField
               label="تاریخ تولد"

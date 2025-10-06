@@ -34,7 +34,6 @@ const baseFields: FieldDef[] = [
   { key: 'nationalId', label: 'کد ملی', placeholder: 'کد ملی ۱۰ رقمی', required: true, type: 'number' },
   { key: 'birthDate', label: 'تاریخ تولد', placeholder: 'تاریخ تولد خود را وارد کنید', required: true },
   { key: 'nameFather', label: 'نام پدر', placeholder: 'نام پدر خود را وارد کنید', required: true },
-  { key: 'email', label: 'ایمیل', placeholder: 'example@email.com', required: false, type: 'email' },
   { key: 'province', label: 'استان', placeholder: 'استان محل سکونت', required: true },
   { key: 'city', label: 'شهر', placeholder: 'شهر محل سکونت', required: true },
   { key: 'street', label: 'آدرس', placeholder: 'آدرس کامل', required: true, multiline: true },
@@ -69,7 +68,6 @@ const needyFamilyFields: FieldDef[] = [
 
 function validateField(field: FieldDef, value: string): string {
   if (field.required && (!value || value.trim() === '')) return `${field.label} الزامی است`;
-  if (field.type === 'email' && value && !/^\S+@\S+\.\S+$/.test(value)) return 'فرمت ایمیل نادرست است';
   if (field.type === 'phone' && value && !/^(۰۹|09)[۰-۹0-9]{9}$/.test(value.replace(/[^۰-۹0-9]/g, ''))) {
     return 'شماره تلفن باید با ۰۹ یا 09 شروع شود و ۱۱ رقم باشد';
   }

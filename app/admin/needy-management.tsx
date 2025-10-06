@@ -100,7 +100,8 @@ export default function ReportsPage() {
     };
 
     const handleGood = (record: NeedyRecord) => {
-        router.push(`/admin/edit-good?${record.id}`);
+        // Navigate to the dynamic route that expects :registerId
+        router.push(`/admin/edit-good/${record.id}`);
     };
 
     const handleDelete = (record: NeedyRecord) => {

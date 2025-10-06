@@ -217,7 +217,6 @@ export default function AdminDetailsPage() {
           <DetailRow label="کد ملی" value={adminDetails.NationalID} />
           <DetailRow label="تاریخ تولد" value={adminDetails.BirthDate} />
           <DetailRow label="شماره موبایل" value={adminDetails.Phone} />
-          <DetailRow label="ایمیل" value={adminDetails.Email} />
         </DetailSection>
 
         {/* Address Information */}

@@ -119,14 +119,7 @@ export default function AdminUserRegister() {
               keyboardType="numeric"
             />
 
-            <InputField
-              label="ایمیل"
-              value={formData.Email || ''}
-              onChangeText={(text) => setFormData(prev => ({ ...prev, Email: text }))}
-              placeholder="example@email.com"
-              keyboardType="email-address"
-              autoCapitalize="none"
-            />
+
 
             <InputField
               label="رمز عبور *"

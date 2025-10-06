@@ -168,14 +168,7 @@ const handleGoodsCountChange = (count: number) => {
             fieldErrs.LastName = 'نام خانوادگی الزامی است';
         }
 
-        // Email validation (if provided)
-        if (formData.Email && formData.Email.trim()) {
-            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            if (!emailRegex.test(formData.Email)) {
-                errors.push('فرمت ایمیل صحیح نیست');
-                fieldErrs.Email = 'فرمت ایمیل صحیح نیست';
-            }
-        }
+
 
         if (!formData.Phone.trim()) {
             errors.push('شماره موبایل الزامی است');
@@ -321,15 +314,6 @@ const handleGoodsCountChange = (count: number) => {
                             error={fieldErrors.NationalID}
                         />
 
-                        <InputField
-                            label="ایمیل"
-                            value={formData.Email || ''}
-                            onChangeText={(text) => handleFieldChange('Email', text)}
-                            placeholder="example@email.com"
-                            keyboardType="email-address"
-                            autoCapitalize="none"
-                            error={fieldErrors.Email}
-                        />
 
                         <InputField
                             label="تاریخ تولد"

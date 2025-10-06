@@ -61,7 +61,8 @@ export const Config = {
     DELETE_CHILD_NEEDY: '/delete-child-needy',
     DELETE_ADMIN: '/delete-admin',
     GET_GOODS: '/get-goods',
-    EDIT_GOOD: '/edit-good'
+    EDIT_GOOD: '/edit-good',
+    ADD_GOOD: '/add-good',
   }
 };
 

@@ -1,3 +1,4 @@
+///////////////edit-good////////////////////
 import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, ScrollView, Alert, ActivityIndicator, TouchableOpacity } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
@@ -16,6 +17,17 @@ import { useAuth } from '@/components/AuthContext';
 import { withOpacity } from '@/utils/colorUtils';
 
 
+interface ExtendedNeedyEditForm {
+  goods_of_registre: Array<{
+    GoodID?: number;
+    TypeGood: string;
+    NumberGood: number;
+    GivenToWhome: number;
+    GivenBy: number;
+    UpdatedDate?: string;
+  }>;
+}
+
 export default function EditNeedyPage() {
   const { registerId } = useLocalSearchParams();
   const router = useRouter();
@@ -25,8 +37,16 @@ export default function EditNeedyPage() {
   const [goodsCount, setGoodsCount] = useState(0);
 
   const [formData, setFormData] = useState<ExtendedNeedyEditForm>({
-    goods_of_registre: [],
+    goods_of_registre: [{
+      TypeGood: '',
+      NumberGood: 0,
+      GivenToWhome: parseInt(registerId as string),
+      GivenBy: userId || 0
+    }]
   });
+   const formDataString = JSON.stringify(formData);
+
+   const parsedFormData = formDataString ? JSON.parse(formDataString) : {};
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -61,24 +81,38 @@ export default function EditNeedyPage() {
 
   const loadGoodsData = async (id: string) => {
     try {
-      const response = await apiService.getGoodsDetails(registerId);
+      const response = await apiService.getGoodsDetails(id);
+      console.log('API Response:', response);
+
       if (response.success && response.data) {
         const data = response.data;
-        setFormData({
-          goods_of_registre : data.goods
-        });
+        console.log('Goods data:', data);
+
+        setFormData(prev => ({
+          ...prev,
+          goods_of_registre: data.goods || data || []
+        }));
+
+        setGoodsCount(data.goods?.length || data?.length || 0);
       } else {
-        Alert.alert('خطا', 'دریافت اطلاعات کمک با خطا مواجه شد');
-        router.back();
+        console.log('No goods found, initializing empty form');
+        setFormData({
+          goods_of_registre: [{
+            TypeGood: '',
+            NumberGood: 0,
+            GivenToWhome: parseInt(id),
+            GivenBy: userId || 0
+          }]
+        });
       }
     } catch (error) {
-      console.error('Error loading needy data:', error);
-      Alert.alert('خطا', 'خطا در دریافت اطلاعات');
-      router.back();
+      console.error('Error loading goods data:', error);
+      Alert.alert('خطا', 'خطا در دریافت اطلاعات کالاها');
     } finally {
       setLoading(false);
     }
   };
+
 
     const handleAddNewGood = () => {
       const currentGoods = formData.goods_of_registre || [];
@@ -87,11 +121,26 @@ export default function EditNeedyPage() {
         TypeGood: '',
         NumberGood: '',
         GivenToWhome: registerId,
+        GivenBy: userId,
       };
 
       const newGoods = [...currentGoods, newGood];
       setFormData({...formData, goods_of_registre: newGoods});
     };
+
+const goodPayload = {
+                  ...parsedFormData,
+                  GivenBy: Number(userId),
+                  GivenToWhome: registerId,
+              };
+
+const handleEditGoods = async () => {
+    const response = await apiService.editGood(registerId, goodPayload);
+    if (response.success)
+    {
+        alert("ویرایش با موفقیت انجام شد!");
+        }
+    }
 
 const handleSaveGoods = async () => {
   try {
@@ -99,7 +148,7 @@ const handleSaveGoods = async () => {
       !good.GoodID && good.TypeGood && good.NumberGood
     );
 
-    if (newGood.length === 0) {
+    if (newGoods.length === 0) {
       alert('هیچ کمک جدید معتبری برای ذخیره وجود ندارد');
       return;
     }
@@ -110,7 +159,7 @@ const handleSaveGoods = async () => {
         GivenToWhome: registerId,
       };
       console.log(`در حال ذخیره کمک جدید شماره ${index + 1} از ${newGoods.length}`);
-      return apiService.createGoodNeedyPerson(goodData);
+      return apiService.createGoodNeedy(goodData);
     });
 
     await Promise.all(savePromises);
@@ -144,7 +193,7 @@ const handleSaveGoods = async () => {
         });
     };
 
-    const handleGoodsFieldChange = (index: number, field: string, value: string) => {
+    const handleGoodFieldChange = (index: number, field: string, value: string) => {
         setFormData(prev => ({
             ...prev,
             goods_of_registre: prev.goods_of_registre.map((good, i) =>
@@ -212,6 +261,7 @@ const handleSaveGoods = async () => {
     );
   }
 
+
   return (
     <ThemedView style={[styles.container, { backgroundColor }]}>
       <AppHeader title="ویرایش کمک ها" showBackButton />
@@ -244,7 +294,7 @@ const handleSaveGoods = async () => {
                 {formData.goods_of_registre.map((good, index) => (
                   <View key={index} style={[styles.childCard, { backgroundColor: withOpacity(primaryColor, 5), borderColor: withOpacity(primaryColor, 20) }]}>
 
-                    {/* هدر کارت فرزند با دکمه حذف */}
+                    {/* هدر کارت کمک  */}
                     <View style={styles.childHeader}>
                       <ThemedText style={[styles.childTitle, { color: primaryColor, textAlign: 'right' }]}>
                         👶 کمک {index + 1}
@@ -271,6 +321,13 @@ const handleSaveGoods = async () => {
               </View>
             )}
 
+        <TouchableOpacity
+              style={[styles.saveButton, { backgroundColor: '#28a745' }]}
+              onPress={handleEditGoods}
+            >
+              <ThemedText style={styles.saveButtonText}> ویرایش کمک ها </ThemedText>
+            </TouchableOpacity>
+
 <View style={styles.childrenButtonsContainer}>
   {/* دکمه افزودن فرزند جدید */}
   <TouchableOpacity
@@ -279,6 +336,7 @@ const handleSaveGoods = async () => {
   >
     <ThemedText style={styles.addButtonText}>+ افزودن کمک جدید</ThemedText>
   </TouchableOpacity>
+
 
   {/* دکمه ذخیره فرزندان در دیتابیس */}
   {formData.goods_of_registre && formData.goods_of_registre.length > 0 && (
@@ -296,12 +354,6 @@ const handleSaveGoods = async () => {
 
         <View style={styles.footer}>
 
-            <Button
-            title="ذخیره"
-            onPress={handlEditGoods}
-            variant="outline"
-            style={styles.actionButton}
-          />
           <Button
             title="انصراف"
             onPress={() => router.back()}
@@ -313,6 +365,7 @@ const handleSaveGoods = async () => {
     </ThemedView>
   );
 }
+
 
 const styles = StyleSheet.create({
   container: {

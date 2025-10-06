@@ -100,7 +100,7 @@ export default function ReportsPage() {
     };
 
     const handleGood = (record: NeedyRecord) => {
-        router.push(`/admin/edit-good?registerId=${record.id}`);
+        router.push(`/admin/edit-good?${record.id}`);
     };
 
     const handleDelete = (record: NeedyRecord) => {

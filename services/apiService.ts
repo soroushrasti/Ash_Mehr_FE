@@ -90,6 +90,16 @@ class ApiService {
     });
   }
 
+ async createGoodNeedy(needyData: NeedyGoodCreate): Promise<ApiResponse> {
+    return apiRequest({
+      endpoint: Config.ENDPOINTS.ADD_GOOD,
+      method: 'POST',
+      body: needyData,
+      redirectOnSuccessTo: '/',
+      showErrorAlert: true,
+    });
+  }
+
   /**
    * Signup Admin - POST /signup-admin
    * On success: show OK alert and redirect to main page

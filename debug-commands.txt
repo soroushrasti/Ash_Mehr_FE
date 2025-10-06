@@ -1,0 +1,70 @@
+#!/bin/bash
+
+# Debug and Fix Commands for VPS Deployment
+# Run these commands on your VPS (ssh root@62.3.42.208 -p 3031)
+
+echo "=== DEBUGGING VPS DEPLOYMENT ==="
+echo ""
+
+echo "1. CHECK IF THE SERVICE IS RUNNING"
+echo "pm2 status"
+echo "pm2 logs ash-mehr-frontend --lines 50"
+echo ""
+
+echo "2. CHECK NETWORK AND PORTS"
+echo "netstat -tlnp | grep 3000"
+echo "lsof -i :3000"
+echo ""
+
+echo "3. CHECK FIREWALL STATUS"
+echo "ufw status"
+echo "iptables -L"
+echo ""
+
+echo "4. CHECK IF PROJECT FILES EXIST"
+echo "ls -la /opt/ash_mehr_frontend/"
+echo "cd /opt/ash_mehr_frontend && ls -la"
+echo ""
+
+echo "5. CHECK NODE.JS AND NPM"
+echo "node --version"
+echo "npm --version"
+echo "which expo"
+echo ""
+
+echo "6. TRY MANUAL START (for immediate testing)"
+echo "cd /opt/ash_mehr_frontend"
+echo "EXPO_PUBLIC_API_BASE_URL=http://62.3.42.208:8000 npx expo start --web --port 3000 --host 0.0.0.0"
+echo ""
+
+echo "=== COMMON FIXES ==="
+echo ""
+
+echo "FIX 1: INSTALL EXPO CLI IF MISSING"
+echo "npm install -g @expo/cli"
+echo ""
+
+echo "FIX 2: OPEN FIREWALL PORT"
+echo "ufw allow 3000"
+echo "ufw reload"
+echo ""
+
+echo "FIX 3: RESTART PM2 SERVICE"
+echo "pm2 delete ash-mehr-frontend"
+echo "cd /opt/ash_mehr_frontend"
+echo "pm2 start ecosystem.config.js"
+echo "pm2 save"
+echo ""
+
+echo "FIX 4: USE PORT 80 (if 3000 is blocked)"
+echo "pm2 delete ash-mehr-frontend"
+echo "cd /opt/ash_mehr_frontend"
+echo "pm2 start 'npx expo start --web --port 80 --host 0.0.0.0' --name ash-mehr-frontend"
+echo ""
+
+echo "FIX 5: CHECK BACKEND CORS SETTINGS"
+echo "curl -I http://localhost:8000"
+echo "curl -H 'Origin: http://62.3.42.208:3000' -H 'Access-Control-Request-Method: GET' -X OPTIONS http://localhost:8000/info-needy"
+echo ""
+
+echo "=== STEP BY STEP TROUBLESHOOTING ==="

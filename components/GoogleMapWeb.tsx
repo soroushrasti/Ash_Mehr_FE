@@ -93,13 +93,30 @@ const GoogleMapWeb: React.FC<GoogleMapWebProps> = ({
         return;
       }
 
-      // Create callback function name
+      // Validate API key
+      const apiKey = Config.GOOGLE_MAPS_API_KEY;
+      if (!apiKey || apiKey === 'undefined' || apiKey === '') {
+        const error = 'Google Maps API key is not configured';
+        console.error(error);
+        setLoadError(error);
+        reject(new Error(error));
+        return;
+      }
+
+      // Create callback function name with timestamp to avoid conflicts
       const callbackName = 'googleMapsCallback' + Date.now();
 
-      // Set up callback
+      // Set up callback with additional error handling for domain issues
       (window as any)[callbackName] = () => {
         try {
           if (window.google && window.google.maps) {
+            console.log('Google Maps API loaded successfully for domain:', window.location.hostname);
+
+            // Additional check for Maps API functionality
+            if (typeof window.google.maps.Map !== 'function') {
+              throw new Error('Google Maps Map constructor not available');
+            }
+
             setIsMapLoaded(true);
             setLoadError(null);
             resolve();
@@ -108,7 +125,7 @@ const GoogleMapWeb: React.FC<GoogleMapWebProps> = ({
           }
         } catch (error) {
           console.error('Google Maps callback error:', error);
-          setLoadError('Failed to initialize Google Maps');
+          setLoadError('Failed to initialize Google Maps: ' + (error as Error).message);
           reject(error);
         } finally {
           // Cleanup callback
@@ -116,28 +133,48 @@ const GoogleMapWeb: React.FC<GoogleMapWebProps> = ({
         }
       };
 
-      // Create and load script
+      // Create and load script with enhanced error handling for domains
       const script = document.createElement('script');
-      script.src = `https://maps.googleapis.com/maps/api/js?key=${Config.GOOGLE_MAPS_API_KEY}&libraries=geometry,places&callback=${callbackName}`;
+
+      // Add additional parameters to ensure compatibility with domain restrictions
+      const scriptUrl = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=geometry,places&callback=${callbackName}&loading=async`;
+
+      console.log('Loading Google Maps API for domain:', window.location.hostname);
+      console.log('Using API key:', apiKey.substring(0, 10) + '...');
+
+      script.src = scriptUrl;
       script.async = true;
       script.defer = true;
 
-      script.onerror = () => {
-        setLoadError('Failed to load Google Maps API');
-        reject(new Error('Failed to load Google Maps script'));
+      script.onerror = (error) => {
+        const errorMsg = `Failed to load Google Maps API for domain ${window.location.hostname}. Check API key domain restrictions.`;
+        console.error(errorMsg, error);
+        setLoadError(errorMsg);
+        reject(new Error(errorMsg));
       };
 
-      // Set timeout for loading
+      // Enhanced timeout handling
       const timeout = setTimeout(() => {
-        setLoadError('Google Maps API loading timeout');
-        reject(new Error('Google Maps loading timeout'));
-      }, 10000);
+        const timeoutMsg = `Google Maps API loading timeout for domain ${window.location.hostname}`;
+        console.error(timeoutMsg);
+        setLoadError(timeoutMsg);
+        reject(new Error(timeoutMsg));
+      }, 20000); // Increased timeout for slower connections/domains
 
       script.onload = () => {
         clearTimeout(timeout);
       };
 
-      document.head.appendChild(script);
+      // Add script with additional error monitoring
+      try {
+        document.head.appendChild(script);
+      } catch (appendError) {
+        clearTimeout(timeout);
+        const appendErrorMsg = 'Failed to append Google Maps script to document head';
+        console.error(appendErrorMsg, appendError);
+        setLoadError(appendErrorMsg);
+        reject(new Error(appendErrorMsg));
+      }
     });
   }, []);
 

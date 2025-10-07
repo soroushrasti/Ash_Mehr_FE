@@ -117,7 +117,7 @@ export default function EditNeedyPage() {
       }
     } catch (error) {
       console.error('Error loading goods data:', error);
-      showAlert('خطا', 'خطا در دریافت اطلاعات کالاها');
+      showAlert('خطا', 'خطا در دریافت اطلاعات کمک ها');
     } finally {
       setLoading(false);
     }
@@ -180,7 +180,7 @@ const handleSaveAllGoods = async () => {
     }));
     const response = await apiService.editGood(String(numericRegisterId), payload);
     if (response.success) {
-      showAlert('موفق', 'کالاها با موفقیت ذخیره شدند');
+      showAlert('موفق', 'کمک ها با موفقیت ذخیره شدند');
       // refresh to get new GoodID values for newly created goods
       await loadGoodsData(String(numericRegisterId));
         router.push(`/admin/needy-management`);
@@ -231,12 +231,6 @@ const handleSaveAllGoods = async () => {
         }));
     };
 
-  const handleAddGood = async (index) => {
-       await apiService.createGoodNeedyPerson(formData.goods_of_registre[index].GoodID);
-      };
-  const handlEditGoods = async(index)=> {
-      await apiService.editGood(registerId);
-      };
 
   const loadAdmins = async () => {
     try {
@@ -355,9 +349,10 @@ const handleSaveAllGoods = async () => {
 
                     <InputField
                      label= "مقدار کمک *"
-                     value={good.NumberGood || ''}
+                     value={good.NumberGood === undefined || good.NumberGood === null ? '' : String(good.NumberGood)}
                      onChangeText={(text) => handleGoodFieldChange(index, 'NumberGood', text)}
                      placeholder= "  مقدار کمک"
+                     keyboardType="numeric"
                      textAlign = "right"
                     />
                   </View>

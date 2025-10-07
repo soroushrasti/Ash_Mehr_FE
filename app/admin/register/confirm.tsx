@@ -15,20 +15,26 @@ import { NeedyCreateWithChildren } from '@/types/api';
 export default function AdminRegisterConfirm() {
   const router = useRouter();
   const { formData, roleTitle, roleIcon, location, role, registerId, editMode } = useLocalSearchParams();
-  console.log('Form Data:', formData);
-  console.log('Location Data:', location);
-  console.log('Role:', role, 'Role Title:', roleTitle, 'Role Icon:', roleIcon, 'Register ID:', registerId, 'Edit Mode:', editMode);
+  // Safe parse helpers
+  const safeParse = (raw: any) => {
+    if (!raw) return {};
+    try {
+      return JSON.parse(raw as string);
+    } catch (e) {
+      console.warn('Failed to parse JSON param:', e);
+      return {};
+    }
+  };
+  const parsedFormData: any = safeParse(formData);
+  const parsedLocation: any = safeParse(location);
+
   const roleParam = Array.isArray(role) ? role[0] : role;
   const registerIdString = Array.isArray(registerId) ? registerId[0] : registerId;
   const { userId } = useAuth();
   const [loading, setLoading] = useState(false);
-
   const successColor = useThemeColor({}, 'success');
 
-  const parsedFormData = formData ? JSON.parse(formData as string) : {};
-  const parsedLocation = location ? JSON.parse(location as string) : {};
-
-  // Organize form data for display
+  // Organize form data for display safely
   const personalInfo = [
     { label: 'نام', value: parsedFormData.FirstName },
     { label: 'نام خانوادگی', value: parsedFormData.LastName },
@@ -37,37 +43,15 @@ export default function AdminRegisterConfirm() {
     { label: 'تاریخ تولد', value: parsedFormData.BirthDate },
     { label: 'نام پدر', value: parsedFormData.NameFather },
   ];
-
   const addressInfo = [
     { label: 'استان', value: parsedFormData.Province },
     { label: 'شهر', value: parsedFormData.City },
     { label: 'آدرس', value: parsedFormData.Street },
     { label: 'منطقه', value: parsedFormData.Region },
   ];
-
-  const additionalInfo = [
-    { label: 'جنسیت', value: parsedFormData.Gender === 'Male' ? 'مرد' : parsedFormData.gender === 'Female' ? 'زن' : parsedFormData.gender },
-    { label: 'سطح تحصیلات', value: getEducationLabel(parsedFormData.EducationLevel) },
-    { label: 'درآمد ماهانه', value: parsedFormData.IncomeAmount ? `${parsedFormData.IncomeAmount} تومان` : '' },
-    { label: 'نام همسر', value: parsedFormData.HousebandLastName && parsedFormData.HousebandFirstName ? `${parsedFormData.HousebandFirstName} ${parsedFormData.HousebandLastName}` : '' },
-    { label: 'دلیل غیبت همسر', value: parsedFormData.ReasonMissingHusband },
-    { label: 'سازمان حامی', value: parsedFormData.UnderOrganizationName },
-    { label: 'تحت حمایت نماینده', value: parsedFormData.UnderWhichAdmin },
-  ].filter(item => item.value); // Only show fields with values
-
- const childInfo = parsedFormData.children_of_registre.map((child, index) => [
-   { label: 'نام', value: child.FirstName },
-   { label: 'نام خانوادگی', value: child.LastName },
-   { label: 'سن', value: child.Age },
-   { label: 'جنسیت', value: child.Gender },
-   { label: 'کد ملی', value: child.NationalID },
-   { label: 'تحصیلات', value: child.EducationLevel },
- ].filter(item => item.value));
-
-
-
   function getEducationLabel(value: string) {
-    const educationMap = {
+    if (!value) return '';
+    const educationMap: Record<string, string> = {
       'None': 'بی‌سواد',
       'Primary': 'ابتدایی',
       'Secondary': 'راهنمایی',
@@ -78,8 +62,20 @@ export default function AdminRegisterConfirm() {
       'Master': 'فوق‌لیسانس',
       'PhD': 'دکتری',
     };
-    return educationMap[value as keyof typeof educationMap] || value;
+    return educationMap[value] || value;
   }
+  const genderValue = parsedFormData.Gender || parsedFormData.gender;
+  const translatedGender = genderValue === 'Male' ? 'مرد' : genderValue === 'Female' ? 'زن' : genderValue;
+  const additionalInfo = [
+    { label: 'جنسیت', value: translatedGender },
+    { label: 'سطح تحصیلات', value: getEducationLabel(parsedFormData.EducationLevel) },
+    { label: 'درآمد ماهانه', value: parsedFormData.IncomeAmount ? `${parsedFormData.IncomeAmount} تومان` : '' },
+    { label: 'نام همسر', value: (parsedFormData.HusbandFirstName || parsedFormData.HousebandFirstName) && (parsedFormData.HusbandLastName || parsedFormData.HousebandLastName) ? `${parsedFormData.HusbandFirstName || parsedFormData.HousebandFirstName} ${parsedFormData.HusbandLastName || parsedFormData.HousebandLastName}` : '' },
+    { label: 'دلیل غیبت همسر', value: parsedFormData.ReasonMissingHusband },
+    { label: 'سازمان حامی', value: parsedFormData.UnderOrganizationName },
+    { label: 'تحت حمایت نماینده', value: parsedFormData.UnderWhichAdmin },
+  ].filter(item => item.value !== undefined && item.value !== null && item.value !== '');
+  const childrenArray: any[] = Array.isArray(parsedFormData.children_of_registre) ? parsedFormData.children_of_registre : [];
 
   const handleEditForm = () => {
     router.back();
@@ -96,13 +92,9 @@ export default function AdminRegisterConfirm() {
       return;
     }
     setLoading(true);
-
     try {
-        console.log('Submitting with editMode:', editMode);
       const isAdminRole = roleParam === 'Admin' || roleParam === 'GroupAdmin';
-
       if (isAdminRole && editMode !== 'true') {
-        // Validate password
         if (!parsedFormData.Password || parsedFormData.Password.length < 6) {
           Alert.alert('خطا', 'رمز عبور معتبر وارد نشده است.');
           setLoading(false);
@@ -123,88 +115,63 @@ export default function AdminRegisterConfirm() {
           return;
         }
       }
-
-        if (isAdminRole && editMode === 'true' && registerIdString) {
-            // Validate password
-            if (!parsedFormData.Password || parsedFormData.Password.length < 6) {
-                Alert.alert('خطا', 'رمز عبور معتبر وارد نشده است.');
-                setLoading(false);
-                return;
-            }
-            const adminPayload = {
-                ...parsedFormData,
-                UserRole: roleParam === 'GroupAdmin' ? 'GroupAdmin' : 'Admin',
-                CreatedBy: Number(userId),
-                BirthDate: parsedFormData.BirthDate || undefined,
-                Latitude: parsedLocation.latitude?.toString() || parsedFormData.Latitude || undefined,
-                Longitude: parsedLocation.longitude?.toString() || parsedFormData.Longitude || undefined,
-            };
-            const result = await apiService.editAdmin(registerIdString, adminPayload as any);
-            if (!result.success) {
-                Alert.alert('خطا', result.error || 'ثبت نماینده ناموفق بود');
-                setLoading(false);
-                return;
-            }
+      if (isAdminRole && editMode === 'true' && registerIdString) {
+        if (!parsedFormData.Password || parsedFormData.Password.length < 6) {
+          Alert.alert('خطا', 'رمز عبور معتبر وارد نشده است.');
+          setLoading(false);
+          return;
         }
-
-
-      // Needy roles flow
-        const isNeedy = roleParam === 'Needy' || roleParam === 'needy';
-
-        if (isNeedy && !registerId) {
-            const registerData: NeedyCreateWithChildren = {
-                ...parsedFormData,
-                CreatedBy: Number(userId),
-                Latitude: parsedLocation.latitude?.toString() || undefined,
-                Longitude: parsedLocation.longitude?.toString() || undefined,
-            } as NeedyCreateWithChildren;
-            const result = await apiService.createNeedyPerson(registerData);
-
-            if (!result.success) {
-                Alert.alert('خطا', result.error || 'در ذخیره خطایی رخ داد.');
-                setLoading(false);
-                return;
-            }
-
+        const adminPayload = {
+          ...parsedFormData,
+          UserRole: roleParam === 'GroupAdmin' ? 'GroupAdmin' : 'Admin',
+          CreatedBy: Number(userId),
+          BirthDate: parsedFormData.BirthDate || undefined,
+          Latitude: parsedLocation.latitude?.toString() || parsedFormData.Latitude || undefined,
+          Longitude: parsedLocation.longitude?.toString() || parsedFormData.Longitude || undefined,
+        };
+        const result = await apiService.editAdmin(registerIdString, adminPayload as any);
+        if (!result.success) {
+          Alert.alert('خطا', result.error || 'ثبت نماینده ناموفق بود');
+          setLoading(false);
+          return;
         }
-        if (isNeedy && editMode === 'true' && registerIdString) {
-            console.log(isNeedy, editMode, registerIdString);
-            const registerData: NeedyCreateWithChildren = {
-                ...parsedFormData,
-                CreatedBy: Number(userId),
-                Latitude: parsedLocation.latitude?.toString() || undefined,
-                Longitude: parsedLocation.longitude?.toString() || undefined,
-            } as NeedyCreateWithChildren;
-            const result = await apiService.editNeedy(registerIdString, registerData);
-            console.log('Edit needy result:', result);
-            if (!result.success) {
-                Alert.alert('خطا', result.error || 'در ذخیره خطایی رخ داد.');
-                setLoading(false);
-                return;
-            }
-
-
+      }
+      const isNeedy = roleParam === 'Needy' || roleParam === 'needy';
+      if (isNeedy && !registerId) {
+        const registerData: NeedyCreateWithChildren = {
+          ...parsedFormData,
+          CreatedBy: Number(userId),
+          Latitude: parsedLocation.latitude?.toString() || undefined,
+          Longitude: parsedLocation.longitude?.toString() || undefined,
+        } as NeedyCreateWithChildren;
+        const result = await apiService.createNeedyPerson(registerData);
+        if (!result.success) {
+          Alert.alert('خطا', result.error || 'در ذخیره خطایی رخ داد.');
+          setLoading(false);
+          return;
         }
-
-        if (Platform.OS === 'web') {
-            alert(`${roleTitle} با موفقیت در سیستم ثبت شد.`);
+      }
+      if (isNeedy && editMode === 'true' && registerIdString) {
+        const registerData: NeedyCreateWithChildren = {
+          ...parsedFormData,
+          CreatedBy: Number(userId),
+          Latitude: parsedLocation.latitude?.toString() || undefined,
+          Longitude: parsedLocation.longitude?.toString() || undefined,
+        } as NeedyCreateWithChildren;
+        const result = await apiService.editNeedy(registerIdString, registerData);
+        if (!result.success) {
+          Alert.alert('خطا', result.error || 'در ذخیره خطایی رخ داد.');
+          setLoading(false);
+          return;
         }
-        Alert.alert(
-            'ذخیره موفق',
-            `${roleTitle} با موفقیت در سیستم ثبت شد.`,
-            [
-                {
-                    text: 'تأیید',
-                    onPress: () => {
-                        router.replace('/admin');
-                    }
-                }
-            ]
-        );
-        router.replace('/admin');
-        setLoading(false);
-        return;
-
+      }
+      if (Platform.OS === 'web') {
+        alert(`${roleTitle} با موفقیت در سیستم ثبت شد.`);
+      }
+      Alert.alert('ذخیره موفق', `${roleTitle} با موفقیت در سیستم ثبت شد.`, [
+        { text: 'تأیید', onPress: () => router.replace('/admin') }
+      ]);
+      router.replace('/admin'); // single redirect is enough; duplicate removed
     } catch (error) {
       console.error('Registration error:', error);
       Alert.alert('خطا', error instanceof Error ? error.message : 'در ذخیره خطایی رخ داد. لطفاً دوباره تلاش کنید.');
@@ -316,24 +283,23 @@ export default function AdminRegisterConfirm() {
           editTitle="ویرایش"
         />
 
-         {/* children Information */}
-         {parsedFormData.children_of_registre?.map((child, index) => (
-           <InfoSection
-             key={index}
-             title="اطلاعات فرزندان"
-             data={[
-               { label: 'نام', value: child.FirstName },
-               { label: 'نام خانوادگی', value: child.LastName },
-               { label: 'سن', value: child.Age },
-               { label: 'جنسیت', value: child.Gender },
-               { label: 'کد ملی', value: child.NationalID },
-               { label: 'تحصیلات', value: child.EducationLevel },
-             ].filter(item => item.value)}
-             onEdit={handleEditForm}
-          editTitle="ویرایش"
-             />
-         ))}
-
+        {/* children Information */}
+        {childrenArray.length > 0 && childrenArray.map((child, index) => (
+          <InfoSection
+            key={child.NationalID || index}
+            title={`اطلاعات فرزندان ${index + 1}`}
+            data={[
+              { label: 'نام', value: child.FirstName },
+              { label: 'نام خانوادگی', value: child.LastName },
+              { label: 'سن', value: child.Age },
+              { label: 'جنسیت', value: child.Gender },
+              { label: 'کد ملی', value: child.NationalID },
+              { label: 'تحصیلات', value: getEducationLabel(child.EducationLevel) },
+            ].filter(item => item.value !== undefined && item.value !== null && item.value !== '')}
+            onEdit={handleEditForm}
+            editTitle="ویرایش"
+          />
+        ))}
 
         {/* Address Information */}
         <InfoSection
@@ -369,10 +335,10 @@ export default function AdminRegisterConfirm() {
             <ThemedText style={styles.locationIcon}>📍</ThemedText>
             <View style={styles.locationDetails}>
               <ThemedText type="caption" style={styles.infoLabel}>
-                عرض جغرافیایی: {parsedLocation.latitude?.toFixed(6)}
+                عرض جغرافیایی: {typeof parsedLocation.latitude === 'number' ? parsedLocation.latitude.toFixed(6) : (parsedLocation.latitude || '-')}
               </ThemedText>
               <ThemedText type="caption" style={styles.infoLabel}>
-                طول جغرافیایی: {parsedLocation.longitude?.toFixed(6)}
+                طول جغرافیایی: {typeof parsedLocation.longitude === 'number' ? parsedLocation.longitude.toFixed(6) : (parsedLocation.longitude || '-')}
               </ThemedText>
             </View>
           </View>

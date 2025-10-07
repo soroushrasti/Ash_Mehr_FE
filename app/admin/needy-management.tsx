@@ -153,6 +153,7 @@ export default function ReportsPage() {
                 borderBottomColor: borderColor
             }
         ]}>
+            {/* Name */}
             <View style={styles.tableCell}>
                 <ThemedText
                     style={[
@@ -160,24 +161,25 @@ export default function ReportsPage() {
                         { color: isHeader ? 'white' : textColor },
                         isHeader && styles.tableHeaderText
                     ]}
+                    numberOfLines={1}
                 >
                     {isHeader ? 'نام' : `${record.name}`}
                 </ThemedText>
             </View>
-
-            <View style={styles.tableCell}>
+            {/* Address */}
+            <View style={[styles.tableCell, styles.addressCell]}>
                 <ThemedText
                     style={[
                         styles.tableCellText,
                         { color: isHeader ? 'white' : textColor },
                         isHeader && styles.tableHeaderText
                     ]}
-                    numberOfLines={isHeader ? 1 : 2}
+                    numberOfLines={2}
                 >
                     {isHeader ? 'آدرس' : record.info}
                 </ThemedText>
             </View>
-
+            {/* Representative */}
             <View style={styles.tableCell}>
                 <ThemedText
                     style={[
@@ -185,47 +187,53 @@ export default function ReportsPage() {
                         { color: isHeader ? 'white' : textColor },
                         isHeader && styles.tableHeaderText
                     ]}
+                    numberOfLines={1}
                 >
                     {isHeader ? 'نماینده' : (record.group_name || 'نامشخص')}
                 </ThemedText>
             </View>
-
+            {/* Actions */}
             {!isHeader && (
                 <View style={styles.actionsCell}>
                     <TouchableOpacity
                         style={[styles.actionButton, { backgroundColor: primaryColor }]}
                         onPress={() => handleViewDetails(record)}
+                        hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
+                        accessibilityLabel="جزئیات"
                     >
                         <ThemedText style={styles.actionButtonText}>👁️</ThemedText>
                     </TouchableOpacity>
-
                     <TouchableOpacity
                         style={[styles.actionButton, { backgroundColor: successColor }]}
                         onPress={() => handleEdit(record)}
+                        hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
+                        accessibilityLabel="ویرایش"
                     >
                         <ThemedText style={styles.actionButtonText}>✏️</ThemedText>
                     </TouchableOpacity>
-
                     <TouchableOpacity
                         style={[styles.actionButton, { backgroundColor: dangerColor }]}
                         onPress={() => handleDelete(record)}
+                        hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
+                        accessibilityLabel="حذف"
                     >
                         <ThemedText style={styles.actionButtonText}>🗑️</ThemedText>
                     </TouchableOpacity>
-
                     <TouchableOpacity
                         style={[styles.actionButton, { backgroundColor: '#9a8161' }]}
                         onPress={() => handleGood(record)}
+                        hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
+                        accessibilityLabel="کمک ها"
                     >
                         <ThemedText style={styles.actionButtonText}>💰</ThemedText>
                     </TouchableOpacity>
                 </View>
             )}
-
             {isHeader && (
                 <View style={styles.actionsCell}>
                     <ThemedText
                         style={[styles.tableCellText, { color: 'white' }, styles.tableHeaderText]}
+                        numberOfLines={1}
                     >
                         عملیات
                     </ThemedText>
@@ -366,6 +374,8 @@ export default function ReportsPage() {
     );
 }
 
+const ACTION_BUTTON_SIZE = Platform.OS === 'android' ? 40 : 34;
+
 const styles = StyleSheet.create({
     container: {
         flex: 1,
@@ -425,23 +435,31 @@ const styles = StyleSheet.create({
         flexDirection: 'row-reverse',
         borderBottomWidth: 1,
         borderColor: '#E0E0E0',
-        paddingVertical: Spacing.md,
-        paddingHorizontal: Spacing.sm,
-        minHeight: 60,
+        paddingVertical: Spacing.sm,
+        paddingHorizontal: Spacing.xs,
+        minHeight: 64,
         width: '100%',
+        alignItems: 'center'
     },
     tableCell: {
         flex: 1,
         paddingHorizontal: Spacing.xs,
         justifyContent: 'center',
         alignItems: 'flex-end',
+        minWidth: 60,
+    },
+    addressCell: {
+        flex: 2,
+        minWidth: 120,
     },
     actionsCell: {
-        flex: 1,
         flexDirection: 'row-reverse',
         alignItems: 'center',
-        justifyContent: 'center',
+        justifyContent: 'flex-start',
+        gap: 6,
         paddingHorizontal: Spacing.xs,
+        flexShrink: 0,
+        width: Platform.OS === 'android' ? 190 : 170,
     },
     tableCellText: {
         fontSize: 14,
@@ -452,16 +470,22 @@ const styles = StyleSheet.create({
         fontSize: 16,
     },
     actionButton: {
-        width: 32,
-        height: 32,
-        borderRadius: 16,
+        width: ACTION_BUTTON_SIZE,
+        height: ACTION_BUTTON_SIZE,
+        borderRadius: ACTION_BUTTON_SIZE / 2,
         justifyContent: 'center',
         alignItems: 'center',
-        marginHorizontal: 2,
+        shadowColor: '#000',
+        shadowOpacity: 0.08,
+        shadowRadius: 2,
+        shadowOffset: { width: 0, height: 1 },
+        elevation: 2,
     },
     actionButtonText: {
-        fontSize: 12,
+        fontSize: Platform.OS === 'android' ? 18 : 16,
+        lineHeight: Platform.OS === 'android' ? 20 : 18,
         color: 'white',
+        textAlign: 'center'
     },
     emptyContainer: {
         alignItems: 'center',

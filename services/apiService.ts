@@ -172,7 +172,7 @@ class ApiService {
     });
   }
 
-   async editGood(registerId: string, needyData: any): Promise<ApiResponse> {
+   async editGood(registerId: string, goodData: any): Promise<ApiResponse> {
       return apiRequest({
         endpoint: `${Config.ENDPOINTS.EDIT_GOOD}/${registerId}`,
         method: 'POST',

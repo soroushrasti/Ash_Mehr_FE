@@ -124,12 +124,35 @@ const handleGoodsCountChange = (count: number) => {
     };
 
     const handleGoodFieldChange = (index: number, field: string, value: string) => {
-        setFormData(prev => ({
-            ...prev,
-            goods_of_registre: prev.goods_of_registre.map((good, i) =>
-                i === index ? { ...good, [field]: value } : good
-            )
-        }));
+          let finalValue = value;
+
+            // اگر فیلد عددی است و کاربر عدد فارسی وارد کرده
+            if (field === 'NumberGood') {
+                // تبدیل اعداد فارسی به انگلیسی
+                finalValue = value
+                    .replace(/۰/g, '0')
+                    .replace(/۱/g, '1')
+                    .replace(/۲/g, '2')
+                    .replace(/۳/g, '3')
+                    .replace(/۴/g, '4')
+                    .replace(/۵/g, '5')
+                    .replace(/۶/g, '6')
+                    .replace(/۷/g, '7')
+                    .replace(/۸/g, '8')
+                    .replace(/۹/g, '9');
+            }
+         setFormData(prev => {
+               const updatedGoods = [...prev.goods_of_registre];
+               updatedGoods[index] = {
+                   ...updatedGoods[index],
+                   [field]: finalValue
+               };
+               return {
+                   ...prev,
+                   goods_of_registre: updatedGoods
+               };
+           });
+
     };
 
     const [loading, setLoading] = useState(false);
@@ -582,9 +605,16 @@ const handleGoodsCountChange = (count: number) => {
                                 }))
                             ]}
                             selectedValue={formData.UnderWhichAdmin || 0}
-                            onValueChange={(value) => handleFieldChange('UnderWhichAdmin', value || undefined)}
+                            onValueChange={(value) => {
+                                    if (value === 0) {
+                                        Alert.alert('اخطار', 'لطفا یک نماینده انتخاب کنید');
+                                        return;
+                                    }
+                                    handleFieldChange('UnderWhichAdmin', value);
+                                }}
                             placeholder="انتخاب نماینده"
                             style={styles.pickerContainer}
+                            required
                         />
 
                             <ThemedText style={styles.fieldLabel}>تحت نظارت نماینده فرعی</ThemedText>
@@ -684,6 +714,7 @@ const handleGoodsCountChange = (count: number) => {
                                                              value={good.NumberGood}
                                                              onChangeText={(text) => handleGoodFieldChange(index, 'NumberGood', text)}
                                                              placeholder="مقدار کمک"
+                                                             keyboardType = "numeric"
                                                              required
                                                          />
                                                     </View>

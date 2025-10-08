@@ -176,7 +176,7 @@ class ApiService {
       return apiRequest({
         endpoint: `${Config.ENDPOINTS.EDIT_GOOD}/${registerId}`,
         method: 'POST',
-        body: needyData,
+        body: goodData,
         includeAuth: true,
         showErrorAlert: true,
       });

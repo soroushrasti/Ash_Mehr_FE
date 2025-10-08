@@ -1,6 +1,5 @@
-///////////////edit-good////////////////////
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, ScrollView, Alert, ActivityIndicator, TouchableOpacity } from 'react-native';
+import { View, StyleSheet, ScrollView, ActivityIndicator, TouchableOpacity } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { ThemedView } from '@/components/ThemedView';
 import { ThemedText } from '@/components/ThemedText';
@@ -18,20 +17,27 @@ import { showAlert } from '@/utils/alert';
 
 
 interface ExtendedNeedyEditForm {
-  goods_of_registre: Array<{
+  goods_of_registre: {
     GoodID?: number;
     TypeGood: string;
-    NumberGood: number; // ensure always number
-    GivenToWhome: number; // register id (int)
-    GivenBy: number; // admin id (int)
+    NumberGood: number;
+    GivenToWhome: number;
+    GivenBy: number;
     UpdatedDate?: string;
-  }>;
+  }[];
 }
 
 export default function EditNeedyPage() {
   const { registerId } = useLocalSearchParams();
   const router = useRouter();
   const { userId } = useAuth();
+
+  // Ensure userId is a number
+  const numericUserId = React.useMemo(() => {
+    const id = userId ? (typeof userId === 'string' ? parseInt(userId, 10) : userId) : 0;
+    return isNaN(id) ? 0 : id;
+  }, [userId]);
+
   // compute numeric register id early
   const numericRegisterId = React.useMemo(() => {
     const raw = Array.isArray(registerId) ? registerId[0] : registerId;
@@ -39,56 +45,29 @@ export default function EditNeedyPage() {
     return isNaN(n) ? 0 : n;
   }, [registerId]);
 
-  const errorColor = useThemeColor({}, 'danger');
-
-  const [goodsCount, setGoodsCount] = useState(0);
+  const errorColor = useThemeColor({}, 'error');
 
   const [formData, setFormData] = useState<ExtendedNeedyEditForm>({
     goods_of_registre: [{
       TypeGood: '',
       NumberGood: 0,
       GivenToWhome: numericRegisterId,
-      GivenBy: userId || 0
+      GivenBy: numericUserId
     }]
   });
-   const formDataString = JSON.stringify(formData);
-
-   const parsedFormData = formDataString ? JSON.parse(formDataString) : {};
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
-  const [fieldErrors, setFieldErrors] = useState<{[key: string]: string}>({});
-  const [adminOptions, setAdminOptions] = useState<AdminPersonLocation[]>([]);
 
   const primaryColor = useThemeColor({}, 'primary');
-  const successColor = useThemeColor({}, 'success');
   const backgroundColor = useThemeColor({}, 'background');
-  const surfaceColor = useThemeColor({}, 'surface');
   const textColor = useThemeColor({}, 'text');
-  const borderColor = useThemeColor({}, 'border');
 
- useEffect(() => {
-   const loadData = async () => {
-     if (registerId) {
-       try {
-         await Promise.all([
-           loadGoodsData(registerId),
-           loadAdmins()
-         ]);
-       } catch (error) {
-         console.error('Error loading data:', error);
-         showAlert('خطا', 'خطا در بارگذاری اطلاعات');
-       }
-     }
-   };
-
-   loadData();
- }, [registerId]);
-
-  const loadGoodsData = async (id: string) => {
+  const loadGoodsData = React.useCallback(async (id: string | string[]) => {
+    const idStr = Array.isArray(id) ? id[0] : id;
     try {
-      const response = await apiService.getGoodsDetails(id);
+      const response = await apiService.getGoodsDetails(idStr);
       if (response.success && response.data) {
         const data = response.data;
         const list = Array.isArray(data.goods) ? data.goods : Array.isArray(data) ? data : [];
@@ -99,21 +78,19 @@ export default function EditNeedyPage() {
             TypeGood: g.TypeGood || g.type || '',
             NumberGood: Number(g.NumberGood ?? g.number ?? 0),
             GivenToWhome: g.GivenToWhome || numericRegisterId,
-            GivenBy: g.GivenBy || (userId || 0),
+            GivenBy: g.GivenBy || numericUserId,
             UpdatedDate: g.UpdatedDate || g.updated_at
           }))
         }));
-        setGoodsCount(list.length);
       } else {
         setFormData({
           goods_of_registre: [{
             TypeGood: '',
             NumberGood: 0,
             GivenToWhome: numericRegisterId,
-            GivenBy: userId || 0
+            GivenBy: numericUserId
           }]
         });
-        setGoodsCount(1);
       }
     } catch (error) {
       console.error('Error loading goods data:', error);
@@ -121,153 +98,104 @@ export default function EditNeedyPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [numericRegisterId, numericUserId]);
 
-
-    const handleAddNewGood = () => {
-      setFormData(prev => ({
-        ...prev,
-        goods_of_registre: [
-          ...prev.goods_of_registre,
-          {
-            TypeGood: '',
-            NumberGood: 0,
-            GivenToWhome: numericRegisterId,
-            GivenBy: userId || 0
-          }
-        ]
-      }));
-      setGoodsCount(c => c + 1);
-    };
-
-const removeGoodAt = (index: number) => {
-  setFormData(prev => ({
-    ...prev,
-    goods_of_registre: prev.goods_of_registre.filter((_, i) => i !== index)
-  }));
-  setGoodsCount(c => Math.max(0, c - 1));
-};
-
-const validateGoods = (): boolean => {
-  const errs: string[] = [];
-  formData.goods_of_registre.forEach((g, idx) => {
-    if (!g.TypeGood.trim()) errs.push(`نوع کمک ردیف ${idx + 1} خالی است`);
-    if (g.NumberGood === undefined || g.NumberGood === null || isNaN(g.NumberGood) || g.NumberGood <= 0) {
-      errs.push(`مقدار کمک ردیف ${idx + 1} باید عدد مثبت باشد`);
-    }
-  });
-  setValidationErrors(errs);
-  return errs.length === 0;
-};
-
-const handleSaveAllGoods = async () => {
-  if (!numericRegisterId) {
-    showAlert('خطا', 'شناسه ثبت شونده معتبر نیست');
-    return;
-  }
-  if (!validateGoods()) {
-    showAlert('خطا', 'ابتدا خطاهای اعتبارسنجی را برطرف کنید');
-    return;
-  }
-  try {
-    setSaving(true);
-    const payload = formData.goods_of_registre.map(g => ({
-      GoodID: g.GoodID, // backend will upsert if exists
-      TypeGood: g.TypeGood.trim(),
-      NumberGood: Number(g.NumberGood),
-      GivenBy: userId || g.GivenBy || 0,
-      // GivenToWhome inferred from path param
-    }));
-    const response = await apiService.editGood(String(numericRegisterId), payload);
-    if (response.success) {
-      showAlert('موفق', 'کمک ها با موفقیت ذخیره شدند');
-      // refresh to get new GoodID values for newly created goods
-      await loadGoodsData(String(numericRegisterId));
-        router.push(`/admin/needy-management`);
-    } else {
-      showAlert('خطا', response.error || 'ذخیره با شکست مواجه شد');
-    }
-  } catch (e: any) {
-    console.error('Save goods error', e);
-    showAlert('خطا', e.message || 'خطای ناشناخته در ذخیره');
-  } finally {
-    setSaving(false);
-  }
-};
-
-    const handleGoodsCountChange = (count: number) => {
-        const numCount = Math.max(0, Math.min(count, 10)); // Limit to 0-10 children
-        setGoodsCount(numCount);
-
-        setFormData(prev => {
-            const newGoods = Array(numCount).fill(null).map((_, index) => {
-                // Keep existing data if available
-                const existingGood = prev.goods_of_registre[index];
-                return existingGood || {
-                    TypeGood: '',
-                    NumberGood: '',
-                    GivenToWhome: '',
-                };
-            });
-
-            return {
-                ...prev,
-                goods_of_registre: newGoods
-            };
-        });
-    };
-
-    const handleGoodFieldChange = (index: number, field: string, value: string) => {
-        setFormData(prev => ({
-            ...prev,
-            goods_of_registre: prev.goods_of_registre.map((good, i) => {
-                if (i !== index) return good;
-                if (field === 'NumberGood') {
-                  const num = parseInt(value, 10);
-                  return { ...good, NumberGood: isNaN(num) ? 0 : num };
-                }
-                return { ...good, [field]: value } as any;
-            })
-        }));
-    };
-
-
-  const loadAdmins = async () => {
-    try {
-      const response = await apiService.getAdminGeoPoints();
-      if (response.success && response.data) {
-        setAdminOptions(response.data);
+  useEffect(() => {
+    const loadData = async () => {
+      if (registerId) {
+        try {
+          await loadGoodsData(registerId);
+        } catch (error) {
+          console.error('Error loading data:', error);
+          showAlert('خطا', 'خطا در بارگذاری اطلاعات');
+        }
       }
-    } catch (error) {
-      console.error('Failed to load admins:', error);
+    };
+
+    loadData();
+  }, [registerId, loadGoodsData]);
+
+  const handleAddNewGood = () => {
+    setFormData(prev => ({
+      ...prev,
+      goods_of_registre: [
+        ...prev.goods_of_registre,
+        {
+          TypeGood: '',
+          NumberGood: 0,
+          GivenToWhome: numericRegisterId,
+          GivenBy: numericUserId
+        }
+      ]
+    }));
+  };
+
+  const removeGoodAt = (index: number) => {
+    setFormData(prev => ({
+      ...prev,
+      goods_of_registre: prev.goods_of_registre.filter((_, i) => i !== index)
+    }));
+  };
+
+  const validateGoods = (): boolean => {
+    const errs: string[] = [];
+    formData.goods_of_registre.forEach((g, idx) => {
+      if (!g.TypeGood.trim()) errs.push(`نوع کمک ردیف ${idx + 1} خالی است`);
+      if (g.NumberGood === undefined || g.NumberGood === null || isNaN(g.NumberGood) || g.NumberGood <= 0) {
+        errs.push(`مقدار کمک ردیف ${idx + 1} باید عدد مثبت باشد`);
+      }
+    });
+    setValidationErrors(errs);
+    return errs.length === 0;
+  };
+
+  const handleSaveAllGoods = async () => {
+    if (!numericRegisterId) {
+      showAlert('خطا', 'شناسه ثبت شونده معتبر نیست');
+      return;
+    }
+    if (!validateGoods()) {
+      showAlert('خطا', 'ابتدا خطاهای اعتبارسنجی را برطرف کنید');
+      return;
+    }
+    try {
+      setSaving(true);
+      const payload = formData.goods_of_registre.map(g => ({
+        GoodID: g.GoodID,
+        TypeGood: g.TypeGood.trim(),
+        NumberGood: Number(g.NumberGood),
+        GivenBy: numericUserId || g.GivenBy || 0,
+      }));
+      const response = await apiService.editGood(String(numericRegisterId), payload);
+      if (response.success) {
+        showAlert('موفق', 'کمک ها با موفقیت ذخیره شدند');
+        await loadGoodsData(String(numericRegisterId));
+        router.push(`/admin/needy-management`);
+      } else {
+        showAlert('خطا', response.error || 'ذخیره با شکست مواجه شد');
+      }
+    } catch (e: any) {
+      console.error('Save goods error', e);
+      showAlert('خطا', e.message || 'خطای ناشناخته در ذخیره');
+    } finally {
+      setSaving(false);
     }
   };
 
-  const validateForm = () => {
-    const errors: string[] = [];
-    const fieldErrs: {[key: string]: string} = {};
-    setValidationErrors(errors);
-    setFieldErrors(fieldErrs);
-    return errors.length === 0;
+  const handleGoodFieldChange = (index: number, field: string, value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      goods_of_registre: prev.goods_of_registre.map((good, i) => {
+        if (i !== index) return good;
+        if (field === 'NumberGood') {
+          const num = parseInt(value, 10);
+          return { ...good, NumberGood: isNaN(num) ? 0 : num };
+        }
+        return { ...good, [field]: value };
+      })
+    }));
   };
 
-  const handleFieldChange = (field: keyof ExtendedNeedyEditForm, value: string | number | undefined) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-
-    // Clear field-specific error when user starts typing
-    if (fieldErrors[field]) {
-      setFieldErrors(prev => {
-        const newErrors = { ...prev };
-        delete newErrors[field];
-        return newErrors;
-      });
-    }
-
-    // Clear general validation errors when user starts making changes
-    if (validationErrors.length > 0) {
-      setValidationErrors([]);
-    }
-  };
 
 
   if (loading) {
@@ -471,60 +399,65 @@ const styles = StyleSheet.create({
     fontSize: 14,
     marginBottom: Spacing.xs,
   },
-   childHeader: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      marginBottom: 10,
-    },
-    deleteButton: {
-      paddingHorizontal: 10,
-      paddingVertical: 4,
-      backgroundColor: '#d9534f',
-      borderRadius: 6,
-      alignSelf: 'flex-start'
-    },
-    deleteText: {
-      color: 'white',
-      fontSize: 12,
-      fontWeight: '600'
-    },
-   addChildSection: {
-       marginTop: 20,
-       alignItems: 'center'
-     },
-   addButtonText: {
-       color: '#FFFFFF',
-       fontSize: 16,
-       fontWeight: 'bold'
-     },
- childrenButtonsContainer: {
-     marginTop: 20,
-     gap: 15,
-     alignItems: 'center'
-   },
-   addButton: {
-     paddingVertical: 12,
-     paddingHorizontal: 24,
-     borderRadius: 8,
-     alignItems: 'center',
-     minWidth: 200
-   },
-   saveButton: {
-     paddingVertical: 12,
-     paddingHorizontal: 24,
-     borderRadius: 8,
-     alignItems: 'center',
-     minWidth: 200
-   },
-   addButtonText: {
-     color: '#FFFFFF',
-     fontSize: 16,
-     fontWeight: 'bold'
-   },
-   saveButtonText: {
-     color: '#FFFFFF',
-     fontSize: 16,
-     fontWeight: 'bold'
-   },
+  childCard: {
+    borderWidth: 1,
+    borderRadius: BorderRadius.md,
+    padding: Spacing.md,
+    marginBottom: Spacing.md,
+  },
+  childTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  childHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  deleteButton: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    backgroundColor: '#d9534f',
+    borderRadius: 6,
+    alignSelf: 'flex-start'
+  },
+  deleteText: {
+    color: 'white',
+    fontSize: 12,
+    fontWeight: '600'
+  },
+  addChildSection: {
+    marginTop: 20,
+    alignItems: 'center'
+  },
+  childrenButtonsContainer: {
+    marginTop: 20,
+    gap: 15,
+    alignItems: 'center'
+  },
+  addButton: {
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 8,
+    alignItems: 'center',
+    minWidth: 200
+  },
+  saveButton: {
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 8,
+    alignItems: 'center',
+    minWidth: 200
+  },
+  addButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: 'bold'
+  },
+  saveButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: 'bold'
+  },
 });

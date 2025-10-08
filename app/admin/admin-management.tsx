@@ -23,6 +23,9 @@ interface AdminRecord {
   createdAt?: string;
 }
 
+const ACTION_BUTTON_SIZE = Platform.OS === 'android' ? 28 : 34;
+const ACTION_BUTTON_GAP = Platform.OS === 'android' ? 3 : 6;
+
 export default function AdminManagementPage() {
   const [adminRecords, setAdminRecords] = useState<NeedyPersonLocation[]>([]);
   const [loading, setLoading] = useState(true);
@@ -385,30 +388,33 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderColor: '#E0E0E0',
     paddingVertical: Spacing.md,
-    paddingHorizontal: Spacing.sm,
+    paddingHorizontal: Platform.OS === 'android' ? 4 : Spacing.sm,
     minHeight: 60,
-    width: '100%', // Ensure full width
+    width: '100%',
   },
   tableCell: {
     flex: 1,
-    paddingHorizontal: Spacing.xs,
+    paddingHorizontal: Platform.OS === 'android' ? 4 : Spacing.xs,
     justifyContent: 'center',
     alignItems: 'flex-end',
   },
   actionsCell: {
-    flex: 1,
     flexDirection: 'row-reverse',
     alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: Spacing.xs,
+    justifyContent: 'flex-start',
+    gap: ACTION_BUTTON_GAP,
+    paddingHorizontal: Platform.OS === 'android' ? 2 : Spacing.xs,
+    flexShrink: 0,
+    width: Platform.OS === 'android' ? 110 : 140,
+    minWidth: Platform.OS === 'android' ? 110 : 140,
   },
   tableCellText: {
-    fontSize: 14,
+    fontSize: Platform.OS === 'android' ? 12 : 14,
     textAlign: 'right',
   },
   tableHeaderText: {
     fontWeight: 'bold',
-    fontSize: 16,
+    fontSize: Platform.OS === 'android' ? 14 : 16,
   },
   roleBadge: {
     paddingHorizontal: Spacing.sm,
@@ -423,16 +429,22 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   actionButton: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    width: ACTION_BUTTON_SIZE,
+    height: ACTION_BUTTON_SIZE,
+    borderRadius: ACTION_BUTTON_SIZE / 2,
     justifyContent: 'center',
     alignItems: 'center',
-    marginHorizontal: 2,
+    shadowColor: '#000',
+    shadowOpacity: 0.08,
+    shadowRadius: 2,
+    shadowOffset: { width: 0, height: 1 },
+    elevation: 2,
   },
   actionButtonText: {
-    fontSize: 12,
+    fontSize: Platform.OS === 'android' ? 12 : 16,
+    lineHeight: Platform.OS === 'android' ? 14 : 18,
     color: 'white',
+    textAlign: 'center',
   },
   emptyContainer: {
     alignItems: 'center',

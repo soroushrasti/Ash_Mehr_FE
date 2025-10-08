@@ -374,7 +374,8 @@ export default function ReportsPage() {
     );
 }
 
-const ACTION_BUTTON_SIZE = Platform.OS === 'android' ? 40 : 34;
+const ACTION_BUTTON_SIZE = Platform.OS === 'android' ? 28 : 34;
+const ACTION_BUTTON_GAP = Platform.OS === 'android' ? 3 : 6;
 
 const styles = StyleSheet.create({
     container: {
@@ -436,38 +437,39 @@ const styles = StyleSheet.create({
         borderBottomWidth: 1,
         borderColor: '#E0E0E0',
         paddingVertical: Spacing.sm,
-        paddingHorizontal: Spacing.xs,
+        paddingHorizontal: Platform.OS === 'android' ? 4 : Spacing.xs,
         minHeight: 64,
         width: '100%',
         alignItems: 'center'
     },
     tableCell: {
         flex: 1,
-        paddingHorizontal: Spacing.xs,
+        paddingHorizontal: Platform.OS === 'android' ? 4 : Spacing.xs,
         justifyContent: 'center',
         alignItems: 'flex-end',
-        minWidth: 60,
+        minWidth: Platform.OS === 'android' ? 50 : 60,
     },
     addressCell: {
-        flex: 2,
-        minWidth: 120,
+        flex: Platform.OS === 'android' ? 1.5 : 2,
+        minWidth: Platform.OS === 'android' ? 80 : 120,
     },
     actionsCell: {
         flexDirection: 'row-reverse',
         alignItems: 'center',
         justifyContent: 'flex-start',
-        gap: 6,
-        paddingHorizontal: Spacing.xs,
+        gap: ACTION_BUTTON_GAP,
+        paddingHorizontal: Platform.OS === 'android' ? 2 : Spacing.xs,
         flexShrink: 0,
-        width: Platform.OS === 'android' ? 190 : 170,
+        width: Platform.OS === 'android' ? 135 : 170,
+        minWidth: Platform.OS === 'android' ? 135 : 170,
     },
     tableCellText: {
-        fontSize: 14,
+        fontSize: Platform.OS === 'android' ? 12 : 14,
         textAlign: 'right',
     },
     tableHeaderText: {
         fontWeight: 'bold',
-        fontSize: 16,
+        fontSize: Platform.OS === 'android' ? 14 : 16,
     },
     actionButton: {
         width: ACTION_BUTTON_SIZE,
@@ -482,8 +484,8 @@ const styles = StyleSheet.create({
         elevation: 2,
     },
     actionButtonText: {
-        fontSize: Platform.OS === 'android' ? 18 : 16,
-        lineHeight: Platform.OS === 'android' ? 20 : 18,
+        fontSize: Platform.OS === 'android' ? 12 : 16,
+        lineHeight: Platform.OS === 'android' ? 14 : 18,
         color: 'white',
         textAlign: 'center'
     },

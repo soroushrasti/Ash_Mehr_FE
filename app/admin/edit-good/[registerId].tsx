@@ -223,8 +223,13 @@ const handleSaveAllGoods = async () => {
             goods_of_registre: prev.goods_of_registre.map((good, i) => {
                 if (i !== index) return good;
                 if (field === 'NumberGood') {
-                  const num = parseInt(value, 10);
-                  return { ...good, NumberGood: isNaN(num) ? 0 : num };
+                   const normalizeNumber = (str) => {
+                      return str.replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d));
+                    };
+
+                    const normalizedValue = normalizeNumber(value);
+                    const num = parseInt(normalizedValue, 10);
+                    return { ...good, NumberGood: isNaN(num) ? 0 : num };
                 }
                 return { ...good, [field]: value } as any;
             })

@@ -374,27 +374,6 @@ const processChartData = (chartData) => {
             </ScrollView>
           </ChartCard>
         )}
-
-        {/* نمودار مقدار کمک */}
-        {isValidChartData(chartData.numberGood) && (
-          <ChartCard title="تعداد مددجوها به ازای مقدار کمک" colorSet={chartColors[5]} icon="💰">
-            <ScrollView horizontal showsHorizontalScrollIndicator={true}>
-              <BarChart
-                data={chartData.numberGood}
-                width={calculateChartWidth(chartData.numberGood.labels)}
-                height={240}
-                chartConfig={createChartConfig(chartColors[5])}
-                verticalLabelRotation={-45}
-                fromZero={true}
-                style={styles.chart}
-                showValuesOnTopOfBars={true}
-                withInnerLines={true}
-                withVerticalLabels={true}
-                withHorizontalLabels={true}
-              />
-            </ScrollView>
-          </ChartCard>
-        )}
       </ScrollView>
     </ThemedView>
   );

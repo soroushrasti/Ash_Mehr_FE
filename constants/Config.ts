@@ -63,6 +63,7 @@ export const Config = {
     GET_GOODS: '/get-goods',
     EDIT_GOOD: '/edit-good',
     ADD_GOOD: '/add-good',
+    GET_REGISTER_STATS: '/register-stats'
   }
 };
 

@@ -330,6 +330,22 @@ export default function AdminHome() {
               </ThemedText>
             </TouchableOpacity>
 
+            {/* plot data */}
+                        <TouchableOpacity
+                          style={[styles.actionCard, styles.rtlActionCard, { backgroundColor: "#FDFF00", borderColor }]}
+                          onPress={() => router.push('/admin/plot-data')}
+                        >
+                          <View style={styles.actionCardHeader}>
+                            <ThemedText style={[styles.actionTitle, { color: primaryColor }]} rtl={true}>
+                              نمودار داده ها
+                            </ThemedText>
+                            <ThemedText style={styles.managementIcon}>📈</ThemedText>
+                          </View>
+                          <ThemedText style={[styles.actionDescription, { color: textColor, opacity: 0.7 }]} rtl={true}>
+                            مشاهده آمار داده ها
+                          </ThemedText>
+                        </TouchableOpacity>
+
           </View>
         </Animated.View>
       </ScrollView>

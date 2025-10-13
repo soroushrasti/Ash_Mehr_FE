@@ -215,6 +215,15 @@ class ApiService {
     });
   }
 
+   async getRegisterStats(): Promise<ApiResponse<any>> {
+      return apiRequest<any>({
+        endpoint: Config.ENDPOINTS.GET_REGISTER_STATS,
+        method: 'GET',
+        includeAuth: true,
+        showErrorAlert: false,
+      });
+    }
+
   /** POST /edit-admin/{register_id} - Edit admin information */
   async editAdmin(registerId: string, adminData: any): Promise<ApiResponse> {
     return apiRequest({

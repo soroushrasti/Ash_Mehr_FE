@@ -274,9 +274,66 @@ const processChartData = (chartData) => {
         {isValidChartData(chartData.adminStats) && (
           <ChartCard title="تعداد مددجوها به ازای هر نماینده" colorSet={chartColors[0]} icon="👥">
             <ScrollView horizontal showsHorizontalScrollIndicator={true}>
+             <View style={{flexDirection: 'row', alignItems: 'center'}}>
+               <Text style={{transform: [{rotate: '-90deg'}], marginRight: 10}}>تعداد مددجو</Text>
+               <View>
+                 <BarChart
+                   data={chartData.adminStats}
+                   width={calculateChartWidth(chartData.adminStats.labels)}
+                   height={240}
+                   chartConfig={createChartConfig(chartColors[0])}
+                   verticalLabelRotation={-45}
+                   fromZero={true}
+                   style={styles.chart}
+                   showValuesOnTopOfBars={true}
+                   withInnerLines={true}
+                   withVerticalLabels={true}
+                   withHorizontalLabels={true}
+                 />
+                 <Text style={{textAlign: 'center', marginTop: 10}}>نماینده</Text>
+               </View>
+             </View>
+            </ScrollView>
+          </ChartCard>
+        )}
+
+        {/* نمودار استان‌ها */}
+        {isValidChartData(chartData.provinceStats) && (
+          <ChartCard title="تعداد مددجوها به ازای هر استان" colorSet={chartColors[1]} icon="📍">
+            <ScrollView horizontal showsHorizontalScrollIndicator={true}>
+              <View style={{flexDirection: 'row', alignItems: 'center'}}>
+                <Text style={{transform: [{rotate: '-90deg'}], marginRight: 10}}>تعداد مددجو</Text>
+                <View>
+                  <BarChart
+                    data={chartData.provinceStats}
+                    width={calculateChartWidth(chartData.provinceStats.labels)}
+                    height={240}
+                    chartConfig={createChartConfig(chartColors[0])}
+                    verticalLabelRotation={-45}
+                    fromZero={true}
+                    style={styles.chart}
+                    showValuesOnTopOfBars={true}
+                    withInnerLines={true}
+                    withVerticalLabels={true}
+                    withHorizontalLabels={true}
+                  />
+                  <Text style={{textAlign: 'center', marginTop: 10}}>استان</Text>
+                </View>
+              </View>
+            </ScrollView>
+          </ChartCard>
+        )}
+
+        {/* نمودار سطح تحصیلات */}
+        {isValidChartData(chartData.educationLevel) && (
+          <ChartCard title="تعداد مددجوها به ازای هر سطح تحصیلی" colorSet={chartColors[2]} icon="🎓">
+            <ScrollView horizontal showsHorizontalScrollIndicator={true}>
+          <View style={{flexDirection: 'row', alignItems: 'center'}}>
+            <Text style={{transform: [{rotate: '-90deg'}], marginRight: 10}}>تعداد مددجو</Text>
+            <View>
               <BarChart
-                data={chartData.adminStats}
-                width={calculateChartWidth(chartData.adminStats.labels)}
+                data={chartData.educationLevel}
+                width={calculateChartWidth(chartData.educationLevel.labels)}
                 height={240}
                 chartConfig={createChartConfig(chartColors[0])}
                 verticalLabelRotation={-45}
@@ -287,48 +344,9 @@ const processChartData = (chartData) => {
                 withVerticalLabels={true}
                 withHorizontalLabels={true}
               />
-            </ScrollView>
-          </ChartCard>
-        )}
-
-        {/* نمودار استان‌ها */}
-        {isValidChartData(chartData.provinceStats) && (
-          <ChartCard title="تعداد مددجوها به ازای هر استان" colorSet={chartColors[1]} icon="📍">
-            <ScrollView horizontal showsHorizontalScrollIndicator={true}>
-              <BarChart
-                data={chartData.provinceStats}
-                width={calculateChartWidth(chartData.provinceStats.labels)}
-                height={240}
-                chartConfig={createChartConfig(chartColors[1])}
-                verticalLabelRotation={-45}
-                fromZero={true}
-                style={styles.chart}
-                showValuesOnTopOfBars={true}
-                withInnerLines={true}
-                withVerticalLabels={true}
-                withHorizontalLabels={true}
-              />
-            </ScrollView>
-          </ChartCard>
-        )}
-
-        {/* نمودار سطح تحصیلات */}
-        {isValidChartData(chartData.educationLevel) && (
-          <ChartCard title="تعداد مددجوها به ازای هر سطح تحصیلی" colorSet={chartColors[2]} icon="🎓">
-            <ScrollView horizontal showsHorizontalScrollIndicator={true}>
-              <BarChart
-                data={chartData.educationLevel}
-                width={calculateChartWidth(chartData.educationLevel.labels)}
-                height={240}
-                chartConfig={createChartConfig(chartColors[2])}
-                verticalLabelRotation={-45}
-                fromZero={true}
-                style={styles.chart}
-                showValuesOnTopOfBars={true}
-                withInnerLines={true}
-                withVerticalLabels={true}
-                withHorizontalLabels={true}
-              />
+              <Text style={{textAlign: 'center', marginTop: 10}}>سطح تحصیلی</Text>
+            </View>
+          </View>
             </ScrollView>
           </ChartCard>
         )}
@@ -337,19 +355,25 @@ const processChartData = (chartData) => {
         {isValidChartData(chartData.childrenNumber) && (
           <ChartCard title="تعداد مددجوها به ازای تعداد فرزندان" colorSet={chartColors[3]} icon="👶">
             <ScrollView horizontal showsHorizontalScrollIndicator={true}>
-              <BarChart
-                data={chartData.childrenNumber}
-                width={calculateChartWidth(chartData.childrenNumber.labels)}
-                height={240}
-                chartConfig={createChartConfig(chartColors[3])}
-                verticalLabelRotation={-45}
-                fromZero={true}
-                style={styles.chart}
-                showValuesOnTopOfBars={true}
-                withInnerLines={true}
-                withVerticalLabels={true}
-                withHorizontalLabels={true}
-              />
+            <View style={{flexDirection: 'row', alignItems: 'center'}}>
+                <Text style={{transform: [{rotate: '-90deg'}], marginRight: 10}}>تعداد مددجو</Text>
+                <View>
+                  <BarChart
+                    data={chartData.childrenNumber}
+                    width={calculateChartWidth(chartData.childrenNumber.labels)}
+                    height={240}
+                    chartConfig={createChartConfig(chartColors[0])}
+                    verticalLabelRotation={-45}
+                    fromZero={true}
+                    style={styles.chart}
+                    showValuesOnTopOfBars={true}
+                    withInnerLines={true}
+                    withVerticalLabels={true}
+                    withHorizontalLabels={true}
+                  />
+                  <Text style={{textAlign: 'center', marginTop: 10}}>تعداد فرزند</Text>
+                </View>
+              </View>
             </ScrollView>
           </ChartCard>
         )}
@@ -358,19 +382,25 @@ const processChartData = (chartData) => {
         {isValidChartData(chartData.typeGood) && (
           <ChartCard title="تعداد مددجوها به ازای نوع کمک" colorSet={chartColors[4]} icon="🎁">
             <ScrollView horizontal showsHorizontalScrollIndicator={true}>
-              <BarChart
-                data={chartData.typeGood}
-                width={calculateChartWidth(chartData.typeGood.labels)}
-                height={240}
-                chartConfig={createChartConfig(chartColors[4])}
-                verticalLabelRotation={-45}
-                fromZero={true}
-                style={styles.chart}
-                showValuesOnTopOfBars={true}
-                withInnerLines={true}
-                withVerticalLabels={true}
-                withHorizontalLabels={true}
-              />
+              <View style={{flexDirection: 'row', alignItems: 'center'}}>
+                  <Text style={{transform: [{rotate: '-90deg'}], marginRight: 10}}>تعداد مددجو</Text>
+                  <View>
+                    <BarChart
+                      data={chartData.typeGood}
+                      width={calculateChartWidth(chartData.typeGood.labels)}
+                      height={240}
+                      chartConfig={createChartConfig(chartColors[0])}
+                      verticalLabelRotation={-45}
+                      fromZero={true}
+                      style={styles.chart}
+                      showValuesOnTopOfBars={true}
+                      withInnerLines={true}
+                      withVerticalLabels={true}
+                      withHorizontalLabels={true}
+                    />
+                    <Text style={{textAlign: 'center', marginTop: 10}}>نوع کمک</Text>
+                  </View>
+                </View>
             </ScrollView>
           </ChartCard>
         )}

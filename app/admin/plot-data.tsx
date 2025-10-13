@@ -1,7 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, RefreshControl, ActivityIndicator } from 'react-native';
 import { BarChart } from 'react-native-chart-kit';
 import { apiService } from '@/services/apiService';
+import { ThemedView } from '@/components/ThemedView';
+import { ThemedText } from '@/components/ThemedText';
+import AppHeader from '@/components/AppHeader';
+import { LinearGradient } from 'expo-linear-gradient';
+import { Spacing, BorderRadius } from '@/constants/Design';
 
 const RegisterCharts = () => {
   const [chartData, setChartData] = useState(null);
@@ -95,7 +100,7 @@ const RegisterCharts = () => {
 
 const calculateChartWidth = (labels) => {
   const baseWidth = 350;
-  const minBarSpacing = 60; // حداقل فاصله برای هر میله
+  const minBarSpacing = 70;
   return Math.max(baseWidth, labels.length * minBarSpacing);
 };
 
@@ -133,7 +138,6 @@ const processChartData = (chartData) => {
   const isValidChartData = (chartData) => {
       if (!chartData || !chartData.labels || !chartData.datasets) return false;
 
-      // بررسی وجود حداقل یک label غیر خالی
       const hasValidLabel = chartData.labels.some(label =>
         label !== null &&
         label !== undefined &&
@@ -142,7 +146,6 @@ const processChartData = (chartData) => {
 
       if (!hasValidLabel) return false;
 
-      // بررسی وجود حداقل یک dataset با داده‌های معتبر
       return chartData.datasets.some(dataset =>
         dataset &&
         dataset.data &&
@@ -151,321 +154,328 @@ const processChartData = (chartData) => {
       );
   };
 
-const processNumberGoodStats = (data) => {
-  if (!data || !data.labels || !data.datasets) return null;
+  const processNumberGoodStats = (data) => {
+    if (!data || !data.labels || !data.datasets) return null;
 
-  // محدود کردن طول برچسب‌ها و فرمت کردن اعداد بزرگ
-  const processedLabels = data.labels.map(label => {
-    if (label === null || label === undefined) return 'نامشخص';
-    if (typeof label === 'number' && label > 1000000) {
-      return `${(label / 1000000).toFixed(1)}M`; // تبدیل به میلیون
-    }
-    if (typeof label === 'number' && label > 1000) {
-      return `${(label / 1000).toFixed(1)}K`; // تبدیل به هزار
-    }
-    return String(label).substring(0, 10); // محدود کردن طول رشته
+    // محدود کردن طول برچسب‌ها و فرمت کردن اعداد بزرگ
+    const processedLabels = data.labels.map(label => {
+      if (label === null || label === undefined) return 'نامشخص';
+      if (typeof label === 'number' && label > 1000000) {
+        return `${(label / 1000000).toFixed(1)}M`; // تبدیل به میلیون
+      }
+      if (typeof label === 'number' && label > 1000) {
+        return `${(label / 1000).toFixed(1)}K`; // تبدیل به هزار
+      }
+      return String(label).substring(0, 10); // محدود کردن طول رشته
+    });
+
+    return {
+      labels: processedLabels,
+      datasets: data.datasets
+    };
+  };
+
+
+  // تعریف رنگ‌های مختلف برای هر نمودار
+  const chartColors = [
+    { primary: 'rgba(76, 175, 80, 1)', gradient: ['#4CAF50', '#81C784'], light: 'rgba(76, 175, 80, 0.1)' },
+    { primary: 'rgba(33, 150, 243, 1)', gradient: ['#2196F3', '#64B5F6'], light: 'rgba(33, 150, 243, 0.1)' },
+    { primary: 'rgba(255, 152, 0, 1)', gradient: ['#FF9800', '#FFB74D'], light: 'rgba(255, 152, 0, 0.1)' },
+    { primary: 'rgba(156, 39, 176, 1)', gradient: ['#9C27B0', '#BA68C8'], light: 'rgba(156, 39, 176, 0.1)' },
+    { primary: 'rgba(244, 67, 54, 1)', gradient: ['#F44336', '#E57373'], light: 'rgba(244, 67, 54, 0.1)' },
+    { primary: 'rgba(0, 150, 136, 1)', gradient: ['#009688', '#4DB6AC'], light: 'rgba(0, 150, 136, 0.1)' },
+  ];
+
+  const createChartConfig = (colorSet) => ({
+    backgroundColor: '#ffffff',
+    backgroundGradientFrom: '#ffffff',
+    backgroundGradientTo: '#f5f5f5',
+    decimalPlaces: 0,
+    color: (opacity = 1) => colorSet.primary.replace('1)', `${opacity})`),
+    labelColor: (opacity = 1) => `rgba(50, 50, 50, ${opacity})`,
+    barPercentage: 0.6,
+    propsForLabels: {
+      fontSize: 11,
+      fontWeight: '600',
+    },
+    propsForVerticalLabels: {
+      fontSize: 11,
+      fontWeight: '500',
+    },
+    propsForHorizontalLabels: {
+      fontSize: 11,
+      fontWeight: '500',
+    },
+    propsForBackgroundLines: {
+      strokeDasharray: '', // solid lines
+      stroke: '#e0e0e0',
+      strokeWidth: 1,
+    },
   });
 
-  return {
-    labels: processedLabels,
-    datasets: data.datasets
-  };
-};
-
+  const ChartCard = ({ title, children, colorSet, icon }) => (
+    <View style={styles.chartCard}>
+      <View style={[styles.chartHeader, { backgroundColor: colorSet.light }]}>
+        <Text style={styles.chartIcon}>{icon}</Text>
+        <ThemedText style={styles.chartTitle}>{title}</ThemedText>
+      </View>
+      <View style={styles.chartContent}>
+        {children}
+      </View>
+    </View>
+  );
 
   if (loading) {
-    return <Text style={{ textAlign: 'center', padding: 20 }}>در حال بارگذاری...</Text>;
+    return (
+      <ThemedView style={styles.container}>
+        <AppHeader title="گزارش‌ها و نمودارها" showBackButton />
+        <View style={styles.centerContent}>
+          <ActivityIndicator size="large" color="#4CAF50" />
+          <ThemedText style={styles.loadingText}>در حال بارگذاری...</ThemedText>
+        </View>
+      </ThemedView>
+    );
   }
 
   if (error) {
-    return <Text style={{ textAlign: 'center', padding: 20, color: 'red' }}>{error}</Text>;
+    return (
+      <ThemedView style={styles.container}>
+        <AppHeader title="گزارش‌ها و نمودارها" showBackButton />
+        <View style={styles.centerContent}>
+          <Text style={styles.errorIcon}>⚠️</Text>
+          <ThemedText style={styles.errorText}>{error}</ThemedText>
+        </View>
+      </ThemedView>
+    );
   }
 
   if (!chartData) {
-    return <Text style={{ textAlign: 'center', padding: 20 }}>داده‌ای برای نمایش وجود ندارد</Text>;
+    return (
+      <ThemedView style={styles.container}>
+        <AppHeader title="گزارش‌ها و نمودارها" showBackButton />
+        <View style={styles.centerContent}>
+          <Text style={styles.emptyIcon}>📊</Text>
+          <ThemedText style={styles.emptyText}>داده‌ای برای نمایش وجود ندارد</ThemedText>
+        </View>
+      </ThemedView>
+    );
   }
 
   return (
-           <ScrollView contentContainerStyle={{ padding: 16, alignItems: 'center' }}>
-             {/* نمودار ادمین */}
-             <View style={{ marginBottom: 20 }}>
-               <Text style={{ textAlign: 'center', fontSize: 16, fontWeight: 'bold', marginBottom: 10 }}>
-                 نمودار تعداد مددجوها به ازای هر نماینده
-               </Text>
-                {isValidChartData(chartData.adminStats) ? (
-                   <BarChart
-                            data={chartData.adminStats}
-                            width={calculateChartWidth(chartData.adminStats.labels)}
-                            height={220}
-                            chartConfig={{
-                              backgroundColor: '#ffffff',
-                              backgroundGradientFrom: '#ffffff',
-                              backgroundGradientTo: '#ffffff',
-                              decimalPlaces: 0,
-                              color: (opacity = 1) => `rgba(76, 175, 80, ${opacity})`,
-                              labelColor: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
-                              barPercentage: 0.3, // عرض میله کمتر برای فشرده‌تر شدن
-                              propsForLabels: {
-                                fontSize: 10,
-                              },
-                              // تنظیمات برای نمایش اعداد محور Y
-                              propsForVerticalLabels: {
-                                fontSize: 10,
-                              },
-                              propsForHorizontalLabels: {
-                                fontSize: 10,
-                              },
-                            }}
-                            verticalLabelRotation={-45}
-                            fromZero={true}
-                            style={{
-                              marginVertical: 8,
-                              borderRadius: 16,
-                            }}
-                            // اضافه کردن این تنظیمات برای نمایش اعداد
-                            showValuesOnTopOfBars={true}
-                            withInnerLines={true}
-                            withVerticalLabels={true}
-                            withHorizontalLabels={true}
-                          />
-                   ) : (
-                     <Text style={{ textAlign: 'center' }}>داده‌ای برای نمودار نماینده وجود ندارد</Text>
-                   )}
-             </View>
+    <ThemedView style={styles.container}>
+      <AppHeader title="گزارش‌ها و نمودارها" showBackButton />
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        refreshControl={
+          <RefreshControl refreshing={loading} onRefresh={fetchRegisterStats} colors={['#4CAF50']} />
+        }
+      >
+        {/* نمودار نمایندگان */}
+        {isValidChartData(chartData.adminStats) && (
+          <ChartCard title="تعداد مددجوها به ازای هر نماینده" colorSet={chartColors[0]} icon="👥">
+            <ScrollView horizontal showsHorizontalScrollIndicator={true}>
+              <BarChart
+                data={chartData.adminStats}
+                width={calculateChartWidth(chartData.adminStats.labels)}
+                height={240}
+                chartConfig={createChartConfig(chartColors[0])}
+                verticalLabelRotation={-45}
+                fromZero={true}
+                style={styles.chart}
+                showValuesOnTopOfBars={true}
+                withInnerLines={true}
+                withVerticalLabels={true}
+                withHorizontalLabels={true}
+              />
+            </ScrollView>
+          </ChartCard>
+        )}
 
-                 {/* نمودار استان */}
-                          <View style={{ marginBottom: 20 }}>
-                            <Text style={{ textAlign: 'center', fontSize: 16, fontWeight: 'bold', marginBottom: 10 }}>
-                              نمودار تعداد مددجوها به ازای هر استان
-                            </Text>
-                      {isValidChartData(chartData.provinceStats) ? (
-                 <BarChart
-                   data={chartData.provinceStats}
-                   width={calculateChartWidth(chartData.provinceStats.labels)}
-                   height={220}
-                   chartConfig={{
-                     backgroundColor: '#ffffff',
-                     backgroundGradientFrom: '#ffffff',
-                     backgroundGradientTo: '#ffffff',
-                     decimalPlaces: 0,
-                     color: (opacity = 1) => `rgba(76, 175, 80, ${opacity})`,
-                     labelColor: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
-                     barPercentage: 0.3, // عرض میله کمتر برای فشرده‌تر شدن
-                     propsForLabels: {
-                       fontSize: 10,
-                     },
-                     // تنظیمات برای نمایش اعداد محور Y
-                     propsForVerticalLabels: {
-                       fontSize: 10,
-                     },
-                     propsForHorizontalLabels: {
-                       fontSize: 10,
-                     },
-                   }}
-                   verticalLabelRotation={-45}
-                   fromZero={true}
-                   style={{
-                     marginVertical: 8,
-                     borderRadius: 16,
-                   }}
-                   // اضافه کردن این تنظیمات برای نمایش اعداد
-                   showValuesOnTopOfBars={true}
-                   withInnerLines={true}
-                   withVerticalLabels={true}
-                   withHorizontalLabels={true}
-                 />
+        {/* نمودار استان‌ها */}
+        {isValidChartData(chartData.provinceStats) && (
+          <ChartCard title="تعداد مددجوها به ازای هر استان" colorSet={chartColors[1]} icon="📍">
+            <ScrollView horizontal showsHorizontalScrollIndicator={true}>
+              <BarChart
+                data={chartData.provinceStats}
+                width={calculateChartWidth(chartData.provinceStats.labels)}
+                height={240}
+                chartConfig={createChartConfig(chartColors[1])}
+                verticalLabelRotation={-45}
+                fromZero={true}
+                style={styles.chart}
+                showValuesOnTopOfBars={true}
+                withInnerLines={true}
+                withVerticalLabels={true}
+                withHorizontalLabels={true}
+              />
+            </ScrollView>
+          </ChartCard>
+        )}
 
-                      ) : (
-                        <Text style={{ textAlign: 'center' }}>داده‌ای برای نمودار استان وجود ندارد</Text>
-                      )}
-                  </View>
+        {/* نمودار سطح تحصیلات */}
+        {isValidChartData(chartData.educationLevel) && (
+          <ChartCard title="تعداد مددجوها به ازای هر سطح تحصیلی" colorSet={chartColors[2]} icon="🎓">
+            <ScrollView horizontal showsHorizontalScrollIndicator={true}>
+              <BarChart
+                data={chartData.educationLevel}
+                width={calculateChartWidth(chartData.educationLevel.labels)}
+                height={240}
+                chartConfig={createChartConfig(chartColors[2])}
+                verticalLabelRotation={-45}
+                fromZero={true}
+                style={styles.chart}
+                showValuesOnTopOfBars={true}
+                withInnerLines={true}
+                withVerticalLabels={true}
+                withHorizontalLabels={true}
+              />
+            </ScrollView>
+          </ChartCard>
+        )}
 
-                       <View style={{ marginBottom: 20 }}>
-                         <Text style={{ textAlign: 'center', fontSize: 16, fontWeight: 'bold', marginBottom: 10 }}>
-                           نمودار تعداد مددجوها به ازای هر سطح تحصیلی
-                         </Text>
-                         {isValidChartData(chartData.educationLevel) ? (
-                           <BarChart
-                            data={chartData.educationLevel}
-                            width={calculateChartWidth(chartData.educationLevel.labels)}
-                            height={220}
-                            chartConfig={{
-                              backgroundColor: '#ffffff',
-                              backgroundGradientFrom: '#ffffff',
-                              backgroundGradientTo: '#ffffff',
-                              decimalPlaces: 0,
-                              color: (opacity = 1) => `rgba(76, 175, 80, ${opacity})`,
-                              labelColor: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
-                              barPercentage: 0.3, // عرض میله کمتر برای فشرده‌تر شدن
-                              propsForLabels: {
-                                fontSize: 10,
-                              },
-                              // تنظیمات برای نمایش اعداد محور Y
-                              propsForVerticalLabels: {
-                                fontSize: 10,
-                              },
-                              propsForHorizontalLabels: {
-                                fontSize: 10,
-                              },
-                            }}
-                            verticalLabelRotation={-45}
-                            fromZero={true}
-                            style={{
-                              marginVertical: 8,
-                              borderRadius: 16,
-                            }}
-                            // اضافه کردن این تنظیمات برای نمایش اعداد
-                            showValuesOnTopOfBars={true}
-                            withInnerLines={true}
-                            withVerticalLabels={true}
-                            withHorizontalLabels={true}
-                          />
+        {/* نمودار تعداد فرزندان */}
+        {isValidChartData(chartData.childrenNumber) && (
+          <ChartCard title="تعداد مددجوها به ازای تعداد فرزندان" colorSet={chartColors[3]} icon="👶">
+            <ScrollView horizontal showsHorizontalScrollIndicator={true}>
+              <BarChart
+                data={chartData.childrenNumber}
+                width={calculateChartWidth(chartData.childrenNumber.labels)}
+                height={240}
+                chartConfig={createChartConfig(chartColors[3])}
+                verticalLabelRotation={-45}
+                fromZero={true}
+                style={styles.chart}
+                showValuesOnTopOfBars={true}
+                withInnerLines={true}
+                withVerticalLabels={true}
+                withHorizontalLabels={true}
+              />
+            </ScrollView>
+          </ChartCard>
+        )}
 
-                      ) : (
-                        <Text style={{ textAlign: 'center' }}>داده‌ای برای نمودار استان وجود ندارد</Text>
-                      )}
-                       </View>
+        {/* نمودار نوع کمک */}
+        {isValidChartData(chartData.typeGood) && (
+          <ChartCard title="تعداد مددجوها به ازای نوع کمک" colorSet={chartColors[4]} icon="🎁">
+            <ScrollView horizontal showsHorizontalScrollIndicator={true}>
+              <BarChart
+                data={chartData.typeGood}
+                width={calculateChartWidth(chartData.typeGood.labels)}
+                height={240}
+                chartConfig={createChartConfig(chartColors[4])}
+                verticalLabelRotation={-45}
+                fromZero={true}
+                style={styles.chart}
+                showValuesOnTopOfBars={true}
+                withInnerLines={true}
+                withVerticalLabels={true}
+                withHorizontalLabels={true}
+              />
+            </ScrollView>
+          </ChartCard>
+        )}
 
-             {/* نمودار تعداد فرزندان */}
-            <View style={{ marginBottom: 20 }}>
-              <Text style={{ textAlign: 'center', fontSize: 16, fontWeight: 'bold', marginBottom: 10 }}>
-                نمودار تعداد مددجوها به ازای تعداد فرزندان
-              </Text>
-        {isValidChartData(chartData.childrenNumber) ? (
-          <BarChart
-                  data={chartData.childrenNumber}
-                  width={calculateChartWidth(chartData.childrenNumber.labels)}
-                  height={220}
-                  chartConfig={{
-                    backgroundColor: '#ffffff',
-                    backgroundGradientFrom: '#ffffff',
-                    backgroundGradientTo: '#ffffff',
-                    decimalPlaces: 0,
-                    color: (opacity = 1) => `rgba(76, 175, 80, ${opacity})`,
-                    labelColor: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
-                    barPercentage: 0.3, // عرض میله کمتر برای فشرده‌تر شدن
-                    propsForLabels: {
-                      fontSize: 10,
-                    },
-                    // تنظیمات برای نمایش اعداد محور Y
-                    propsForVerticalLabels: {
-                      fontSize: 10,
-                    },
-                    propsForHorizontalLabels: {
-                      fontSize: 10,
-                    },
-                  }}
-                  verticalLabelRotation={-45}
-                  fromZero={true}
-                  style={{
-                    marginVertical: 8,
-                    borderRadius: 16,
-                  }}
-                  // اضافه کردن این تنظیمات برای نمایش اعداد
-                  showValuesOnTopOfBars={true}
-                  withInnerLines={true}
-                  withVerticalLabels={true}
-                  withHorizontalLabels={true}
-                />
-                    ) : (
-                      <Text style={{ textAlign: 'center' }}>داده‌ای برای نمودار تعداد فرزندان وجود ندارد</Text>
-                    )}
-            </View>
-
-   {/* نمودار نوع کمک */}
-              <View style={{ marginBottom: 20 }}>
-                <Text style={{ textAlign: 'center', fontSize: 16, fontWeight: 'bold', marginBottom: 10 }}>
-                  نمودار تعداد مددجوها به ازای نوع کمک
-                </Text>
-                 {isValidChartData(chartData.typeGood) ? (
-                        <BarChart
-                          data={chartData.typeGood}
-                          width={calculateChartWidth(chartData.typeGood.labels)}
-                          height={220}
-                          chartConfig={{
-                            backgroundColor: '#ffffff',
-                            backgroundGradientFrom: '#ffffff',
-                            backgroundGradientTo: '#ffffff',
-                            decimalPlaces: 0,
-                            color: (opacity = 1) => `rgba(76, 175, 80, ${opacity})`,
-                            labelColor: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
-                            barPercentage: 0.3, // عرض میله کمتر برای فشرده‌تر شدن
-                            propsForLabels: {
-                              fontSize: 10,
-                            },
-                            // تنظیمات برای نمایش اعداد محور Y
-                            propsForVerticalLabels: {
-                              fontSize: 10,
-                            },
-                            propsForHorizontalLabels: {
-                              fontSize: 10,
-                            },
-                          }}
-                          verticalLabelRotation={-45}
-                          fromZero={true}
-                          style={{
-                            marginVertical: 8,
-                            borderRadius: 16,
-                          }}
-                          // اضافه کردن این تنظیمات برای نمایش اعداد
-                          showValuesOnTopOfBars={true}
-                          withInnerLines={true}
-                          withVerticalLabels={true}
-                          withHorizontalLabels={true}
-                        />
-                         ) : (
-                           <Text style={{ textAlign: 'center' }}>داده‌ای برای نمودار نوع کمک وجود ندارد</Text>
-                         )}
-              </View>
-
-
-   {/* نمودار مقدار کمک */}
-          <View style={{ marginBottom: 20 }}>
-            <Text style={{ textAlign: 'center', fontSize: 16, fontWeight: 'bold', marginBottom: 10 }}>
-              نمودار تعداد مددجوها به ازای مقدار کمک
-            </Text>
-       {isValidChartData(chartData.numberGood) ? (
-                   <BarChart
-                       data={chartData.numberGood}
-                       width={calculateChartWidth(chartData.numberGood.labels)}
-                       height={220}
-                       chartConfig={{
-                         backgroundColor: '#ffffff',
-                         backgroundGradientFrom: '#ffffff',
-                         backgroundGradientTo: '#ffffff',
-                         decimalPlaces: 0,
-                         color: (opacity = 1) => `rgba(76, 175, 80, ${opacity})`,
-                         labelColor: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
-                         barPercentage: 0.3, // عرض میله کمتر برای فشرده‌تر شدن
-                         propsForLabels: {
-                           fontSize: 10,
-                         },
-                         // تنظیمات برای نمایش اعداد محور Y
-                         propsForVerticalLabels: {
-                           fontSize: 10,
-                         },
-                         propsForHorizontalLabels: {
-                           fontSize: 10,
-                         },
-                       }}
-                       verticalLabelRotation={-45}
-                       fromZero={true}
-                       style={{
-                         marginVertical: 8,
-                         borderRadius: 16,
-                       }}
-                       // اضافه کردن این تنظیمات برای نمایش اعداد
-                       showValuesOnTopOfBars={true}
-                       withInnerLines={true}
-                       withVerticalLabels={true}
-                       withHorizontalLabels={true}
-                     />
-       ) : (
-         <Text style={{ textAlign: 'center' }}>داده‌ای برای نمودار مقدار کمک وجود ندارد</Text>
-       )}
-          </View>
-    </ScrollView>
+        {/* نمودار مقدار کمک */}
+        {isValidChartData(chartData.numberGood) && (
+          <ChartCard title="تعداد مددجوها به ازای مقدار کمک" colorSet={chartColors[5]} icon="💰">
+            <ScrollView horizontal showsHorizontalScrollIndicator={true}>
+              <BarChart
+                data={chartData.numberGood}
+                width={calculateChartWidth(chartData.numberGood.labels)}
+                height={240}
+                chartConfig={createChartConfig(chartColors[5])}
+                verticalLabelRotation={-45}
+                fromZero={true}
+                style={styles.chart}
+                showValuesOnTopOfBars={true}
+                withInnerLines={true}
+                withVerticalLabels={true}
+                withHorizontalLabels={true}
+              />
+            </ScrollView>
+          </ChartCard>
+        )}
+      </ScrollView>
+    </ThemedView>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  scrollContent: {
+    padding: Spacing.lg,
+    paddingBottom: Spacing.xl * 2,
+  },
+  centerContent: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: Spacing.xl,
+  },
+  loadingText: {
+    marginTop: Spacing.md,
+    fontSize: 16,
+    opacity: 0.7,
+  },
+  errorIcon: {
+    fontSize: 48,
+    marginBottom: Spacing.md,
+  },
+  errorText: {
+    fontSize: 16,
+    color: '#F44336',
+    textAlign: 'center',
+  },
+  emptyIcon: {
+    fontSize: 64,
+    marginBottom: Spacing.md,
+  },
+  emptyText: {
+    fontSize: 16,
+    opacity: 0.7,
+    textAlign: 'center',
+  },
+  chartCard: {
+    marginBottom: Spacing.xl,
+    borderRadius: BorderRadius.lg,
+    backgroundColor: '#ffffff',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
+    overflow: 'hidden',
+  },
+  chartHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: Spacing.md,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e0e0e0',
+  },
+  chartIcon: {
+    fontSize: 24,
+    marginRight: Spacing.sm,
+  },
+  chartTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    flex: 1,
+    textAlign: 'right',
+  },
+  chartContent: {
+    padding: Spacing.md,
+    backgroundColor: '#fafafa',
+  },
+  chart: {
+    marginVertical: Spacing.sm,
+    borderRadius: BorderRadius.md,
+  },
+});
 
 export default RegisterCharts;

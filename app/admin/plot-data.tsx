@@ -22,7 +22,7 @@ const RegisterCharts = () => {
       setLoading(true);
       const response = await apiService.getRegisterStats();
 
-      if (!response?.data?.adminStats || !response?.data?.provinceStats || !response?.data?.educationLevelStats || !response?.data?.numberGoodStats || !response?.data?.typeGoodStats || !response?.data?.childrenNumberStats) {
+      if (!response?.data?.adminStats || !response?.data?.provinceStats || !response?.data?.educationLevelStats || !response?.data?.typeGoodStats || !response?.data?.childrenNumberStats) {
         throw new Error('داده‌ها به درستی دریافت نشدند');
       }
 
@@ -30,7 +30,6 @@ const RegisterCharts = () => {
       const formattedAdminData = formatChartData(response.data.adminStats, 'admin');
       const formattedProvinceData = formatChartData(response.data.provinceStats, 'province');
       const formattedEducationLevelData = formatChartData(response.data.educationLevelStats, 'educationLevel');
-      const formattedNumberGoodData = formatChartData(response.data.numberGoodStats, 'numberGood');
       const formattedTypeGoodData = formatChartData(response.data.typeGoodStats, 'typeGood');
       const formattedChildrenNumberData = formatChartData(response.data.childrenNumberStats, 'childrenNumber');
 
@@ -38,7 +37,6 @@ const RegisterCharts = () => {
         adminStats: formattedAdminData,
         provinceStats: formattedProvinceData,
         educationLevel : formattedEducationLevelData,
-        numberGood : formattedNumberGoodData,
         typeGood : formattedTypeGoodData,
         childrenNumber : formattedChildrenNumberData
       });
@@ -214,16 +212,17 @@ const processChartData = (chartData) => {
   });
 
   const ChartCard = ({ title, children, colorSet, icon }) => (
-    <View style={styles.chartCard}>
-      <View style={[styles.chartHeader, { backgroundColor: colorSet.light }]}>
-        <Text style={styles.chartIcon}>{icon}</Text>
-        <ThemedText style={styles.chartTitle}>{title}</ThemedText>
+      <View style={[styles.chartCard, { backgroundColor: colorSet.light }]}>
+        <View style={[styles.chartHeader, { backgroundColor: colorSet.medium }]}>
+          <Text style={styles.chartIcon}>{icon}</Text>
+          <ThemedText style={styles.chartTitle}>{title}</ThemedText>
+        </View>
+        <View style={[styles.chartContent, { backgroundColor: colorSet.light }]}>
+          {children}
+        </View>
       </View>
-      <View style={styles.chartContent}>
-        {children}
-      </View>
-    </View>
-  );
+    );
+
 
   if (loading) {
     return (
@@ -308,7 +307,7 @@ const processChartData = (chartData) => {
                     data={chartData.provinceStats}
                     width={calculateChartWidth(chartData.provinceStats.labels)}
                     height={240}
-                    chartConfig={createChartConfig(chartColors[0])}
+                    chartConfig={createChartConfig(chartColors[1])}
                     verticalLabelRotation={-45}
                     fromZero={true}
                     style={styles.chart}
@@ -335,7 +334,7 @@ const processChartData = (chartData) => {
                 data={chartData.educationLevel}
                 width={calculateChartWidth(chartData.educationLevel.labels)}
                 height={240}
-                chartConfig={createChartConfig(chartColors[0])}
+                chartConfig={createChartConfig(chartColors[2])}
                 verticalLabelRotation={-45}
                 fromZero={true}
                 style={styles.chart}
@@ -362,7 +361,7 @@ const processChartData = (chartData) => {
                     data={chartData.childrenNumber}
                     width={calculateChartWidth(chartData.childrenNumber.labels)}
                     height={240}
-                    chartConfig={createChartConfig(chartColors[0])}
+                    chartConfig={createChartConfig(chartColors[3])}
                     verticalLabelRotation={-45}
                     fromZero={true}
                     style={styles.chart}
@@ -389,7 +388,7 @@ const processChartData = (chartData) => {
                       data={chartData.typeGood}
                       width={calculateChartWidth(chartData.typeGood.labels)}
                       height={240}
-                      chartConfig={createChartConfig(chartColors[0])}
+                      chartConfig={createChartConfig(chartColors[4])}
                       verticalLabelRotation={-45}
                       fromZero={true}
                       style={styles.chart}

@@ -230,7 +230,6 @@ const processChartData = (chartData) => {
 
     try {
       const response = await apiService.getRegisterStats();
-      console.log("*****", response);
 
       if (!response.success) {
         throw new Error('خطا در دریافت اطلاعات از سرور');

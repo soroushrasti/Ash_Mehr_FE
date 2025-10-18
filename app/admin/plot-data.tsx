@@ -8,6 +8,7 @@ import AppHeader from '@/components/AppHeader';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Spacing, BorderRadius } from '@/constants/Design';
 import * as Font from 'expo-font';
+import { useFonts } from 'expo-font';
 
 const RegisterCharts = () => {
   const [chartData, setChartData] = useState(null);
@@ -319,22 +320,37 @@ const processChartData = (chartData) => {
             <ScrollView horizontal showsHorizontalScrollIndicator={true}>
              <View style={{flexDirection: 'row', alignItems: 'center'}}>
                <Text style={{transform: [{rotate: '-90deg'}], marginRight: 10}}>تعداد مددجو</Text>
-               <View>
-                 <BarChart
-                   data={chartData.adminStats}
-                   width={calculateChartWidth(chartData.adminStats.labels)}
-                   height={240}
-                   chartConfig={createChartConfig(chartColors[0])}
-                   verticalLabelRotation={-45}
-                   fromZero={true}
-                   style={styles.chart}
-                   showValuesOnTopOfBars={true}
-                   withInnerLines={true}
-                   withVerticalLabels={true}
-                   withHorizontalLabels={true}
-                 />
-                 <Text style={{textAlign: 'center', marginTop: 10}}>نماینده</Text>
+             <View>
+               <BarChart
+                 data={chartData.adminStats}
+                 width={calculateChartWidth(chartData.adminStats.labels)}
+                 height={200}
+                 chartConfig={{
+                   ...createChartConfig(chartColors[0]),
+                 }}
+                 verticalLabelRotation={0}
+                 fromZero={true}
+                 style={styles.chart}
+                 showValuesOnTopOfBars={true}
+                 withInnerLines={true}
+                 withVerticalLabels={false} // لیبل‌های عمودی غیرفعال
+                 withHorizontalLabels={true}
+               />
+
+               {/* لیبل‌های دستی زیر هر ستون */}
+               <View style={styles.customLabels}>
+                 {chartData.adminStats.labels.map((label, index) => (
+                   <View key={index} style={styles.labelContainer}>
+                     <Text style={styles.chartText} numberOfLines={1}>
+                       {label}
+                     </Text>
+                   </View>
+                 ))}
                </View>
+
+               <Text style={styles.chartTitle}>نماینده</Text>
+             </View>
+
              </View>
             </ScrollView>
           </ChartCard>
@@ -357,11 +373,23 @@ const processChartData = (chartData) => {
                     style={styles.chart}
                     showValuesOnTopOfBars={true}
                     withInnerLines={true}
-                    withVerticalLabels={true}
+                    withVerticalLabels={false}
                     withHorizontalLabels={true}
                   />
-                  <Text style={{textAlign: 'center', marginTop: 10}}>استان</Text>
-                </View>
+
+               {/* لیبل‌های دستی زیر هر ستون */}
+               <View style={styles.customLabels}>
+                 {chartData.provinceStats.labels.map((label, index) => (
+                   <View key={index} style={styles.labelContainer}>
+                     <Text style={styles.chartText} numberOfLines={1}>
+                       {label}
+                     </Text>
+                   </View>
+                 ))}
+               </View>
+
+               <Text style={styles.chartTitle}>استان</Text>
+             </View>
               </View>
             </ScrollView>
           </ChartCard>
@@ -377,20 +405,7 @@ const processChartData = (chartData) => {
               <BarChart
                 data={{
                               ...chartData.educationLevelStats,
-                              labels: chartData.educationLevelStats.labels.map(label => {
-                                const educationMapping = {
-                                  'Kindergarten': 'مهدکودک',
-                                  'Primary': 'ابتدایی',
-                                  'Secondary': 'راهنمایی',
-                                  'High School': 'دبیرستان',
-                                  'Diploma': 'دیپلم',
-                                  'Associate Degree': 'فوق‌دیپلم',
-                                  'Bachelor': 'لیسانس',
-                                  'Master': 'فوق‌لیسانس',
-                                  'PhD': 'دکتری'
-                                };
-                                return educationMapping[label] || label;
-                              })
+
                             }}
                 width={calculateChartWidth(chartData.educationLevelStats.labels)}
                 height={240}
@@ -401,11 +416,23 @@ const processChartData = (chartData) => {
                 style={styles.chart}
                 showValuesOnTopOfBars={true}
                 withInnerLines={true}
-                withVerticalLabels={true}
+                withVerticalLabels={false}
                 withHorizontalLabels={true}
               />
-              <Text style={{textAlign: 'center', marginTop: 10}}>سطح تحصیلی</Text>
-            </View>
+
+               {/* لیبل‌های دستی زیر هر ستون */}
+               <View style={styles.customLabels}>
+                 {chartData.educationLevelStats.labels.map((label, index) => (
+                   <View key={index} style={styles.labelContainer}>
+                     <Text style={styles.chartText} numberOfLines={1}>
+                       {label}
+                     </Text>
+                   </View>
+                 ))}
+               </View>
+
+               <Text style={styles.chartTitle}>سطح تحصیلی</Text>
+             </View>
           </View>
             </ScrollView>
           </ChartCard>
@@ -428,11 +455,23 @@ const processChartData = (chartData) => {
                     style={styles.chart}
                     showValuesOnTopOfBars={true}
                     withInnerLines={true}
-                    withVerticalLabels={true}
+                    withVerticalLabels={false}
                     withHorizontalLabels={true}
                   />
-                  <Text style={{textAlign: 'center', marginTop: 10}}>تعداد فرزند</Text>
-                </View>
+
+               {/* لیبل‌های دستی زیر هر ستون */}
+               <View style={styles.customLabels}>
+                 {chartData.childrenNumberStats.labels.map((label, index) => (
+                   <View key={index} style={styles.labelContainer}>
+                     <Text style={styles.chartText} numberOfLines={1}>
+                       {label}
+                     </Text>
+                   </View>
+                 ))}
+               </View>
+
+               <Text style={styles.chartTitle}>تعداد فرزند</Text>
+             </View>
               </View>
             </ScrollView>
           </ChartCard>
@@ -455,11 +494,23 @@ const processChartData = (chartData) => {
                       style={styles.chart}
                       showValuesOnTopOfBars={true}
                       withInnerLines={true}
-                      withVerticalLabels={true}
+                      withVerticalLabels={false}
                       withHorizontalLabels={true}
                     />
-                    <Text style={{textAlign: 'center', marginTop: 10}}>نوع کمک</Text>
-                  </View>
+
+               {/* لیبل‌های دستی زیر هر ستون */}
+               <View style={styles.customLabels}>
+                 {chartData.typeGoodStats.labels.map((label, index) => (
+                   <View key={index} style={styles.labelContainer}>
+                     <Text style={styles.chartText} numberOfLines={1}>
+                       {label}
+                     </Text>
+                   </View>
+                 ))}
+               </View>
+
+               <Text style={styles.chartTitle}>نوع کمک</Text>
+             </View>
                 </View>
             </ScrollView>
           </ChartCard>
@@ -545,6 +596,36 @@ const styles = StyleSheet.create({
     marginVertical: Spacing.sm,
     borderRadius: BorderRadius.md,
   },
+  chart: {
+      marginVertical: 8,
+      borderRadius: 16,
+    },
+    customLabels: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingHorizontal: 10,
+      marginTop: 5,
+    },
+    labelContainer: {
+      flex: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    chartText: {
+      fontFamily: 'Vazir',
+      fontSize: 10,
+      textAlign: 'center',
+      writingDirection: 'rtl',
+      maxWidth: 60, // محدودیت عرض برای متن‌های طولانی
+    },
+    chartTitle: {
+      fontFamily: 'Vazir',
+      fontSize: 14,
+      textAlign: 'center',
+      marginTop: 10,
+      fontWeight: 'bold',
+    },
 });
 
 export default RegisterCharts;

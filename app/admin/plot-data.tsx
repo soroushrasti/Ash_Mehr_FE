@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, StyleSheet, RefreshControl, ActivityIndicator } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, RefreshControl, ActivityIndicator, TouchableOpacity, Alert } from 'react-native';
 import { BarChart } from 'react-native-chart-kit';
 import { apiService } from '@/services/apiService';
 import { ThemedView } from '@/components/ThemedView';
@@ -7,6 +7,7 @@ import { ThemedText } from '@/components/ThemedText';
 import AppHeader from '@/components/AppHeader';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Spacing, BorderRadius } from '@/constants/Design';
+import * as Font from 'expo-font';
 
 const RegisterCharts = () => {
   const [chartData, setChartData] = useState(null);
@@ -223,6 +224,28 @@ const processChartData = (chartData) => {
       </View>
     );
 
+  const fetchData = async () => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const response = await apiService.getRegisterStats();
+      console.log("*****", response);
+
+      if (!response.success) {
+        throw new Error('خطا در دریافت اطلاعات از سرور');
+      }
+
+      setChartData(response.data);
+
+    } catch (err) {
+      setError(err.message);
+      Alert.alert('خطا', 'دریافت اطلاعات با مشکل مواجه شد');
+    } finally {
+      setLoading(false);
+    }
+  };
+
 
   if (loading) {
     return (
@@ -236,6 +259,7 @@ const processChartData = (chartData) => {
     );
   }
 
+
   if (error) {
     return (
       <ThemedView style={styles.container}>
@@ -243,6 +267,18 @@ const processChartData = (chartData) => {
         <View style={styles.centerContent}>
           <Text style={styles.errorIcon}>⚠️</Text>
           <ThemedText style={styles.errorText}>{error}</ThemedText>
+            <TouchableOpacity
+              onPress={fetchData}
+              style={{
+                backgroundColor: '#007AFF',
+                padding: 12,
+                borderRadius: 8,
+              }}
+        >
+          <Text style={{ color: 'white', fontWeight: 'bold' }}>
+            تلاش مجدد
+          </Text>
+        </TouchableOpacity>
         </View>
       </ThemedView>
     );
@@ -269,6 +305,7 @@ const processChartData = (chartData) => {
           <RefreshControl refreshing={loading} onRefresh={fetchRegisterStats} colors={['#4CAF50']} />
         }
       >
+
         {/* نمودار نمایندگان */}
         {isValidChartData(chartData.adminStats) && (
           <ChartCard title="تعداد مددجوها به ازای هر نماینده" colorSet={chartColors[0]} icon="👥">
@@ -336,6 +373,7 @@ const processChartData = (chartData) => {
                 height={240}
                 chartConfig={createChartConfig(chartColors[2])}
                 verticalLabelRotation={-45}
+                horizontalLabelRotation={-45}
                 fromZero={true}
                 style={styles.chart}
                 showValuesOnTopOfBars={true}

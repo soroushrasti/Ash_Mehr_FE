@@ -37,9 +37,9 @@ const RegisterCharts = () => {
       setChartData({
         adminStats: formattedAdminData,
         provinceStats: formattedProvinceData,
-        educationLevel : formattedEducationLevelData,
-        typeGood : formattedTypeGoodData,
-        childrenNumber : formattedChildrenNumberData
+        educationLevelStats : formattedEducationLevelData,
+        typeGoodStats : formattedTypeGoodData,
+        childrenNumberStats : formattedChildrenNumberData
       });
       setError(null);
     } catch (error) {
@@ -82,6 +82,14 @@ const RegisterCharts = () => {
             }
             return label;
         });
+
+     return {
+        labels: persianLabels, // اینجا labels فارسی شده رو استفاده کنید
+        datasets: datasets.map(dataset => ({
+          ...dataset,
+          data: dataset.data || []
+        }))
+      };
 
     // پاکسازی داده‌ها - تبدیل NaN به 0
     const cleanedDatasets = datasets.map(dataset => ({
@@ -360,15 +368,31 @@ const processChartData = (chartData) => {
         )}
 
         {/* نمودار سطح تحصیلات */}
-        {isValidChartData(chartData.educationLevel) && (
+        {isValidChartData(chartData.educationLevelStats) && (
           <ChartCard title="تعداد مددجوها به ازای هر سطح تحصیلی" colorSet={chartColors[2]} icon="🎓">
             <ScrollView horizontal showsHorizontalScrollIndicator={true}>
           <View style={{flexDirection: 'row', alignItems: 'center'}}>
             <Text style={{transform: [{rotate: '-90deg'}], marginRight: 10}}>تعداد مددجو</Text>
             <View>
               <BarChart
-                data={chartData.educationLevel}
-                width={calculateChartWidth(chartData.educationLevel.labels)}
+                data={{
+                              ...chartData.educationLevelStats,
+                              labels: chartData.educationLevelStats.labels.map(label => {
+                                const educationMapping = {
+                                  'Kindergarten': 'مهدکودک',
+                                  'Primary': 'ابتدایی',
+                                  'Secondary': 'راهنمایی',
+                                  'High School': 'دبیرستان',
+                                  'Diploma': 'دیپلم',
+                                  'Associate Degree': 'فوق‌دیپلم',
+                                  'Bachelor': 'لیسانس',
+                                  'Master': 'فوق‌لیسانس',
+                                  'PhD': 'دکتری'
+                                };
+                                return educationMapping[label] || label;
+                              })
+                            }}
+                width={calculateChartWidth(chartData.educationLevelStats.labels)}
                 height={240}
                 chartConfig={createChartConfig(chartColors[2])}
                 verticalLabelRotation={-45}
@@ -388,15 +412,15 @@ const processChartData = (chartData) => {
         )}
 
         {/* نمودار تعداد فرزندان */}
-        {isValidChartData(chartData.childrenNumber) && (
+        {isValidChartData(chartData.childrenNumberStats) && (
           <ChartCard title="تعداد مددجوها به ازای تعداد فرزندان" colorSet={chartColors[3]} icon="👶">
             <ScrollView horizontal showsHorizontalScrollIndicator={true}>
             <View style={{flexDirection: 'row', alignItems: 'center'}}>
                 <Text style={{transform: [{rotate: '-90deg'}], marginRight: 10}}>تعداد مددجو</Text>
                 <View>
                   <BarChart
-                    data={chartData.childrenNumber}
-                    width={calculateChartWidth(chartData.childrenNumber.labels)}
+                    data={chartData.childrenNumberStats}
+                    width={calculateChartWidth(chartData.childrenNumberStats.labels)}
                     height={240}
                     chartConfig={createChartConfig(chartColors[3])}
                     verticalLabelRotation={-45}
@@ -415,15 +439,15 @@ const processChartData = (chartData) => {
         )}
 
         {/* نمودار نوع کمک */}
-        {isValidChartData(chartData.typeGood) && (
+        {isValidChartData(chartData.typeGoodStats) && (
           <ChartCard title="تعداد مددجوها به ازای نوع کمک" colorSet={chartColors[4]} icon="🎁">
             <ScrollView horizontal showsHorizontalScrollIndicator={true}>
               <View style={{flexDirection: 'row', alignItems: 'center'}}>
                   <Text style={{transform: [{rotate: '-90deg'}], marginRight: 10}}>تعداد مددجو</Text>
                   <View>
                     <BarChart
-                      data={chartData.typeGood}
-                      width={calculateChartWidth(chartData.typeGood.labels)}
+                      data={chartData.typeGoodStats}
+                      width={calculateChartWidth(chartData.typeGoodStats.labels)}
                       height={240}
                       chartConfig={createChartConfig(chartColors[4])}
                       verticalLabelRotation={-45}

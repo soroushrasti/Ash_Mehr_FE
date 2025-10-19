@@ -345,7 +345,11 @@ const handleGoodsCountChange = (count: number) => {
                         <InputField
                             label="شماره موبایل*"
                             value={formData.Phone || ''}
-                            onChangeText={(text) => handleFieldChange('Phone', text)}
+                             onChangeText={(text) => {
+                                    // فقط اعداد فارسی و انگلیسی را قبول کند
+                                    const cleanedText = text.replace(/[^0-9۰-۹]/g, '');
+                                    handleFieldChange('Phone', cleanedText);
+                                }}
                             placeholder="09xxxxxxxxx"
                             keyboardType="phone-pad"
                             error={fieldErrors.Phone}
@@ -354,13 +358,15 @@ const handleGoodsCountChange = (count: number) => {
                         <InputField
                             label="کد ملی"
                             value={formData.NationalID || ''}
-                            onChangeText={(text) => handleFieldChange('NationalID', text)}
+                             onChangeText={(text) => {
+                                    // فقط اعداد فارسی و انگلیسی را قبول کند
+                                    const cleanedText = text.replace(/[^0-9۰-۹]/g, '');
+                                    handleFieldChange('NationalID', cleanedText);
+                                }}
                             placeholder="کد ملی ۱۰ رقمی"
                             keyboardType="numeric"
                             error={fieldErrors.NationalID}
                         />
-
-
                         <InputField
                             label="تاریخ تولد"
                             value={formData.BirthDate || ''}
@@ -532,7 +538,11 @@ const handleGoodsCountChange = (count: number) => {
                                 <InputField
                                     label="کد ملی"
                                     value={child.NationalID}
-                                    onChangeText={(text) => handleChildFieldChange(index, 'NationalID', text)}
+                                    onChangeText={(text) => {
+                                            // فقط اعداد فارسی و انگلیسی را قبول کند
+                                            const cleanedText = text.replace(/[^0-9۰-۹]/g, '');
+                                            handleChildFieldChange(index, 'NationalID', cleanedText);
+                                        }}
                                     placeholder="کد ملی ۱۰ رقمی"
                                     keyboardType="numeric"
                                     maxLength={10}
@@ -541,7 +551,11 @@ const handleGoodsCountChange = (count: number) => {
                                 <InputField
                                     label="سن"
                                     value={child.Age}
-                                    onChangeText={(text) => handleChildFieldChange(index, 'Age', text)}
+                                    onChangeText={(text) => {
+                                            // فقط اعداد فارسی و انگلیسی را قبول کند
+                                            const cleanedText = text.replace(/[^0-9۰-۹]/g, '');
+                                            handleChildFieldChange(index, 'Age', cleanedText);
+                                        }}
                                     placeholder="سن فرزند"
                                     keyboardType="numeric"
                                 />
@@ -655,91 +669,94 @@ const handleGoodsCountChange = (count: number) => {
                                         style={styles.pickerContainer}
                                  />
 
-                        <ThemedText style={styles.sectionTitle}>اطلاعات کمک ها</ThemedText>
+            <ThemedText style={styles.sectionTitle}>اطلاعات کمک ها</ThemedText>
 
-                           {/* Enhanced Children Count Section */}
-                           <View style={styles.childrenCountSection}>
-                               <ThemedText style={[styles.fieldLabel, styles.rtlText]}>تعداد کمک ها</ThemedText>
+               {/* Enhanced Children Count Section */}
+               <View style={styles.childrenCountSection}>
+                   <ThemedText style={[styles.fieldLabel, styles.rtlText]}>تعداد کمک ها</ThemedText>
 
-                               <View style={styles.counterContainer}>
-                                   <TouchableOpacity
-                                       style={[
-                                           styles.counterButton,
-                                           {
-                                               backgroundColor: childrenCount > 0 ? '#DC3545' : '#E0E0E0',
-                                               borderWidth: 1,
-                                               borderColor: childrenCount > 0 ? '#C82333' : '#CCCCCC'
-                                           }
-                                       ]}
-                                       onPress={() => handleGoodsCountChange(goodsCount - 1)}
-                                       disabled={goodsCount <= 0}
-                                   >
-                                       <ThemedText style={[
-                                           styles.counterButtonText,
-                                           { color: goodsCount > 0 ? '#FFFFFF' : '#999999' }
-                                       ]}>−</ThemedText>
-                                   </TouchableOpacity>
+                   <View style={styles.counterContainer}>
+                       <TouchableOpacity
+                           style={[
+                               styles.counterButton,
+                               {
+                                   backgroundColor: childrenCount > 0 ? '#DC3545' : '#E0E0E0',
+                                   borderWidth: 1,
+                                   borderColor: childrenCount > 0 ? '#C82333' : '#CCCCCC'
+                               }
+                           ]}
+                           onPress={() => handleGoodsCountChange(goodsCount - 1)}
+                           disabled={goodsCount <= 0}
+                       >
+                           <ThemedText style={[
+                               styles.counterButtonText,
+                               { color: goodsCount > 0 ? '#FFFFFF' : '#999999' }
+                           ]}>−</ThemedText>
+                       </TouchableOpacity>
 
-                                   <View style={styles.countDisplay}>
-                                       <ThemedText style={styles.countNumber}>{goodsCount}</ThemedText>
-                                       <ThemedText style={[styles.countLabel, styles.rtlText]}>کمک</ThemedText>
-                                   </View>
+                       <View style={styles.countDisplay}>
+                           <ThemedText style={styles.countNumber}>{goodsCount}</ThemedText>
+                           <ThemedText style={[styles.countLabel, styles.rtlText]}>کمک</ThemedText>
+                       </View>
 
-                                   <TouchableOpacity
-                                       style={[
-                                           styles.counterButton,
-                                           {
-                                               backgroundColor: childrenCount < 10 ? '#28A745' : '#E0E0E0',
-                                               borderWidth: 1,
-                                               borderColor: childrenCount < 10 ? '#1E7E34' : '#CCCCCC'
-                                           }
-                                       ]}
-                                       onPress={() => handleGoodsCountChange(goodsCount + 1)}
-                                       disabled={goodsCount >= 10}
-                                   >
-                                       <ThemedText style={[
-                                           styles.counterButtonText,
-                                           { color: goodsCount < 10 ? '#FFFFFF' : '#999999' }
-                                       ]}>+</ThemedText>
-                                   </TouchableOpacity>
-                               </View>
+                       <TouchableOpacity
+                           style={[
+                               styles.counterButton,
+                               {
+                                   backgroundColor: childrenCount < 10 ? '#28A745' : '#E0E0E0',
+                                   borderWidth: 1,
+                                   borderColor: childrenCount < 10 ? '#1E7E34' : '#CCCCCC'
+                               }
+                           ]}
+                           onPress={() => handleGoodsCountChange(goodsCount + 1)}
+                           disabled={goodsCount >= 10}
+                       >
+                           <ThemedText style={[
+                               styles.counterButtonText,
+                               { color: goodsCount < 10 ? '#FFFFFF' : '#999999' }
+                           ]}>+</ThemedText>
+                       </TouchableOpacity>
+                   </View>
 
-                               {goodsCount > 0 && (
-                                   <View style={styles.childrenCountInfo}>
-                                       <ThemedText style={[styles.infoText, styles.rtlText, { color: primaryColor }]}>
-                                           📝 لطفاً اطلاعات {goodsCount} کمک را وارد کنید
-                                       </ThemedText>
-                                   </View>
-                               )}
+                   {goodsCount > 0 && (
+                       <View style={styles.childrenCountInfo}>
+                           <ThemedText style={[styles.infoText, styles.rtlText, { color: primaryColor }]}>
+                               📝 لطفاً اطلاعات {goodsCount} کمک را وارد کنید
+                           </ThemedText>
+                       </View>
+                   )}
 
-                           </View>
-                          {/* goods Information Forms */}
-                                {formData.goods_of_registre.map((good, index) => (
-                                    <View key={index} style={styles.childContainer}>
-                                        <View style={styles.childHeader}>
-                                            <ThemedText style={[styles.childTitle, styles.rtlText]}>
-                                                👶 کمک {index + 1}
-                                            </ThemedText>
-                                            <View style={styles.childNumber}>
-                                                <ThemedText style={styles.childNumberText}>{index + 1}</ThemedText>
-                                            </View>
-                                        </View>
+               </View>
+              {/* goods Information Forms */}
+                    {formData.goods_of_registre.map((good, index) => (
+                        <View key={index} style={styles.childContainer}>
+                            <View style={styles.childHeader}>
+                                <ThemedText style={[styles.childTitle, styles.rtlText]}>
+                                    👶 کمک {index + 1}
+                                </ThemedText>
+                                <View style={styles.childNumber}>
+                                    <ThemedText style={styles.childNumberText}>{index + 1}</ThemedText>
+                                </View>
+                            </View>
 
-                                        <InputField
-                                            label="نوع کمک"
-                                            value={good.TypeGood}
-                                            onChangeText={(text) => handleGoodFieldChange(index, 'TypeGood', text)}
-                                            placeholder="نوع کمک"
-                                            required
-                                        />
-                                         <InputField
-                                             label="مقدار کمک"
-                                             value={good.NumberGood}
-                                             onChangeText={(text) => handleGoodFieldChange(index, 'NumberGood', text)}
-                                             placeholder="مقدار کمک"
-                                             keyboardType = "numeric"
-                                             required
-                                         />
+                            <InputField
+                                label="نوع کمک"
+                                value={good.TypeGood}
+                                onChangeText={(text) => handleGoodFieldChange(index, 'TypeGood', text)}
+                                placeholder="نوع کمک"
+                                required
+                            />
+                             <InputField
+                                 label="مقدار کمک"
+                                 value={good.NumberGood}
+                                 onChangeText={(text) => {
+                                     const cleanedText = text.replace(/[^0-9۰-۹]/g, '');
+                                     handleGoodFieldChange(index, 'NumberGood', cleanedText);
+                                 }}
+                                 placeholder="مقدار کمک"
+                                 keyboardType = "numeric"
+                                 required
+                             />
                                     </View>
                             ))}
 

@@ -278,7 +278,11 @@ export default function EditNeedyPage() {
                     <InputField
                      label= "مقدار کمک *"
                      value={good.NumberGood === undefined || good.NumberGood === null ? '' : String(good.NumberGood)}
-                     onChangeText={(text) => handleGoodFieldChange(index, 'NumberGood', text)}
+                      onChangeText={(text) => {
+                             // فقط اعداد فارسی و انگلیسی را قبول کند
+                             const cleanedText = text.replace(/[^0-9۰-۹]/g, '');
+                             handleGoodFieldChange(index, 'NumberGood', cleanedText);
+                         }}
                      placeholder= "  مقدار کمک"
                      keyboardType="numeric"
                      textAlign = "right"

@@ -326,7 +326,11 @@ export default function EditAdminPage() {
             <InputField
               label="شماره موبایل"
               value={formData.Phone || ''}
-              onChangeText={(text) => handleFieldChange('Phone', text)}
+               onChangeText={(text) => {
+                      // فقط اعداد فارسی و انگلیسی را قبول کند
+                      const cleanedText = text.replace(/[^0-9۰-۹]/g, '');
+                      handleFieldChange('Phone', cleanedText);
+                  }}
               placeholder="۰۹۱۲۳۴۵۶۷۸۹"
               keyboardType="phone-pad"
               error={fieldErrors.Phone}
@@ -336,16 +340,16 @@ export default function EditAdminPage() {
             <InputField
               label="کد ملی"
               value={formData.NationalID || ''}
-              onChangeText={(text) => handleFieldChange('NationalID', text)}
+               onChangeText={(text) => {
+                      // فقط اعداد فارسی و انگلیسی را قبول کند
+                      const cleanedText = text.replace(/[^0-9۰-۹]/g, '');
+                      handleFieldChange('NationalID', cleanedText);
+                  }}
               placeholder="کد ملی ۱۰ رقمی"
               keyboardType="numeric"
               error={fieldErrors.NationalID}
               style={styles.rtlInput}
             />
-
-
-
-
             <ThemedText style={[styles.sectionTitle, { color: textColor }]}>اطلاعات آدرس</ThemedText>
 
             <InputField

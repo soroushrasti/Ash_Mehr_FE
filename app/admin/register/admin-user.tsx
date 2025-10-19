@@ -106,7 +106,11 @@ export default function AdminUserRegister() {
             <InputField
               label="شماره موبایل"
               value={formData.Phone || ''}
-              onChangeText={(text) => setFormData(prev => ({ ...prev, Phone: text }))}
+               onChangeText={(text) => {
+                      // فقط اعداد فارسی و انگلیسی را قبول کند
+                      const cleanedText = text.replace(/[^0-9۰-۹]/g, '');
+                      setFormData(prev => ({ ...prev, Phone: cleanedText }));
+                  }}
               placeholder="09123456789"
               keyboardType="phone-pad"
             />
@@ -114,12 +118,14 @@ export default function AdminUserRegister() {
             <InputField
               label="کد ملی"
               value={formData.NationalID || ''}
-              onChangeText={(text) => setFormData(prev => ({ ...prev, NationalID: text }))}
+               onChangeText={(text) => {
+                      // فقط اعداد فارسی و انگلیسی را قبول کند
+                      const cleanedText = text.replace(/[^0-9۰-۹]/g, '');
+                      setFormData(prev => ({ ...prev, NationalID: cleanedText }));
+                  }}
               placeholder="کد ملی ۱۰ رقمی"
               keyboardType="numeric"
             />
-
-
 
             <InputField
               label="رمز عبور *"

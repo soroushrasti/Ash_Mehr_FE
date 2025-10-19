@@ -377,7 +377,11 @@ const handleSaveChildren = async () => {
             <InputField
               label="شماره موبایل"
               value={formData.Phone || ''}
-              onChangeText={(text) => handleFieldChange('Phone', text)}
+               onChangeText={(text) => {
+                      // فقط اعداد فارسی و انگلیسی را قبول کند
+                      const cleanedText = text.replace(/[^0-9۰-۹]/g, '');
+                      handleFieldChange('Phone', cleanedText);
+                  }}
               placeholder="09123456789"
               keyboardType="phone-pad"
               error={fieldErrors.Phone}
@@ -386,7 +390,11 @@ const handleSaveChildren = async () => {
             <InputField
               label="کد ملی"
               value={formData.NationalID || ''}
-              onChangeText={(text) => handleFieldChange('NationalID', text)}
+               onChangeText={(text) => {
+                        // فقط اعداد فارسی و انگلیسی را قبول کند
+                        const cleanedText = text.replace(/[^0-9۰-۹]/g, '');
+                        handleFieldChange('NationalID', cleanedText);
+                    }}
               placeholder="کد ملی ۱۰ رقمی"
               keyboardType="numeric"
               error={fieldErrors.NationalID}
@@ -516,7 +524,11 @@ const handleSaveChildren = async () => {
                     <InputField
                        label= "سن فرزند"
                        value={child.Age || ''}
-                       onChangeText={(text) => handleChildFieldChange(index, 'Age', text)}
+                        onChangeText={(text) => {
+                               // فقط اعداد فارسی و انگلیسی را قبول کند
+                               const cleanedText = text.replace(/[^0-9۰-۹]/g, '');
+                               handleChildFieldChange(index, 'Age', cleanedText);
+                           }}
                        placeholder= "سن فرزند"
                        keyboardType="numeric"
 
@@ -525,8 +537,12 @@ const handleSaveChildren = async () => {
                     <InputField
                        label= "کد ملی فرزند"
                        value={child.NationalID || ''}
-                       onChangeText={(text) => handleChildFieldChange(index, 'NationalID', text)}
-                       placeholder= "کد ملی ۱۰ رقمی"
+                        onChangeText={(text) => {
+                              // فقط اعداد فارسی و انگلیسی را قبول کند
+                              const cleanedText = text.replace(/[^0-9۰-۹]/g, '');
+                              handleChildFieldChange(index, 'NationalID', cleanedText);
+                          }}
+                      placeholder= "کد ملی ۱۰ رقمی"
                        keyboardType="numeric"
                        maxLength={10}
                     />

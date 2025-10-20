@@ -64,10 +64,28 @@ const RegisterCharts = () => {
     const labels = data.labels || [];
     const datasets = data.datasets || [];
 
+       const educationMapping = {
+           'Kindergarten': 'مهدکودک',
+            'Primary': 'ابتدایی',
+            'Secondary': 'راهنمایی',
+            'High School': 'دبیرستان',
+            'Diploma': 'دیپلم',
+            'Associate Degree': 'فوق‌دیپلم',
+            'Bachelor': 'لیسانس',
+            'Master': 'فوق‌لیسانس',
+            'PhD': 'دکتری'
+        };
 
-
+        // تبدیل برچسب‌ها به فارسی اگر نوع نمودار مربوط به تحصیلات باشد
+        const persianLabels = labels.map(label => {
+            if (type && type.includes('education')) {
+                return educationMapping[label] || label;
+            }
+            return label;
+        });
 
      return {
+        labels: persianLabels, // اینجا labels فارسی شده رو استفاده کنید
         datasets: datasets.map(dataset => ({
           ...dataset,
           data: dataset.data || []
@@ -225,30 +243,8 @@ const processChartData = (chartData) => {
       if (!response.success) {
         throw new Error('خطا در دریافت اطلاعات از سرور');
       }
-  const convertToPersian = (label) => {
-    const translations = {
-       'Kindergarten': 'مهدکودک',
-                   'Primary': 'ابتدایی',
-                   'Secondary': 'راهنمایی',
-                   'High School': 'دبیرستان',
-                   'Diploma': 'دیپلم',
-                   'Associate Degree': 'فوق‌دیپلم',
-                   'Bachelor': 'لیسانس',
-                   'Master': 'فوق‌لیسانس',
-                   'PhD': 'دکتری'
-    };
 
-    return translations[label] || label;
-  };
-    const persianData = {
-        ...response.data,
-        educationLevelStats: {
-        ...response.data.educationLevelStats,
-        labels: response.data.educationLevelStats.labels.map(label => convertToPersian(label))
-    }
-  };
-
-      setChartData(persianData);
+      setChartData(response.data);
 
     } catch (err) {
       setError(err.message);

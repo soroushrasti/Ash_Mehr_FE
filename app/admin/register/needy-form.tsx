@@ -192,7 +192,6 @@ const handleGoodsCountChange = (count: number) => {
         }
 
 
-
         if (!formData.Phone.trim()) {
             errors.push('شماره موبایل الزامی است');
             fieldErrs.LastName = 'شماره موبایل الزامی است';
@@ -273,6 +272,7 @@ const handleGoodsCountChange = (count: number) => {
         setFieldErrors(fieldErrs);
         return errors.length === 0;
     };
+
 
     // Clear validation errors when user starts typing
     const handleFieldChange = (field: keyof ExtendedNeedyForm, value: string | number | undefined | Child[]) => {

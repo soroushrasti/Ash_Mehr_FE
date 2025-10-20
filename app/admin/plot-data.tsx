@@ -244,7 +244,29 @@ const processChartData = (chartData) => {
         throw new Error('خطا در دریافت اطلاعات از سرور');
       }
 
-      setChartData(response.data);
+    const convertToPersian = (label) => {
+        const translations = {
+          'Kindergarten': 'مهدکودک',
+          'Primary': 'ابتدایی',
+          'Secondary': 'راهنمایی',
+          'High School': 'دبیرستان',
+          'Diploma': 'دیپلم',
+          'Associate Degree': 'فوق‌دیپلم',
+          'Bachelor': 'لیسانس',
+          'Master': 'فوق‌لیسانس',
+          'PhD': 'دکتری'
+        };
+        return translations[label] || label;
+      };
+    const persianData = {
+          ...response.data,
+          educationLevelStats: {
+            ...response.data.educationLevelStats,
+            labels: response.data.educationLevelStats.labels.map(label => convertToPersian(label))
+          }
+        };
+
+      setChartData(persianData);
 
     } catch (err) {
       setError(err.message);

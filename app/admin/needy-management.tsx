@@ -8,6 +8,7 @@ import { useThemeColor } from '@/hooks/useThemeColor';
 import { Spacing, BorderRadius } from '@/constants/Design';
 import { apiService } from '@/services/apiService';
 import AppHeader from '@/components/AppHeader';
+import { useAuth } from '@/components/AuthContext';
 
 interface NeedyRecord {
     id: number; // Changed from string to number to match API response
@@ -29,6 +30,7 @@ export default function ReportsPage() {
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
     const router = useRouter();
+    const {userType} = useAuth();
 
     const primaryColor = useThemeColor({}, 'primary');
     const successColor = useThemeColor({}, 'success');
@@ -192,8 +194,9 @@ export default function ReportsPage() {
                     {isHeader ? 'نماینده' : (record.group_name || 'نامشخص')}
                 </ThemedText>
             </View>
+
             {/* Actions */}
-            {!isHeader && (
+            {!isHeader&& userType === 'Admin' && (
                 <View style={styles.actionsCell}>
                     <TouchableOpacity
                         style={[styles.actionButton, { backgroundColor: primaryColor }]}
@@ -229,7 +232,7 @@ export default function ReportsPage() {
                     </TouchableOpacity>
                 </View>
             )}
-            {isHeader && (
+            {isHeader && userType === 'Admin'&& (
                 <View style={styles.actionsCell}>
                     <ThemedText
                         style={[styles.tableCellText, { color: 'white' }, styles.tableHeaderText]}

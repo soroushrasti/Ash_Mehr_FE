@@ -1,4 +1,4 @@
-import React from 'react';
+import {React, useState, useEffect} from 'react';
 import { View, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
 import { ThemedView } from '@/components/ThemedView';
@@ -8,9 +8,11 @@ import { useThemeColor } from '@/hooks/useThemeColor';
 import { Spacing, BorderRadius } from '@/constants/Design';
 import AppHeader from '@/components/AppHeader';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useAuth } from '@/components/AuthContext';
 
 export default function VolunteerManagementPage() {
   const router = useRouter();
+  const { user } = useAuth();
 
   const primaryColor = useThemeColor({}, 'primary');
   const successColor = useThemeColor({}, 'success');

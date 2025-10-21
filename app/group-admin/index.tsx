@@ -14,7 +14,6 @@ import { useAuth } from '@/components/AuthContext';
 import { RTLPicker } from '@/components/RTLPicker';
 import { useLocalSearchParams } from 'expo-router';
 
-
 // Force RTL layout
 if (!I18nManager.isRTL) {
   I18nManager.allowRTL(true);
@@ -36,15 +35,8 @@ export default function AdminHome() {
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(50)).current;
   const { userName } = useAuth();
+  const {userType} = useAuth();
 
-  const [role, setRole] = useState(null);
-
-      useEffect(() => {
-          // اطمینان از اینکه router.isReady و router.query وجود دارند
-          if (router.isReady && router.query.role) {
-              setRole(router.query.role);
-          }
-      }, [router.isReady, router.query]);
 
   // Theme colors
   const primaryColor = useThemeColor({}, 'primary');
@@ -132,7 +124,6 @@ export default function AdminHome() {
   const onRefresh = () => fetchData(true);
 
   const needyCount = needyInfo?.numberNeedyPersons ?? mapPoints.length;
-
   return (
     <ThemedView style={[styles.container, { backgroundColor }]} rtl={true}>
       <ScrollView
@@ -279,56 +270,11 @@ export default function AdminHome() {
           </ThemedText>
 
           <View style={styles.actionGrid}>
-            {/* Registration Actions */}
-            <TouchableOpacity
-              style={[styles.actionCard, styles.registrationCard, styles.rtlActionCard, { backgroundColor: primaryColor, borderColor: primaryColor }]}
-              onPress={() => router.push('/admin/register/needy-form')}
-            >
-              <View style={styles.actionCardHeader}>
-                <ThemedText style={[styles.actionTitle, { color: '#FFFFFF' }]} rtl={true}>
-                  ثبت خانواده مددجو
-                </ThemedText>
-                <ThemedText style={styles.registrationIcon}>👨‍👩‍👧‍👦</ThemedText>
-              </View>
-              <ThemedText style={[styles.actionDescription, { color: '#FFFFFF', opacity: 0.9 }]} rtl={true}>
-                افزودن خانواده مددجو جدید به سیستم
-              </ThemedText>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[styles.actionCard, styles.registrationCard, styles.rtlActionCard, { backgroundColor: volunteerColor, borderColor: volunteerColor }]}
-              onPress={() => router.push('/admin/register/group-admin-form')}
-            >
-              <View style={styles.actionCardHeader}>
-                <ThemedText style={[styles.actionTitle, { color: '#FFFFFF' }]} rtl={true}>
-                  ثبت نماینده جدید
-                </ThemedText>
-                <ThemedText style={styles.registrationIcon}>👨‍💼</ThemedText>
-              </View>
-              <ThemedText style={[styles.actionDescription, { color: '#FFFFFF', opacity: 0.9 }]} rtl={true}>
-                افزودن نماینده گروه جدید
-              </ThemedText>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[styles.actionCard, styles.registrationCard, styles.rtlActionCard, { backgroundColor: donationColor, borderColor: donationColor }]}
-              onPress={() => router.push('/admin/register/admin-form')}
-            >
-              <View style={styles.actionCardHeader}>
-                <ThemedText style={[styles.actionTitle, { color: '#FFFFFF' }]} rtl={true}>
-                  ثبت مدیر
-                </ThemedText>
-                <ThemedText style={styles.registrationIcon}>👑</ThemedText>
-              </View>
-              <ThemedText style={[styles.actionDescription, { color: '#FFFFFF', opacity: 0.9 }]} rtl={true}>
-                افزودن مدیر جدید
-              </ThemedText>
-            </TouchableOpacity>
 
             {/* Management Actions */}
             <TouchableOpacity
               style={[styles.actionCard, styles.rtlActionCard, { backgroundColor: surfaceColor, borderColor }]}
-              onPress={() => router.push(`/admin/info-management?role=${role}`)}
+              onPress={() => router.push('/admin/info-management')}
             >
               <View style={styles.actionCardHeader}>
                 <ThemedText style={[styles.actionTitle, { color: primaryColor }]} rtl={true}>
@@ -342,20 +288,20 @@ export default function AdminHome() {
             </TouchableOpacity>
 
             {/* plot data */}
-                        <TouchableOpacity
-                          style={[styles.actionCard, styles.rtlActionCard, { backgroundColor: "#FDFF00", borderColor }]}
-                          onPress={() => router.push('/admin/plot-data')}
-                        >
-                          <View style={styles.actionCardHeader}>
-                            <ThemedText style={[styles.actionTitle, { color: primaryColor }]} rtl={true}>
-                              نمودار داده ها
-                            </ThemedText>
-                            <ThemedText style={styles.managementIcon}>📈</ThemedText>
-                          </View>
-                          <ThemedText style={[styles.actionDescription, { color: textColor, opacity: 0.7 }]} rtl={true}>
-                            مشاهده آمار داده ها
-                          </ThemedText>
-                        </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.actionCard, styles.rtlActionCard, { backgroundColor: "#FDFF00", borderColor }]}
+                  onPress={() => router.push('/admin/plot-data')}
+                >
+                  <View style={styles.actionCardHeader}>
+                    <ThemedText style={[styles.actionTitle, { color: primaryColor }]} rtl={true}>
+                      نمودار داده ها
+                    </ThemedText>
+                    <ThemedText style={styles.managementIcon}>📈</ThemedText>
+                  </View>
+                  <ThemedText style={[styles.actionDescription, { color: textColor, opacity: 0.7 }]} rtl={true}>
+                    مشاهده آمار داده ها
+                  </ThemedText>
+                </TouchableOpacity>
 
           </View>
         </Animated.View>

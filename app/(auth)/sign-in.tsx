@@ -54,6 +54,7 @@ export default function SignInScreen() {
 
     try {
       const resp = await apiService.login(phone, password);
+
       if (!resp.success) {
         setError(resp.error || 'ورود ناموفق بود');
         setLoading(false);
@@ -231,7 +232,11 @@ export default function SignInScreen() {
                 label="شماره تلفن"
                 placeholder="09xxxxxxxxx"
                 value={phone}
-                onChangeText={setPhone}
+                onChangeText={(text) => {
+                  // فقط اعداد و حداکثر ۱۱ رقم
+                  const cleanText = text.replace(/[^0-9۰-۹]/g, '').slice(0, 11);
+                  setPhone(cleanText);
+                }}
                 keyboardType="phone-pad"
                 leftIcon={<ThemedText>📱</ThemedText>}
               />
@@ -299,7 +304,11 @@ export default function SignInScreen() {
                 label="شماره تلفن"
                 placeholder="09xxxxxxxxx"
                 value={phone}
-                onChangeText={setPhone}
+                onChangeText={(text) => {
+                  // فقط اعداد و حداکثر ۱۱ رقم
+                  const cleanText = text.replace(/[^0-9۰-۹]/g, '').slice(0, 11);
+                  setPhone(cleanText);
+                }}
                 keyboardType="phone-pad"
                 leftIcon={<ThemedText>📱</ThemedText>}
                 error={error}

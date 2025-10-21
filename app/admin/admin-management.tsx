@@ -9,6 +9,8 @@ import { Spacing, BorderRadius } from '@/constants/Design';
 import { apiService } from '@/services/apiService';
 import AppHeader from '@/components/AppHeader';
 import {NeedyPersonLocation} from "@/types/api";
+import { useLocalSearchParams } from 'expo-router';
+import { useAuth } from '@/components/AuthContext';
 
 interface AdminRecord {
   id: string;
@@ -31,6 +33,8 @@ export default function AdminManagementPage() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const router = useRouter();
+   const { user } = useAuth();
+  const {userType} = useAuth();
 
   const primaryColor = useThemeColor({}, 'primary');
   const successColor = useThemeColor({}, 'success');
@@ -190,7 +194,8 @@ export default function AdminManagementPage() {
         </ThemedText>
       </View>
 
-      {!isHeader && (
+      {!isHeader&& userType === 'Admin' && (
+
         <View style={styles.actionsCell}>
           <TouchableOpacity
             style={[styles.actionButton, { backgroundColor: primaryColor }]}
@@ -215,7 +220,7 @@ export default function AdminManagementPage() {
         </View>
       )}
 
-      {isHeader && (
+      {isHeader&& userType === 'Admin' && (
         <View style={styles.actionsCell}>
           <ThemedText
             style={[styles.tableCellText, { color: 'white' }, styles.tableHeaderText]}
@@ -226,6 +231,7 @@ export default function AdminManagementPage() {
       )}
     </View>
   );
+
 
   if (loading) {
     return (

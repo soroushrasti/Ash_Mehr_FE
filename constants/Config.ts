@@ -31,7 +31,8 @@ export const Config = {
     },
   // API Configuration
     /// for DEV http://localhost:8000
-     API_BASE_URL: 'http://localhost:8080',
+    API_BASE_URL: 'http://localhost:8080',
+    // API_BASE_URL: 'http://62.3.42.208/api',
   API_TOKEN: getEnvVar('API_TOKEN', 'abd5ae82bad3dba4288914aeee0f6215fda2eb66490c72fdb5c1f080bb9dc441'),
 
   // App Settings

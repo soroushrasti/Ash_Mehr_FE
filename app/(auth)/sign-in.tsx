@@ -98,7 +98,7 @@ export default function SignInScreen() {
       const displayName: string | null = (data.name as string) || [data.firstName, data.lastName].filter(Boolean).join(' ') || null;
 
       await signIn('Needy', needyId, phone, '', displayName);
-      router.replace('/(tabs)');
+      router.replace('/needy');
     } catch (e) {
       console.error('Needy signin error:', e);
       setError('خطا در ورود. لطفاً دوباره تلاش کنید');

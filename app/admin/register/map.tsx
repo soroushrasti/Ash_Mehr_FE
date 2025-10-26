@@ -11,7 +11,6 @@ import { Spacing, BorderRadius } from '@/constants/Design';
 import { Config } from '@/constants/Config';
 import { withOpacity } from '@/utils/colorUtils';
 import AppHeader from '@/components/AppHeader';
-import * as Location from 'expo-location';
 
 // Google Geocoding service
 const geocodeCity = async (city: string, province?: string): Promise<{ latitude: number; longitude: number } | null> => {

@@ -21,6 +21,15 @@
       "edgeToEdgeEnabled": true,
       "package": "com.soroushrasti.Ashyaneh_Mehr",
       "icon": "./assets/images/icon.png",
+      "permissions": [
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_FINE_LOCATION"
+      ],
+      "blockedPermissions": [
+        "android.permission.SYSTEM_ALERT_WINDOW",
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO"
+      ],
       "config": {
         "googleMaps": {
           "apiKey": "AIzaSyCx8-7Y3c7sPHyDfltKMvBitIAmdUwvLFk"

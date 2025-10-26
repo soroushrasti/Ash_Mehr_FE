@@ -44,7 +44,7 @@ export default function ReportsPage() {
         try {
             const response = await apiService.findNeedyRecords();
             if (response.success && response.data) {
-                setNeedyRecords(response.data.connected_rows);
+                setNeedyRecords(response.data.disconnected_rows);
                 // Extract unique representatives
                 const uniqueReps = [...new Set(response.data
                     .map(record => record.group_name)
@@ -258,7 +258,7 @@ export default function ReportsPage() {
 
     return (
         <ThemedView style={[styles.container, { backgroundColor }]}>
-            <AppHeader title="لیست مددجویان" subtitle="مدیریت اطلاعات مددجویان" />
+            <AppHeader title="لیست مددجوهای قطع شده" subtitle="مدیریت اطلاعات مددجویان" />
 
             <ScrollView
                 style={styles.content}

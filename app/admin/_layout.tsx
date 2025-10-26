@@ -10,6 +10,7 @@ export default function AdminLayout() {
         <Stack.Screen name="register/info-management" />
         <Stack.Screen name="register/admin-management" />
         <Stack.Screen name="register/needy-management" />
+        <Stack.Screen name="register/disconnected-needy-management" />
       <Stack.Screen name="register/group-admin-form" />
       <Stack.Screen name="register/confirm" />
     </Stack>

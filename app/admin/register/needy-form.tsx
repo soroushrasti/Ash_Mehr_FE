@@ -63,6 +63,7 @@ export default function AdminUserRegister() {
         IncomeForm: '',
         Latitude: params.latitude ? String(params.latitude) : '',
         Longitude: params.longitude ? String(params.longitude) : '',
+        is_disconnected: '',
         children_of_registre: [],
         goods_of_registre: []
     });
@@ -655,19 +656,19 @@ const handleGoodsCountChange = (count: number) => {
                         />
 
                 <ThemedText style={styles.fieldLabel}>تحت نظارت نماینده فرعی</ThemedText>
-                                    <RTLPicker
-                                        items={[
-                                            { label: "انتخاب نماینده", value: 0 },
-                                            ...adminOptions.map(admin => ({
-                                                label: `${admin.name} ${admin.info ? admin.info : ''}` || `نماینده ${admin.id}`,
-                                                value: admin.id
-                                            }))
-                                        ]}
-                                        selectedValue={formData.UnderSecondAdminID || 0}
-                                        onValueChange={(value) => handleFieldChange('UnderSecondAdminID', value || undefined)}
-                                        placeholder="انتخاب نماینده"
-                                        style={styles.pickerContainer}
-                                 />
+                        <RTLPicker
+                            items={[
+                                { label: "انتخاب نماینده", value: 0 },
+                                ...adminOptions.map(admin => ({
+                                    label: `${admin.name} ${admin.info ? admin.info : ''}` || `نماینده ${admin.id}`,
+                                    value: admin.id
+                                }))
+                            ]}
+                            selectedValue={formData.UnderSecondAdminID || 0}
+                            onValueChange={(value) => handleFieldChange('UnderSecondAdminID', value || undefined)}
+                            placeholder="انتخاب نماینده"
+                            style={styles.pickerContainer}
+                     />
 
             <ThemedText style={styles.sectionTitle}>اطلاعات کمک ها</ThemedText>
 
@@ -759,6 +760,18 @@ const handleGoodsCountChange = (count: number) => {
                              />
                                     </View>
                             ))}
+
+                <ThemedText style={styles.fieldLabel}>قطع همکاری</ThemedText>
+                        <RTLPicker
+                           items={[
+                                   { label: 'بله' ,value: true },
+                                   { label: 'خیر' ,value: false }
+                               ]}
+                            selectedValue={formData.is_disconnected || false}
+                            onValueChange={(value) => handleFieldChange('is_disconnected', value || undefined)}
+                            placeholder="خیر"
+                            style={styles.pickerContainer}
+                     />
 
                         {params.latitude && params.longitude && (
                             <View style={styles.locationInfo}>

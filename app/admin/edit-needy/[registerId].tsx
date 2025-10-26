@@ -54,6 +54,7 @@ export default function EditNeedyPage() {
     IncomeForm: '',
     Latitude: '',
     Longitude: '',
+    is_disconnected:'',
     children_of_registre: [],
   });
 
@@ -109,6 +110,7 @@ export default function EditNeedyPage() {
           IncomeForm: data.income?.toString() || '',
           Latitude: data.Latitude?.toString() || '',
           Longitude: data.Longitude?.toString() || '',
+          is_disconnected: data.is_disconnected || '',
           children_of_registre: data.children,
         });
       } else {
@@ -670,6 +672,18 @@ const handleSaveChildren = async () => {
                           placeholder="انتخاب نماینده"
                           style={styles.pickerContainer}
                         />
+
+        <ThemedText style={styles.sectionTitle}>قطع همکاری</ThemedText>
+                <RTLPicker
+                   items={[
+                           { label: 'بله' ,value: true },
+                           { label: 'خیر' ,value: false }
+                       ]}
+                    selectedValue={formData.is_disconnected || false}
+                    onValueChange={(value) => handleFieldChange('is_disconnected', value || undefined)}
+                    placeholder="خیر"
+                    style={styles.pickerContainer}
+             />
 
             {/* Location Section */}
             <ThemedText style={styles.sectionTitle}>موقعیت جغرافیایی</ThemedText>

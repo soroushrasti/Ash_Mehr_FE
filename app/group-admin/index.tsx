@@ -55,31 +55,33 @@ export default function AdminHome() {
   const [availableGroups, setAvailableGroups] = useState<string[]>([]);
 
   const fetchData = useCallback(async (showRefreshing = false) => {
-    if (showRefreshing) setRefreshing(true);
-    try {
-      const [ni, ai, ng] = await Promise.all([
-        apiService.getNeedyInfo(),
-        apiService.getAdminInfo(),
-        apiService.getNeedyGeoPoints(),
-      ]);
-      if (ni.success) setNeedyInfo(ni.data!);
-      if (ai.success) setAdminInfo(ai.data!);
-      if (ng.success && Array.isArray(ng.data)) {
-        const points = ng.data as unknown as MapPoint[];
-        setMapPoints(points);
-        const groups = [...new Set(
-          points
-            .map(p => p.group_name)
-            .filter((g): g is string => !!g && g.trim() !== '')
-        )];
-        setAvailableGroups(groups);
+      if (showRefreshing) setRefreshing(true);
+      try {
+        const [ni, ai, ng] = await Promise.all([
+          apiService.getNeedyInfo(),
+          apiService.getAdminInfo(),
+          apiService.getNeedyGeoPoints(),
+        ]);
+        if (ni.success) setNeedyInfo(ni.data!);
+        if (ai.success) setAdminInfo(ai.data!);
+        if (ng.success && Array.isArray(ng.data)) {
+          const points = ng.data as unknown as MapPoint[];
+          // فقط connectedها را فیلتر کنید
+          const connectedPoints = points.filter(point => point.is_disconnected === false);
+          setMapPoints(connectedPoints);
+          const groups = [...new Set(
+            connectedPoints
+              .map(p => p.group_name)
+              .filter((g): g is string => !!g && g.trim() !== '')
+          )];
+          setAvailableGroups(groups);
+        }
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      } finally {
+        if (showRefreshing) setRefreshing(false);
       }
-    } catch (error) {
-      console.error('Error fetching data:', error);
-    } finally {
-      if (showRefreshing) setRefreshing(false);
-    }
-  }, []);
+    }, []);
 
   const filteredMapPoints = useMemo(() => {
       console.log('Filtering map points with group filter:', selectedGroupFilter);

@@ -42,9 +42,9 @@ export default function ReportsPage() {
 
     const loadNeedyRecords = async () => {
         try {
-            const response = await apiService.findNeedyRecords();
+            const response = await apiService.findDisconnectedNeedyRecords();
             if (response.success && response.data) {
-                setNeedyRecords(response.data.disconnected_rows);
+                setNeedyRecords(response.data);
                 // Extract unique representatives
                 const uniqueReps = [...new Set(response.data
                     .map(record => record.group_name)

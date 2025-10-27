@@ -44,7 +44,7 @@ export default function ReportsPage() {
         try {
             const response = await apiService.findNeedyRecords();
             if (response.success && response.data) {
-                setNeedyRecords(response.data.connected_rows);
+                setNeedyRecords(response.data);
                 // Extract unique representatives
                 const uniqueReps = [...new Set(response.data
                     .map(record => record.group_name)

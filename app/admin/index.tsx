@@ -181,7 +181,7 @@ export default function AdminHome() {
         >
           <TouchableOpacity
             style={[styles.statCard, { backgroundColor: primaryColor }]}
-            onPress={() => router.push('')}
+            onPress={() => router.push('/admin/register/needy-management')}
           >
             <LinearGradient
               colors={[primaryColor, `${primaryColor}CC`]}
@@ -195,7 +195,7 @@ export default function AdminHome() {
 
           <TouchableOpacity
             style={[styles.statCard, { backgroundColor: volunteerColor }]}
-            onPress={() => router.push('')}
+            onPress={() => router.push('/admin/register/admin-management')}
           >
             <LinearGradient
               colors={[volunteerColor, `${volunteerColor}CC`]}
@@ -210,7 +210,7 @@ export default function AdminHome() {
 
             <TouchableOpacity
                 style={[styles.statCard, { backgroundColor: donationColor }]}
-                onPress={() => router.push('')}
+                onPress={() => router.push('/admin/register/admin-management')}
             >
                 <LinearGradient
                     colors={[donationColor, `${donationColor}CC`]}

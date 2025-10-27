@@ -142,6 +142,16 @@ class ApiService {
     });
   }
 
+ /** GET /find-register - Get all needy records for table */
+  async findDisconnectedNeedyRecords(): Promise<ApiResponse<any[]>> {
+    return apiRequest<any[]>({
+      endpoint: Config.ENDPOINTS.FIND_DISCONNECTED_NEEDY,
+      method: 'GET',
+      includeAuth: true,
+      showErrorAlert: false,
+    });
+  }
+
   /** GET /get-needy/{needy_id} - Get detailed needy information */
   async getNeedyDetails(needyId: string): Promise<ApiResponse<any>> {
     return apiRequest<any>({

@@ -54,6 +54,7 @@ export const Config = {
     FIND_NEEDY_GEO: '/find-needy',
     FIND_ADMIN_GEO: '/find-admin',
     GET_NEEDY: '/get-needy',
+    FIND_DISCONNECTED_NEEDY: '/find-disconnected-needy',
     GET_ADMIN: '/get-admin',
     EDIT_NEEDY: '/edit-needy',
     DELETE_NEEDY: '/delete-needy',

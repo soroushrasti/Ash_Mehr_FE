@@ -63,7 +63,7 @@ export default function AdminUserRegister() {
         IncomeForm: '',
         Latitude: params.latitude ? String(params.latitude) : '',
         Longitude: params.longitude ? String(params.longitude) : '',
-        is_disconnected: '',
+        is_disconnected: false,
         children_of_registre: [],
         goods_of_registre: []
     });
@@ -633,7 +633,7 @@ const handleGoodsCountChange = (count: number) => {
                             placeholder="نام سازمان یا نهاد حامی (در صورت وجود)"
                         />
 
-                        <ThemedText style={styles.fieldLabel}>تحت نظارت نماینده</ThemedText>
+                        <ThemedText style={styles.fieldLabel}>تحت نظارت نماینده *</ThemedText>
                         <RTLPicker
                             items={[
                                 { label: "انتخاب نماینده", value: 0 },
@@ -761,17 +761,17 @@ const handleGoodsCountChange = (count: number) => {
                                     </View>
                             ))}
 
-                <ThemedText style={styles.fieldLabel}>قطع همکاری</ThemedText>
-                        <RTLPicker
-                           items={[
-                                   { label: 'بله' ,value: true },
-                                   { label: 'خیر' ,value: false }
-                               ]}
-                            selectedValue={formData.is_disconnected || false}
-                            onValueChange={(value) => handleFieldChange('is_disconnected', value || undefined)}
-                            placeholder="خیر"
-                            style={styles.pickerContainer}
-                     />
+                      <ThemedText style={styles.fieldLabel}>قطع همکاری</ThemedText>
+                      <RTLPicker
+                          items={[
+                              { label: 'بله', value: true },
+                              { label: 'خیر', value: false }
+                          ]}
+                          selectedValue={formData.is_disconnected}
+                          onValueChange={(value) => handleFieldChange('is_disconnected', value)}
+                          placeholder= 'خیر'
+                          style={styles.pickerContainer}
+                      />
 
                         {params.latitude && params.longitude && (
                             <View style={styles.locationInfo}>
@@ -791,6 +791,100 @@ const handleGoodsCountChange = (count: number) => {
                     <Button
                         title="انتخاب موقعیت در نقشه"
                         onPress={() => {
+                        if (!formData.FirstName || formData.FirstName.trim() === '') {
+                            alert('فیلد نام اجباری است');
+                            return;
+                        }
+                         if (!formData.LastName || formData.LastName.trim() === '') {
+                                alert('فیلد نام خانوادگی اجباری است');
+                                return;
+                            }
+                        if (!formData.Phone || formData.Phone.trim() === '') {
+                                alert('فیلد تلفن اجباری است');
+                                return;
+                            }
+                        if (!formData.Gender || formData.Gender.trim() === '') {
+                                alert('فیلد جنسیت اجباری است');
+                                return;
+                            }
+                        if (!formData.Province || formData.Province.trim() === '') {
+                                alert('فیلد استان اجباری است');
+                                return;
+                            }
+                        if (!formData.City || formData.City.trim() === '') {
+                                alert('فیلد شهر اجباری است');
+                                return;
+                            }
+                        if (!formData.Region || formData.Region.trim() === '') {
+                                alert('فیلد منطقه اجباری است');
+                                return;
+                            }
+                        if (!formData.Street || formData.Street.trim() === '') {
+                                alert('فیلد آدرس اجباری است');
+                                return;
+                            }
+                        if (!formData.UnderWhichAdmin || String(formData.UnderWhichAdmin).trim() === '') {
+                                alert('فیلد تحت نظارت نماینده اجباری است');
+                                return;
+                            }
+
+                            if (formData.children_of_registre && formData.children_of_registre.length > 0) {
+                               for (let i = 0; i < formData.children_of_registre.length; i++) {
+                                   const child = formData.children_of_registre[i];
+                                   const childNumber = i + 1;
+
+                                   if (!child.FirstName || child.FirstName.trim() === '') {
+                                       alert(`فیلد نام فرزند ${childNumber} اجباری است`);
+                                       return;
+                                   }
+
+                                   if (!child.LastName || child.LastName.trim() === '') {
+                                       alert(`فیلد نام خانوادگی فرزند ${childNumber} اجباری است`);
+                                       return;
+                                   }
+                               }
+                           }
+
+                        if (formData.goods_of_registre && formData.goods_of_registre.length > 0) {
+                               for (let i = 0; i < formData.goods_of_registre.length; i++) {
+                                   const good = formData.goods_of_registre[i];
+                                   const goodNumber = i + 1;
+
+                                   if (!good.TypeGood || good.TypeGood.trim() === '') {
+                                       alert(`فیلد نوع کمک ${goodNumber} اجباری است`);
+                                       return;
+                                   }
+
+                                   if (!good.NumberGood || good.NumberGood.trim() === '') {
+                                       alert(`فیلد مقدار کمک ${goodNumber} اجباری است`);
+                                       return;
+                                   }
+                               }
+                           }
+
+                    // Phone validation (if provided)
+                            if (formData.Phone && formData.Phone.trim()) {
+                                const phoneRegex = /^09\d{9}$/;
+                                if (!phoneRegex.test(formData.Phone)) {
+                                    alert('شماره موبایل باید با ۰۹ شروع شده و ۱۱ رقم باشد');
+                                    return;
+                                }
+                            }
+
+                            // National ID validation (if provided)
+                            if (formData.NationalID && formData.NationalID.trim()) {
+                                if (formData.NationalID.length !== 10) {
+                                    alert('کد ملی باید ۱۰ رقم باشد');
+                                    return;
+                                }
+                            }
+
+                            // Age validation (if provided)
+                            if (formData.Age && (formData.Age < 1 || formData.Age > 120)) {
+                                alert('سن باید بین ۱ تا ۱۲۰ سال باشد');
+                                return;
+                            }
+
                             router.push({
                                 pathname: '/admin/register/map',
                                 params: {

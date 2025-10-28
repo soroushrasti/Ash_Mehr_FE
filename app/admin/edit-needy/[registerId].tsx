@@ -377,7 +377,7 @@ const handleSaveChildren = async () => {
             />
 
             <InputField
-              label="شماره موبایل"
+              label="شماره موبایل *"
               value={formData.Phone || ''}
                onChangeText={(text) => {
                       // فقط اعداد فارسی و انگلیسی را قبول کند
@@ -412,7 +412,7 @@ const handleSaveChildren = async () => {
               placeholder="۱۴۰۰/۰۱/۰۱"
             />
 
-            <ThemedText style={styles.fieldLabel}>جنسیت</ThemedText>
+            <ThemedText style={styles.fieldLabel}>جنسیت *</ThemedText>
             <RTLPicker
               items={[
                 { label: "انتخاب کنید", value: "" },
@@ -428,28 +428,28 @@ const handleSaveChildren = async () => {
             <ThemedText style={styles.sectionTitle}>اطلاعات آدرس</ThemedText>
 
             <InputField
-              label="استان"
+              label="  استان *"
               value={formData.Province || ''}
               onChangeText={(text) => handleFieldChange('Province', text)}
               placeholder="نام استان"
             />
 
             <InputField
-              label="شهر"
+              label="  شهر*"
               value={formData.City || ''}
               onChangeText={(text) => handleFieldChange('City', text)}
               placeholder="نام شهر"
             />
 
             <InputField
-              label="منطقه"
+              label=" منطقه *"
               value={formData.Region || ''}
               onChangeText={(text) => handleFieldChange('Region', text)}
               placeholder="منطقه یا ناحیه"
             />
 
             <InputField
-              label="آدرس"
+              label=" آدرس *"
               value={formData.Street || ''}
               onChangeText={(text) => handleFieldChange('Street', text)}
               placeholder="آدرس کامل"
@@ -548,7 +548,7 @@ const handleSaveChildren = async () => {
                        keyboardType="numeric"
                        maxLength={10}
                     />
-                     <ThemedText style={styles.fieldLabel}>جنسیت</ThemedText>
+                     <ThemedText style={styles.fieldLabel}>جنسیت *</ThemedText>
                           <RTLPicker
                           items={[
                          { label: "انتخاب کنید", value: "" },
@@ -643,7 +643,7 @@ const handleSaveChildren = async () => {
               placeholder="نام سازمان یا نهاد حامی (در صورت وجود)"
             />
 
-            <ThemedText style={styles.fieldLabel}>تحت نظارت نماینده</ThemedText>
+            <ThemedText style={styles.fieldLabel}>تحت نظارت نماینده *</ThemedText>
             <RTLPicker
               items={[
                 { label: "انتخاب نماینده", value: 0 },
@@ -722,6 +722,99 @@ const handleSaveChildren = async () => {
           <Button
             title="انتخاب موقعیت در نقشه"
             onPress={() => {
+                if (!formData.FirstName || formData.FirstName.trim() === '') {
+                        alert('فیلد نام اجباری است');
+                        return;
+                    }
+                     if (!formData.LastName || formData.LastName.trim() === '') {
+                            alert('فیلد نام خانوادگی اجباری است');
+                            return;
+                        }
+                    if (!formData.Phone || formData.Phone.trim() === '') {
+                            alert('فیلد تلفن اجباری است');
+                            return;
+                        }
+                    if (!formData.Gender || formData.Gender.trim() === '') {
+                            alert('فیلد جنسیت اجباری است');
+                            return;
+                        }
+                    if (!formData.Province || formData.Province.trim() === '') {
+                            alert('فیلد استان اجباری است');
+                            return;
+                        }
+                    if (!formData.City || formData.City.trim() === '') {
+                            alert('فیلد شهر اجباری است');
+                            return;
+                        }
+                    if (!formData.Region || formData.Region.trim() === '') {
+                            alert('فیلد منطقه اجباری است');
+                            return;
+                        }
+                    if (!formData.Street || formData.Street.trim() === '') {
+                            alert('فیلد آدرس اجباری است');
+                            return;
+                        }
+                    if (!formData.UnderWhichAdmin || String(formData.UnderWhichAdmin).trim() === '') {
+                            alert('فیلد تحت نظارت نماینده اجباری است');
+                            return;
+                        }
+
+                        if (formData.children_of_registre && formData.children_of_registre.length > 0) {
+                           for (let i = 0; i < formData.children_of_registre.length; i++) {
+                               const child = formData.children_of_registre[i];
+                               const childNumber = i + 1;
+
+                               if (!child.FirstName || child.FirstName.trim() === '') {
+                                   alert(`فیلد نام فرزند ${childNumber} اجباری است`);
+                                   return;
+                               }
+
+                               if (!child.LastName || child.LastName.trim() === '') {
+                                   alert(`فیلد نام خانوادگی فرزند ${childNumber} اجباری است`);
+                                   return;
+                               }
+                           }
+                       }
+
+                    if (formData.goods_of_registre && formData.goods_of_registre.length > 0) {
+                           for (let i = 0; i < formData.goods_of_registre.length; i++) {
+                               const good = formData.goods_of_registre[i];
+                               const goodNumber = i + 1;
+
+                               if (!good.TypeGood || good.TypeGood.trim() === '') {
+                                   alert(`فیلد نوع کمک ${goodNumber} اجباری است`);
+                                   return;
+                               }
+
+                               if (!good.NumberGood || good.NumberGood.trim() === '') {
+                                   alert(`فیلد مقدار کمک ${goodNumber} اجباری است`);
+                                   return;
+                               }
+                           }
+                       }
+
+                // Phone validation (if provided)
+                        if (formData.Phone && formData.Phone.trim()) {
+                            const phoneRegex = /^09\d{9}$/;
+                            if (!phoneRegex.test(formData.Phone)) {
+                                alert('شماره موبایل باید با ۰۹ شروع شده و ۱۱ رقم باشد');
+                                return;
+                            }
+                        }
+
+                        // National ID validation (if provided)
+                        if (formData.NationalID && formData.NationalID.trim()) {
+                            if (formData.NationalID.length !== 10) {
+                                alert('کد ملی باید ۱۰ رقم باشد');
+                                return;
+                            }
+                        }
+
+                        // Age validation (if provided)
+                        if (formData.Age && (formData.Age < 1 || formData.Age > 120)) {
+                            alert('سن باید بین ۱ تا ۱۲۰ سال باشد');
+                            return;
+                        }
               router.push({
                 pathname: '/admin/register/map',
                 params: {

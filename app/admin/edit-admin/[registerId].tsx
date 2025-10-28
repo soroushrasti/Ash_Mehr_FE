@@ -424,6 +424,40 @@ export default function EditAdminPage() {
           <Button
             title="📍 انتخاب موقعیت در نقشه"
             onPress={() => {
+                if (!formData.FirstName || formData.FirstName.trim() === '') {
+                        alert('فیلد نام اجباری است');
+                        return;
+                    }
+                     if (!formData.LastName || formData.LastName.trim() === '') {
+                            alert('فیلد نام خانوادگی اجباری است');
+                            return;
+                     }
+                     if (!formData.Password || formData.Password.trim() === '') {
+                             alert('فیلد رمز عبور اجباری است');
+                             return;
+                      }
+
+                    if (!formData.Password || formData.Password.length < 6) {
+                      alert('رمز عبور باید حداقل ۶ کاراکتر باشد');
+                      return;
+                    }
+
+                    // Phone validation (if provided)
+                    if (formData.Phone && formData.Phone.trim()) {
+                        const phoneRegex = /^09\d{9}$/;
+                      if (!phoneRegex.test(formData.Phone)) {
+                        alert('شماره موبایل باید با ۰۹ شروع شده و ۱۱ رقم باشد');
+                        return;
+                      }
+                    }
+
+                    // National ID validation (if provided)
+                    if (formData.NationalID && formData.NationalID.trim()) {
+                      if (formData.NationalID.length !== 10) {
+                        alert('کد ملی باید ۱۰ رقم باشد');
+                        return;
+                      }
+                    }
               router.push({
                 pathname: '/admin/register/map',
                 params: {

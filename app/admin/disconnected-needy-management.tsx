@@ -69,10 +69,11 @@ export default function ReportsPage() {
 
         // Apply search filter
         if (searchTerm) {
-            filtered = filtered.filter(record =>
-                record.name && record.name.toLowerCase().includes(searchTerm.toLowerCase())
-            );
-        }
+                   filtered = filtered.filter(record =>
+                       (record.name && record.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
+                       (record.phone && record.phone.includes(searchTerm))
+                   );
+               }
 
         // Apply representative filter
         if (selectedRepresentative) {

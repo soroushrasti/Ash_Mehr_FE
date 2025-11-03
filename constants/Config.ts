@@ -56,6 +56,7 @@ export const Config = {
     GET_NEEDY: '/get-needy',
     FIND_DISCONNECTED_NEEDY: '/find-disconnected-needy',
     GET_ADMIN: '/get-admin',
+    GET_GOODS: '/get-goods',
     EDIT_NEEDY: '/edit-needy',
     DELETE_NEEDY: '/delete-needy',
     DELETE_CHILD_NEEDY: '/delete-child-needy',
@@ -63,7 +64,9 @@ export const Config = {
     GET_GOODS: '/get-goods',
     EDIT_GOOD: '/edit-good',
     ADD_GOOD: '/add-good',
-    GET_REGISTER_STATS: '/register-stats'
+    GET_REGISTER_STATS: '/register-stats',
+    SEND_SMS: '/send-sms',
+    VERIFY_SMS: '/verify-sms'
   }
 };
 

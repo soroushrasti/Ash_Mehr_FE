@@ -162,6 +162,16 @@ class ApiService {
     });
   }
 
+  /** GET /get-goods/{needy_id} - Get detailed needy information */
+    async getGoodsDetails(needyId: string): Promise<ApiResponse<any>> {
+      return apiRequest<any>({
+        endpoint: `${Config.ENDPOINTS.GET_GOODS}/${needyId}`,
+        method: 'GET',
+        includeAuth: true,
+        showErrorAlert: false,
+      });
+    }
+
     async getGoodsDetails(registerId: string): Promise<ApiResponse<any>> {
       return apiRequest<any>({
         endpoint: `${Config.ENDPOINTS.GET_GOODS}/${registerId}`,
@@ -255,6 +265,22 @@ class ApiService {
       showErrorAlert: true,
     });
   }
-}
 
+  async sendSMSCode(phoneNumber: string, goodId: number): Promise<ApiResponse> {
+     return apiRequest({
+      endpoint: `${Config.ENDPOINTS.SMS_CODE}/${phoneNumber}/${goodId}`,
+      method: 'POST',
+      includeAuth: true,
+      showErrorAlert: true,
+     });
+   }
+  async verifySMSCode(smsCode: string, goodId: number): Promise<ApiResponse> {
+      return apiRequest({
+        endpoint: `${Config.ENDPOINTS.VERIFY_SMS}/${smsCode}/${goodId}`,
+        method: 'POST',
+        includeAuth: true,
+        showErrorAlert: true,
+      });
+  }
+  };
 export const apiService = new ApiService();

@@ -56,7 +56,7 @@ export default function VolunteerManagementPage() {
       title: 'مدیریت اطلاعات مددجوهایی که قطع واریزی',
       subtitle: 'مشاهده، ویرایش و حذف اطلاعات مددجویان',
       icon: '👥',
-      gradient: ['#4facfe', '#00f2fe'],
+      gradient: ['#8B5CF6', '#C084FC'],
       route: '/admin/disconnected-needy-management',
       color: primaryColor,
       features: [
@@ -67,6 +67,7 @@ export default function VolunteerManagementPage() {
         'ویرایش کمک ها'
       ]
     },
+
   ];
 
   const ManagementCard = ({ option }: { option: typeof managementOptions[0] }) => (

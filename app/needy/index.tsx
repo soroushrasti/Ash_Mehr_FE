@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, ScrollView, Alert, ActivityIndicator, I18nManager } from 'react-native';
-import { useRouter } from 'expo-router';
+
+import { View, StyleSheet, ScrollView, Alert, ActivityIndicator, I18nManager, TouchableOpacity, TextInput } from 'react-native';
+import { useRouter, useLocalSearchParams } from 'expo-router';
+
 import { ThemedView } from '@/components/ThemedView';
 import { ThemedText } from '@/components/ThemedText';
 import { useThemeColor } from '@/hooks/useThemeColor';
@@ -48,6 +50,7 @@ interface NeedyDetails {
     EducationLevel?: string;
   }>;
   goods_of_registre?: Array<{
+    id: string;
     TypeGood: string;
     NumberGood: number;
   }>;
@@ -58,11 +61,17 @@ export default function NeedyDetailsPage() {
   const [needyDetails, setNeedyDetails] = useState<NeedyDetails | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
+  const [isSmsVerified, setIsSmsVerified] = useState(false);
+  const [showCodeInput, setShowCodeInput] = useState(false);
+  const [isSendingSms, setIsSendingSms] = useState(false);
+  const [code, setCode] = useState('');
 
+  const [isToggleActive, setIsToggleActive] = useState(false);
   const primaryColor = useThemeColor({}, 'primary');
   const backgroundColor = useThemeColor({}, 'background');
   const surfaceColor = useThemeColor({}, 'surface');
   const textColor = useThemeColor({}, 'text');
+
 
   useEffect(() => {
     // Ensure RTL is enabled on mobile
@@ -113,6 +122,7 @@ export default function NeedyDetailsPage() {
        if (response.success && response.data) {
          const data = response.data;
          const list = Array.isArray(data.goods) ? data.goods : Array.isArray(data) ? data : [];
+
          setNeedyDetails(prev => {
            if (!prev) return prev;
            return {
@@ -131,6 +141,7 @@ export default function NeedyDetailsPage() {
              goods_of_registre: []
            };
          });
+
        }
      } catch (error) {
        console.error('Error loading goods data:', error);
@@ -138,6 +149,43 @@ export default function NeedyDetailsPage() {
      }
  };
 
+const sendSms = async (goodId: string) => {
+  setShowCodeInput(true);
+
+//   setIsSendingSms(true);
+//   try {
+//     const response = await apiService.sendSms(needyDetails.phone, goodId); // یا شماره موبایل مددجو
+//     if (response.success) {
+//       setShowCodeInput(true);
+//     } else {
+//       Alert.alert('خطا', 'ارسال پیامک با خطا مواجه شد');
+//     }
+//   } catch (error) {
+//     console.error('Error sending SMS:', error);
+//     Alert.alert('خطا', 'خطا در ارسال پیامک');
+//   } finally {
+//     setIsSendingSms(false);
+//   }
+
+};
+//
+const verifyCode = async (code: string, goodId: string) => {
+    setIsToggleActive(true);
+    setShowCodeInput(false);
+//   try {
+//     const response = await apiService.verifySMSCode(code, goodId);
+//     if (response.success) {
+//       setIsToggleActive(true);
+//       setShowCodeInput(false);
+//       Alert.alert('موفق', 'کد با موفقیت تایید شد');
+//     } else {
+//       Alert.alert('خطا', 'کد وارد شده معتبر نیست');
+//     }
+//   } catch (error) {
+//     console.error('Error verifying code:', error);
+//     Alert.alert('خطا', 'خطا در تایید کد');
+//   }
+};
 
   const getEducationLabel = (value?: string) => {
     if (!value) return 'مشخص نشده';
@@ -320,12 +368,45 @@ export default function NeedyDetailsPage() {
           {needyDetails.goods_of_registre && needyDetails.goods_of_registre.length > 0 && (
             <DetailSection title="اطلاعات کمک ها" icon="💰">
               {needyDetails.goods_of_registre.map((good, index) => (
+
                 <View key={index} style={[styles.childCard, { backgroundColor: withOpacity(primaryColor, 5), borderColor: withOpacity(primaryColor, 20) }]}>
                   <ThemedText style={[styles.childTitle, { color: primaryColor }]}>
                     💰 کمک {index + 1}
                   </ThemedText>
                   <DetailRow label="نوع کمک" value={good.TypeGood} />
                   <DetailRow label="مقدار کمک" value={good.NumberGood} />
+                   <View style={styles.bottomToggleContainer}>
+                     <TouchableOpacity
+                       style={[
+                         styles.bottomToggleButton,
+                         isToggleActive ? styles.bottomToggleActive : styles.bottomToggleInactive,
+                       ]}
+                       onPress={() => sendSms(good.id)}
+                     >
+                       <ThemedText style={styles.bottomToggleText}>
+                         {isToggleActive ? '✅ تایید شده' : 'تایید نشده'}
+                       </ThemedText>
+                     </TouchableOpacity>
+                   </View>
+                     <View>
+                        {/* سایر المان‌ها */}
+
+                        {showCodeInput && (
+                          <View style={styles.codeInputContainer}>
+                            <TextInput
+                              placeholder = "کد را وارد کنید"
+                              keyboardType="number-pad"
+                              value={code}
+                              onChangeText={setCode}
+                               autoFocus={true}
+                              style={styles.codeInput}
+                            />
+                            <Button title=  "تایید"
+                            onPress={() => verifyCode(code, good.id)}
+                             />
+                          </View>
+                        )}
+                      </View>
                 </View>
               ))}
             </DetailSection>
@@ -482,4 +563,62 @@ const styles = StyleSheet.create({
   backButton: {
     marginTop: Spacing.xs,
   },
+  toggleContainer: {
+    marginBottom: 16,
+    alignItems: 'center',
+    // اینها را اضافه کنید:
+    width: '100%',
+    minHeight: 50, // حداقل ارتفاع
+    justifyContent: 'center',
+  },
+  toggleButton: {
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 8,
+    minWidth: 150,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  toggleText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
+  bottomToggleContainer: {
+    position: 'absolute',
+    bottom: 20,
+    left: 0,
+    right: 0,
+    alignItems: 'center',
+    paddingHorizontal: 16,
+  },
+  bottomToggleButton: {
+    paddingHorizontal: 24,
+    paddingVertical: 14,
+    borderRadius: 25,
+    minWidth: 120,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  bottomToggleActive: {
+    backgroundColor: '#4CAF50',
+  },
+  bottomToggleInactive: {
+    backgroundColor: '#f44336',
+  },
+  bottomToggleText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#fff',
+    textAlign: 'center',
+  },
+
 });

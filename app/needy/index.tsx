@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, ScrollView, Alert, ActivityIndicator, I18nManager } from 'react-native';
-import { useRouter, useLocalSearchParams } from 'expo-router';
+import { useRouter } from 'expo-router';
 import { ThemedView } from '@/components/ThemedView';
 import { ThemedText } from '@/components/ThemedText';
-import { Button } from '@/components/Button';
 import { useThemeColor } from '@/hooks/useThemeColor';
 import { Spacing, BorderRadius } from '@/constants/Design';
 import { apiService } from '@/services/apiService';
@@ -12,47 +11,41 @@ import { withOpacity } from '@/utils/colorUtils';
 import { useAuth } from '@/components/AuthContext';
 import { SignOutButton } from '@/components/SignOutButton';
 
-// Ensure RTL is enabled
-if (!I18nManager.isRTL) {
-  I18nManager.allowRTL(true);
-  I18nManager.forceRTL(true);
-}
-
 interface NeedyDetails {
-  userId: string;
-  register_id: string;
-  firstName: string;
-  lastName: string;
-  nationalId: string;
-  phone: string;
-  email?: string;
-  street: string;
-  city: string;
-  province: string;
-  region: string;
-  gender: string;
-  nameFather: string;
-  husbandFirstName: string;
-  husbandLastName: string;
-  reasonMissingHusband: string;
-  underOrganizationName: string;
-  educationLevel: string;
-  postCode?: string;
-  birthDate?: string;
-  incomeForm?: number;
-  underWhichAdmin: string;
-  underSecondAdminId: string;
-  latitude?: number;
-  longitude?: number;
-  createdAt?: string;
-  updatedAt?: string;
+  UserID?: string;
+  RegisterID?: string;
+  FirstName?: string;
+  LastName?: string;
+  NationalID?: string;
+  Phone?: string;
+  Email?: string;
+  Street?: string;
+  City?: string;
+  Province?: string;
+  Region?: string;
+  Gender?: string;
+  NameFather?: string;
+  HusbandFirstName?: string;
+  HusbandLastName?: string;
+  ReasonMissingHusband?: string;
+  UnderOrganizationName?: string;
+  EducationLevel?: string;
+  PostCode?: string;
+  BirthDate?: string;
+  IncomeForm?: number;
+  UnderWhichAdmin?: string;
+  UnderSecondAdminID?: string;
+  Latitude?: number;
+  Longitude?: number;
+  CreatedDate?: string;
+  UpdatedDate?: string;
   children?: Array<{
-    firstName: string;
-    lastName: string;
-    age: number;
-    gender: string;
-    nationalId: string;
-    education?: string;
+    FirstName?: string;
+    LastName?: string;
+    Age?: number;
+    Gender?: string;
+    NationalID?: string;
+    EducationLevel?: string;
   }>;
   goods_of_registre?: Array<{
     TypeGood: string;
@@ -67,13 +60,17 @@ export default function NeedyDetailsPage() {
   const router = useRouter();
 
   const primaryColor = useThemeColor({}, 'primary');
-  const successColor = useThemeColor({}, 'success');
   const backgroundColor = useThemeColor({}, 'background');
   const surfaceColor = useThemeColor({}, 'surface');
   const textColor = useThemeColor({}, 'text');
-  const borderColor = useThemeColor({}, 'border');
 
   useEffect(() => {
+    // Ensure RTL is enabled on mobile
+    if (!I18nManager.isRTL) {
+      I18nManager.allowRTL(true);
+      I18nManager.forceRTL(true);
+    }
+
     if (userId) {
       const loadData = async () => {
         setLoading(true);
@@ -82,12 +79,15 @@ export default function NeedyDetailsPage() {
           await loadGoodsData(userId as string);
         } catch (error) {
           console.error('Error loading data:', error);
+          Alert.alert('خطا', 'خطا در بارگذاری اطلاعات');
         } finally {
           setLoading(false);
         }
       };
 
       loadData();
+    } else {
+      setLoading(false);
     }
   }, [userId]);
 
@@ -98,15 +98,12 @@ export default function NeedyDetailsPage() {
       if (response.success && response.data) {
         setNeedyDetails(response.data);
       } else {
-        Alert.alert('خطا', 'دریافت جزئیات مددجو با خطا مواجه شد');
-        router.back();
+        console.error('Failed to load needy details:', response.error);
+        Alert.alert('خطا', response.error || 'دریافت جزئیات مددجو با خطا مواجه شد');
       }
     } catch (error) {
       console.error('Error loading needy details:', error);
       Alert.alert('خطا', 'خطا در دریافت اطلاعات');
-      router.back();
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -116,30 +113,34 @@ export default function NeedyDetailsPage() {
        if (response.success && response.data) {
          const data = response.data;
          const list = Array.isArray(data.goods) ? data.goods : Array.isArray(data) ? data : [];
-         setNeedyDetails(prev => ({
-           ...prev,
-           goods_of_registre: list.map((g: any) => ({
-             TypeGood: g.TypeGood ?? g.type ?? '',
-             NumberGood: Number(g.NumberGood ?? g.number ?? 0)
-           }))
-         }));
+         setNeedyDetails(prev => {
+           if (!prev) return prev;
+           return {
+             ...prev,
+             goods_of_registre: list.map((g: any) => ({
+               TypeGood: g.TypeGood ?? g.type ?? '',
+               NumberGood: Number(g.NumberGood ?? g.number ?? 0)
+             }))
+           };
+         });
        } else {
-         setNeedyDetails(prev => ({
-           ...prev,
-           goods_of_registre: [{
-             TypeGood: '',
-             NumberGood: 0,
-           }]
-         }));
+         setNeedyDetails(prev => {
+           if (!prev) return prev;
+           return {
+             ...prev,
+             goods_of_registre: []
+           };
+         });
        }
      } catch (error) {
        console.error('Error loading goods data:', error);
-       showAlert('خطا', 'خطا در دریافت اطلاعات کمک ها');
+       // Goods data is optional, don't show alert
      }
  };
 
 
-  const getEducationLabel = (value: string) => {
+  const getEducationLabel = (value?: string) => {
+    if (!value) return 'مشخص نشده';
     const educationMap = {
       'None': 'بی‌سواد',
       'Primary': 'ابتدایی',
@@ -154,7 +155,8 @@ export default function NeedyDetailsPage() {
     return educationMap[value as keyof typeof educationMap] || value;
   };
 
-  const getGenderLabel = (value: string) => {
+  const getGenderLabel = (value?: string) => {
+    if (!value) return 'مشخص نشده';
     return value === 'Male' ? 'مرد' : value === 'Female' ? 'زن' : value;
   };
 
@@ -213,7 +215,6 @@ export default function NeedyDetailsPage() {
       <AppHeader
         title={`${needyDetails.FirstName} ${needyDetails.LastName}`}
         subtitle="جزئیات مددجو"
-        showBackButton
       />
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
@@ -258,17 +259,11 @@ export default function NeedyDetailsPage() {
             <>
               <DetailRow
                 label="عرض جغرافیایی"
-                value={typeof needyDetails.Latitude === 'number'
-                  ? needyDetails.Latitude.toFixed(6)
-                  : parseFloat(needyDetails.Latitude.toString()).toFixed(6)
-                }
+                value={needyDetails.Latitude.toFixed(6)}
               />
               <DetailRow
                 label="طول جغرافیایی"
-                value={typeof needyDetails.Longitude === 'number'
-                  ? needyDetails.Longitude.toFixed(6)
-                  : parseFloat(needyDetails.Longitude.toString()).toFixed(6)
-                }
+                value={needyDetails.Longitude.toFixed(6)}
               />
             </>
           )}

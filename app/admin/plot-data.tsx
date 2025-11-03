@@ -1,31 +1,41 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, ScrollView, StyleSheet, RefreshControl, ActivityIndicator, TouchableOpacity, Alert } from 'react-native';
 import { BarChart } from 'react-native-chart-kit';
 import { apiService } from '@/services/apiService';
 import { ThemedView } from '@/components/ThemedView';
 import { ThemedText } from '@/components/ThemedText';
 import AppHeader from '@/components/AppHeader';
-import { LinearGradient } from 'expo-linear-gradient';
 import { Spacing, BorderRadius } from '@/constants/Design';
-import * as Font from 'expo-font';
-import { useFonts } from 'expo-font';
+
+interface ChartDataset {
+  labels: string[];
+  datasets: {
+    data: number[];
+  }[];
+}
+
+interface ChartDataState {
+  adminStats: ChartDataset;
+  provinceStats: ChartDataset;
+  educationLevelStats: ChartDataset;
+  typeGoodStats: ChartDataset;
+  childrenNumberStats: ChartDataset;
+}
 
 const RegisterCharts = () => {
-  const [chartData, setChartData] = useState(null);
+  const [chartData, setChartData] = useState<ChartDataState | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetchRegisterStats();
-  }, []);
-
-  const fetchRegisterStats = async () => {
+  const fetchRegisterStats = useCallback(async () => {
     try {
       setLoading(true);
+      setError(null);
       const response = await apiService.getRegisterStats();
 
       if (!response?.data?.adminStats || !response?.data?.provinceStats || !response?.data?.educationLevelStats || !response?.data?.typeGoodStats || !response?.data?.childrenNumberStats) {
-        throw new Error('داده‌ها به درستی دریافت نشدند');
+        setError('داده‌ها به درستی دریافت نشدند');
+        return;
       }
 
       // پاکسازی و فرمت داده‌ها
@@ -49,10 +59,14 @@ const RegisterCharts = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    fetchRegisterStats();
+  }, [fetchRegisterStats]);
 
   // تابع برای فرمت کردن و پاکسازی داده‌ها
-  const formatChartData = (data, type) => {
+  const formatChartData = (data: any, type?: string): ChartDataset => {
     if (!data || typeof data !== 'object') {
       return {
         labels: [],
@@ -64,89 +78,51 @@ const RegisterCharts = () => {
     const labels = data.labels || [];
     const datasets = data.datasets || [];
 
-       const educationMapping = {
-           'Kindergarten': 'مهدکودک',
-            'Primary': 'ابتدایی',
-            'Secondary': 'راهنمایی',
-            'High School': 'دبیرستان',
-            'Diploma': 'دیپلم',
-            'Associate Degree': 'فوق‌دیپلم',
-            'Bachelor': 'لیسانس',
-            'Master': 'فوق‌لیسانس',
-            'PhD': 'دکتری'
-        };
+    const educationMapping: Record<string, string> = {
+      'Kindergarten': 'مهدکودک',
+      'Primary': 'ابتدایی',
+      'Secondary': 'راهنمایی',
+      'High School': 'دبیرستان',
+      'Diploma': 'دیپلم',
+      'Associate Degree': 'فوق‌دیپلم',
+      'Bachelor': 'لیسانس',
+      'Master': 'فوق‌لیسانس',
+      'PhD': 'دکتری'
+    };
 
-        // تبدیل برچسب‌ها به فارسی اگر نوع نمودار مربوط به تحصیلات باشد
-        const persianLabels = labels.map(label => {
-            if (type && type.includes('education')) {
-                return educationMapping[label] || label;
-            }
-            return label;
-        });
-
-     return {
-        labels: persianLabels, // اینجا labels فارسی شده رو استفاده کنید
-        datasets: datasets.map(dataset => ({
-          ...dataset,
-          data: dataset.data || []
-        }))
-      };
+    // تبدیل برچسب‌ها به فارسی اگر نوع نمودار مربوط به تحصیلات باشد
+    const persianLabels = labels.map((label: any) => {
+      if (type && type.includes('education')) {
+        return educationMapping[label] || label;
+      }
+      return label;
+    });
 
     // پاکسازی داده‌ها - تبدیل NaN به 0
-    const cleanedDatasets = datasets.map(dataset => ({
+    const cleanedDatasets = datasets.map((dataset: any) => ({
       ...dataset,
-      data: (dataset.data || []).map(value =>
+      data: (dataset.data || []).map((value: any) =>
         isNaN(Number(value)) || value === null || value === undefined ? 0 : Number(value)
       )
     }));
 
-  return {
-      labels: persianLabels.filter(label => label !== null && label !== undefined && label !== ''),
+    return {
+      labels: persianLabels.filter((label: any) => label !== null && label !== undefined && label !== ''),
       datasets: cleanedDatasets
-  };
+    };
   };
 
-const calculateChartWidth = (labels) => {
+const calculateChartWidth = (labels: string[]) => {
   const baseWidth = 350;
   const minBarSpacing = 70;
   return Math.max(baseWidth, labels.length * minBarSpacing);
 };
 
-const processChartData = (chartData) => {
-  if (!chartData || !chartData.labels || !chartData.datasets) return null;
-
-  // پیدا کردن ایندکس‌های معتبر
-  const validIndices = chartData.labels
-    .map((label, index) => ({
-      label,
-      index,
-      isValid: label !== null &&
-               label !== undefined &&
-               label.toString().trim() !== ''
-    }))
-    .filter(item => item.isValid)
-    .map(item => item.index);
-
-  // اگر هیچ ایندکس معتبری وجود ندارد
-  if (validIndices.length === 0) return null;
-
-  // ساخت داده‌های جدید با فیلتر کردن
-  const processedData = {
-    labels: validIndices.map(index => chartData.labels[index]),
-    datasets: chartData.datasets.map(dataset => ({
-      ...dataset,
-      data: validIndices.map(index => dataset.data[index])
-    }))
-  };
-
-  return processedData;
-};
-
   // تابع برای بررسی اعتبار داده‌های نمودار
-  const isValidChartData = (chartData) => {
+  const isValidChartData = (chartData: any): boolean => {
       if (!chartData || !chartData.labels || !chartData.datasets) return false;
 
-      const hasValidLabel = chartData.labels.some(label =>
+      const hasValidLabel = chartData.labels.some((label: any) =>
         label !== null &&
         label !== undefined &&
         label.toString().trim() !== ''
@@ -154,33 +130,12 @@ const processChartData = (chartData) => {
 
       if (!hasValidLabel) return false;
 
-      return chartData.datasets.some(dataset =>
+      return chartData.datasets.some((dataset: any) =>
         dataset &&
         dataset.data &&
         Array.isArray(dataset.data) &&
-        dataset.data.some(value => typeof value === 'number' && !isNaN(value))
+        dataset.data.some((value: any) => typeof value === 'number' && !isNaN(value))
       );
-  };
-
-  const processNumberGoodStats = (data) => {
-    if (!data || !data.labels || !data.datasets) return null;
-
-    // محدود کردن طول برچسب‌ها و فرمت کردن اعداد بزرگ
-    const processedLabels = data.labels.map(label => {
-      if (label === null || label === undefined) return 'نامشخص';
-      if (typeof label === 'number' && label > 1000000) {
-        return `${(label / 1000000).toFixed(1)}M`; // تبدیل به میلیون
-      }
-      if (typeof label === 'number' && label > 1000) {
-        return `${(label / 1000).toFixed(1)}K`; // تبدیل به هزار
-      }
-      return String(label).substring(0, 10); // محدود کردن طول رشته
-    });
-
-    return {
-      labels: processedLabels,
-      datasets: data.datasets
-    };
   };
 
 
@@ -194,7 +149,7 @@ const processChartData = (chartData) => {
     { primary: 'rgba(0, 150, 136, 1)', gradient: ['#009688', '#4DB6AC'], light: 'rgba(0, 150, 136, 0.1)' },
   ];
 
-  const createChartConfig = (colorSet) => ({
+  const createChartConfig = (colorSet: any) => ({
     backgroundColor: '#ffffff',
     backgroundGradientFrom: '#ffffff',
     backgroundGradientTo: '#f5f5f5',
@@ -221,7 +176,7 @@ const processChartData = (chartData) => {
     },
   });
 
-  const ChartCard = ({ title, children, colorSet, icon }) => (
+  const ChartCard = ({ title, children, colorSet, icon }: { title: string; children: React.ReactNode; colorSet: any; icon: string }) => (
       <View style={[styles.chartCard, { backgroundColor: colorSet.light }]}>
         <View style={[styles.chartHeader, { backgroundColor: colorSet.medium }]}>
           <Text style={styles.chartIcon}>{icon}</Text>
@@ -244,8 +199,8 @@ const processChartData = (chartData) => {
         throw new Error('خطا در دریافت اطلاعات از سرور');
       }
 
-    const convertToPersian = (label) => {
-        const translations = {
+    const convertToPersian = (label: string) => {
+        const translations: Record<string, string> = {
           'Kindergarten': 'مهدکودک',
           'Primary': 'ابتدایی',
           'Secondary': 'راهنمایی',
@@ -262,14 +217,15 @@ const processChartData = (chartData) => {
           ...response.data,
           educationLevelStats: {
             ...response.data.educationLevelStats,
-            labels: response.data.educationLevelStats.labels.map(label => convertToPersian(label))
+            labels: response.data.educationLevelStats.labels.map((label: any) => convertToPersian(label))
           }
         };
 
       setChartData(persianData);
 
     } catch (err) {
-      setError(err.message);
+      const errorMessage = err instanceof Error ? err.message : 'خطا در دریافت اطلاعات';
+      setError(errorMessage);
       Alert.alert('خطا', 'دریافت اطلاعات با مشکل مواجه شد');
     } finally {
       setLoading(false);
@@ -280,7 +236,7 @@ const processChartData = (chartData) => {
   if (loading) {
     return (
       <ThemedView style={styles.container}>
-        <AppHeader title="گزارش‌ها و نمودارها" showBackButton />
+        <AppHeader title="گزارش‌ها و نمودارها" subtitle="در حال بارگذاری..." />
         <View style={styles.centerContent}>
           <ActivityIndicator size="large" color="#4CAF50" />
           <ThemedText style={styles.loadingText}>در حال بارگذاری...</ThemedText>
@@ -293,7 +249,7 @@ const processChartData = (chartData) => {
   if (error) {
     return (
       <ThemedView style={styles.container}>
-        <AppHeader title="گزارش‌ها و نمودارها" showBackButton />
+        <AppHeader title="گزارش‌ها و نمودارها" subtitle="خطا" />
         <View style={styles.centerContent}>
           <Text style={styles.errorIcon}>⚠️</Text>
           <ThemedText style={styles.errorText}>{error}</ThemedText>
@@ -317,7 +273,7 @@ const processChartData = (chartData) => {
   if (!chartData) {
     return (
       <ThemedView style={styles.container}>
-        <AppHeader title="گزارش‌ها و نمودارها" showBackButton />
+        <AppHeader title="گزارش‌ها و نمودارها" subtitle="داده‌ای موجود نیست" />
         <View style={styles.centerContent}>
           <Text style={styles.emptyIcon}>📊</Text>
           <ThemedText style={styles.emptyText}>داده‌ای برای نمایش وجود ندارد</ThemedText>
@@ -328,7 +284,7 @@ const processChartData = (chartData) => {
 
   return (
     <ThemedView style={styles.container}>
-      <AppHeader title="گزارش‌ها و نمودارها" showBackButton />
+      <AppHeader title="گزارش‌ها و نمودارها" subtitle="آمار و نمودارها" />
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         refreshControl={
@@ -347,6 +303,8 @@ const processChartData = (chartData) => {
                  data={chartData.adminStats}
                  width={calculateChartWidth(chartData.adminStats.labels)}
                  height={200}
+                 yAxisLabel=""
+                 yAxisSuffix=""
                  chartConfig={{
                    ...createChartConfig(chartColors[0]),
                  }}
@@ -355,7 +313,7 @@ const processChartData = (chartData) => {
                  style={styles.chart}
                  showValuesOnTopOfBars={true}
                  withInnerLines={true}
-                 withVerticalLabels={false} // لیبل‌های عمودی غیرفعال
+                 withVerticalLabels={false}
                  withHorizontalLabels={true}
                />
 
@@ -370,7 +328,7 @@ const processChartData = (chartData) => {
                  ))}
                </View>
 
-               <Text style={styles.chartTitle}>نماینده</Text>
+               <Text style={styles.chartTitleBottom}>نماینده</Text>
              </View>
 
              </View>
@@ -389,6 +347,8 @@ const processChartData = (chartData) => {
                     data={chartData.provinceStats}
                     width={calculateChartWidth(chartData.provinceStats.labels)}
                     height={240}
+                    yAxisLabel=""
+                    yAxisSuffix=""
                     chartConfig={createChartConfig(chartColors[1])}
                     verticalLabelRotation={-45}
                     fromZero={true}
@@ -410,7 +370,7 @@ const processChartData = (chartData) => {
                  ))}
                </View>
 
-               <Text style={styles.chartTitle}>استان</Text>
+               <Text style={styles.chartTitleBottom}>استان</Text>
              </View>
               </View>
             </ScrollView>
@@ -431,6 +391,8 @@ const processChartData = (chartData) => {
                             }}
                 width={calculateChartWidth(chartData.educationLevelStats.labels)}
                 height={240}
+                yAxisLabel=""
+                yAxisSuffix=""
                 chartConfig={createChartConfig(chartColors[2])}
                 verticalLabelRotation={-45}
                 horizontalLabelRotation={-45}
@@ -453,7 +415,7 @@ const processChartData = (chartData) => {
                  ))}
                </View>
 
-               <Text style={styles.chartTitle}>سطح تحصیلی</Text>
+               <Text style={styles.chartTitleBottom}>سطح تحصیلی</Text>
              </View>
           </View>
             </ScrollView>
@@ -471,6 +433,8 @@ const processChartData = (chartData) => {
                     data={chartData.childrenNumberStats}
                     width={calculateChartWidth(chartData.childrenNumberStats.labels)}
                     height={240}
+                    yAxisLabel=""
+                    yAxisSuffix=""
                     chartConfig={createChartConfig(chartColors[3])}
                     verticalLabelRotation={-45}
                     fromZero={true}
@@ -492,7 +456,7 @@ const processChartData = (chartData) => {
                  ))}
                </View>
 
-               <Text style={styles.chartTitle}>تعداد فرزند</Text>
+               <Text style={styles.chartTitleBottom}>تعداد فرزند</Text>
              </View>
               </View>
             </ScrollView>
@@ -510,6 +474,8 @@ const processChartData = (chartData) => {
                       data={chartData.typeGoodStats}
                       width={calculateChartWidth(chartData.typeGoodStats.labels)}
                       height={240}
+                      yAxisLabel=""
+                      yAxisSuffix=""
                       chartConfig={createChartConfig(chartColors[4])}
                       verticalLabelRotation={-45}
                       fromZero={true}
@@ -531,7 +497,7 @@ const processChartData = (chartData) => {
                  ))}
                </View>
 
-               <Text style={styles.chartTitle}>نوع کمک</Text>
+               <Text style={styles.chartTitleBottom}>نوع کمک</Text>
              </View>
                 </View>
             </ScrollView>
@@ -605,6 +571,7 @@ const styles = StyleSheet.create({
     marginRight: Spacing.sm,
   },
   chartTitle: {
+    fontFamily: 'Vazir',
     fontSize: 16,
     fontWeight: 'bold',
     flex: 1,
@@ -615,39 +582,35 @@ const styles = StyleSheet.create({
     backgroundColor: '#fafafa',
   },
   chart: {
-    marginVertical: Spacing.sm,
-    borderRadius: BorderRadius.md,
+    marginVertical: 8,
+    borderRadius: 16,
   },
-  chart: {
-      marginVertical: 8,
-      borderRadius: 16,
-    },
-    customLabels: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      paddingHorizontal: 10,
-      marginTop: 5,
-    },
-    labelContainer: {
-      flex: 1,
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
-    chartText: {
-      fontFamily: 'Vazir',
-      fontSize: 10,
-      textAlign: 'center',
-      writingDirection: 'rtl',
-      maxWidth: 60, // محدودیت عرض برای متن‌های طولانی
-    },
-    chartTitle: {
-      fontFamily: 'Vazir',
-      fontSize: 14,
-      textAlign: 'center',
-      marginTop: 10,
-      fontWeight: 'bold',
-    },
+  customLabels: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 10,
+    marginTop: 5,
+  },
+  labelContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  chartText: {
+    fontFamily: 'Vazir',
+    fontSize: 10,
+    textAlign: 'center',
+    writingDirection: 'rtl',
+    maxWidth: 60,
+  },
+  chartTitleBottom: {
+    fontFamily: 'Vazir',
+    fontSize: 14,
+    textAlign: 'center',
+    marginTop: 10,
+    fontWeight: 'bold',
+  },
 });
 
 export default RegisterCharts;

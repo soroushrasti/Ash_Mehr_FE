@@ -177,12 +177,12 @@ const calculateChartWidth = (labels: string[]) => {
   });
 
   const ChartCard = ({ title, children, colorSet, icon }: { title: string; children: React.ReactNode; colorSet: any; icon: string }) => (
-      <View style={[styles.chartCard, { backgroundColor: colorSet.light }]}>
-        <View style={[styles.chartHeader, { backgroundColor: colorSet.medium }]}>
+      <View style={styles.chartCard}>
+        <View style={styles.chartHeader}>
           <Text style={styles.chartIcon}>{icon}</Text>
           <ThemedText style={styles.chartTitle}>{title}</ThemedText>
         </View>
-        <View style={[styles.chartContent, { backgroundColor: colorSet.light }]}>
+        <View style={styles.chartContent}>
           {children}
         </View>
       </View>

@@ -98,7 +98,10 @@ export default function SignInScreen() {
       const displayName: string | null = (data.name as string) || [data.firstName, data.lastName].filter(Boolean).join(' ') || null;
 
       await signIn('Needy', needyId, phone, '', displayName);
-      router.replace('/needy');
+      // Use setTimeout to ensure state is updated before navigation
+      setTimeout(() => {
+        router.replace('/needy');
+      }, 100);
     } catch (e) {
       console.error('Needy signin error:', e);
       setError('خطا در ورود. لطفاً دوباره تلاش کنید');

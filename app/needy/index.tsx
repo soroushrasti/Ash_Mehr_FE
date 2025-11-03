@@ -35,8 +35,8 @@ interface NeedyDetails {
   IncomeForm?: number;
   UnderWhichAdmin?: string;
   UnderSecondAdminID?: string;
-  Latitude?: number;
-  Longitude?: number;
+  Latitude?: number | string;
+  Longitude?: number | string;
   CreatedDate?: string;
   UpdatedDate?: string;
   children?: Array<{
@@ -259,11 +259,15 @@ export default function NeedyDetailsPage() {
             <>
               <DetailRow
                 label="عرض جغرافیایی"
-                value={needyDetails.Latitude.toFixed(6)}
+                value={typeof needyDetails.Latitude === 'number'
+                  ? needyDetails.Latitude.toFixed(6)
+                  : parseFloat(String(needyDetails.Latitude)).toFixed(6)}
               />
               <DetailRow
                 label="طول جغرافیایی"
-                value={needyDetails.Longitude.toFixed(6)}
+                value={typeof needyDetails.Longitude === 'number'
+                  ? needyDetails.Longitude.toFixed(6)
+                  : parseFloat(String(needyDetails.Longitude)).toFixed(6)}
               />
             </>
           )}

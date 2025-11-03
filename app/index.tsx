@@ -33,9 +33,9 @@ export default function Index() {
   }
 
   if (userType === 'Needy') {
-    return <Redirect href="/(tabs)" />;
+    return <Redirect href="/needy" />;
   }
 
-  // Default fallback to tabs
-  return <Redirect href="/(tabs)" />;
+  // Default fallback to sign-in
+  return <Redirect href="/(auth)/sign-in" />;
 }

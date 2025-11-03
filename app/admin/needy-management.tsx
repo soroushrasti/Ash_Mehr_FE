@@ -287,7 +287,7 @@ export default function ReportsPage() {
                     <View style={styles.searchContainer}>
                         <TextInput
                             style={[styles.searchInput, { color: textColor, borderColor, backgroundColor: surfaceColor }]}
-                            placeholder="جستجوی نام مددجو"
+                            placeholder="جستجوی نام مددجو یا شماره همراه"
                             placeholderTextColor="#999"
                             value={searchTerm}
                             onChangeText={setSearchTerm}

@@ -53,7 +53,7 @@ export default function VolunteerManagementPage() {
       ]
     },
     {
-      title: 'مدیریت اطلاعات مددجوهایی که قطع همکاری کرده اند',
+      title: 'مدیریت اطلاعات مددجوهایی که قطع واریزی',
       subtitle: 'مشاهده، ویرایش و حذف اطلاعات مددجویان',
       icon: '👥',
       gradient: ['#4facfe', '#00f2fe'],

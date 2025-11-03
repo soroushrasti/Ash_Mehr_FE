@@ -673,7 +673,7 @@ const handleSaveChildren = async () => {
                           style={styles.pickerContainer}
                         />
 
-        <ThemedText style={styles.sectionTitle}>قطع همکاری</ThemedText>
+        <ThemedText style={styles.sectionTitle}>قطع واریزی</ThemedText>
                 <RTLPicker
                    items={[
                            { label: 'بله' ,value: true },

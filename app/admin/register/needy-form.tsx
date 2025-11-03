@@ -761,7 +761,7 @@ const handleGoodsCountChange = (count: number) => {
                                     </View>
                             ))}
 
-                      <ThemedText style={styles.fieldLabel}>قطع همکاری</ThemedText>
+                      <ThemedText style={styles.fieldLabel}>قطع واریزی</ThemedText>
                       <RTLPicker
                           items={[
                               { label: 'بله', value: true },

@@ -268,7 +268,7 @@ class ApiService {
 
   async sendSMSCode(phoneNumber: string, goodId: number): Promise<ApiResponse> {
      return apiRequest({
-      endpoint: `${Config.ENDPOINTS.SMS_CODE}/${phoneNumber}/${goodId}`,
+      endpoint: `${Config.ENDPOINTS.SEND_SMS}/${phoneNumber}/${goodId}`,
       method: 'POST',
       includeAuth: true,
       showErrorAlert: true,

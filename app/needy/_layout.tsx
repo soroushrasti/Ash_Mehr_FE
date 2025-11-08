@@ -7,7 +7,10 @@ export default function NeedyLayout() {
         headerShown: false,
       }}
     >
-      <Stack.Screen name="index" options={{ headerShown: false }} />
+      <Stack.Screen name="index" />
+      <Stack.Screen name="verify-sms" />
+      <Stack.Screen name="verify-goods" />
+      <Stack.Screen name="info-needy" />
     </Stack>
   );
 }

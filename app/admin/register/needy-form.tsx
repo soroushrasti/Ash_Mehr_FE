@@ -94,15 +94,32 @@ export default function AdminUserRegister() {
     };
 
     const handleChildFieldChange = (index: number, field: string, value: string) => {
+        let finalValue = value;
+
+            // اگر فیلد عددی است و کاربر عدد فارسی وارد کرده
+            if (field === 'Age' || field === 'NationalID') {
+                // تبدیل اعداد فارسی به انگلیسی
+                finalValue = value
+                    .replace(/۰/g, '0')
+                    .replace(/۱/g, '1')
+                    .replace(/۲/g, '2')
+                    .replace(/۳/g, '3')
+                    .replace(/۴/g, '4')
+                    .replace(/۵/g, '5')
+                    .replace(/۶/g, '6')
+                    .replace(/۷/g, '7')
+                    .replace(/۸/g, '8')
+                    .replace(/۹/g, '9');
+            }
         setFormData(prev => ({
             ...prev,
             children_of_registre: prev.children_of_registre.map((child, i) =>
-                i === index ? { ...child, [field]: value } : child
+                i === index ? { ...child, [field]: finalValue } : child
             )
         }));
     };
 
-const handleGoodsCountChange = (count: number) => {
+    const handleGoodsCountChange = (count: number) => {
         const numCount = Math.max(0, Math.min(count, 10)); // Limit to 0-10 children
         setGoodsCount(numCount);
 
@@ -277,7 +294,24 @@ const handleGoodsCountChange = (count: number) => {
 
     // Clear validation errors when user starts typing
     const handleFieldChange = (field: keyof ExtendedNeedyForm, value: string | number | undefined | Child[]) => {
-        setFormData(prev => ({ ...prev, [field]: value }));
+        let finalValue = value;
+
+            // اگر فیلد عددی است و کاربر عدد فارسی وارد کرده
+            if (field === 'Phone' || field === 'NationalID') {
+                // تبدیل اعداد فارسی به انگلیسی
+                finalValue = value
+                    .replace(/۰/g, '0')
+                    .replace(/۱/g, '1')
+                    .replace(/۲/g, '2')
+                    .replace(/۳/g, '3')
+                    .replace(/۴/g, '4')
+                    .replace(/۵/g, '5')
+                    .replace(/۶/g, '6')
+                    .replace(/۷/g, '7')
+                    .replace(/۸/g, '8')
+                    .replace(/۹/g, '9');
+            }
+        setFormData(prev => ({ ...prev, [field]: finalValue }));
 
         // Clear field-specific error when user starts typing
         if (fieldErrors[field]) {
@@ -352,7 +386,7 @@ const handleGoodsCountChange = (count: number) => {
                                     handleFieldChange('Phone', cleanedText);
                                 }}
                             placeholder="09xxxxxxxxx"
-                            keyboardType="phone-pad"
+                            keyboardType="numeric"
                             error={fieldErrors.Phone}
                         />
 

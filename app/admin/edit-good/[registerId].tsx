@@ -183,22 +183,37 @@ export default function EditNeedyPage() {
   };
 
   const handleGoodFieldChange = (index: number, field: string, value: string) => {
+        let finalValue = value;
+
+          // اگر فیلد عددی است و کاربر عدد فارسی وارد کرده
+          if (field === 'NumberGood') {
+              // تبدیل اعداد فارسی به انگلیسی
+              finalValue = value
+                  .replace(/۰/g, '0')
+                  .replace(/۱/g, '1')
+                  .replace(/۲/g, '2')
+                  .replace(/۳/g, '3')
+                  .replace(/۴/g, '4')
+                  .replace(/۵/g, '5')
+                  .replace(/۶/g, '6')
+                  .replace(/۷/g, '7')
+                  .replace(/۸/g, '8')
+                  .replace(/۹/g, '9');
+          }
     setFormData(prev => ({
       ...prev,
       goods_of_registre: prev.goods_of_registre.map((good, i) => {
         if (i !== index) return good;
         if (field === 'NumberGood') {
-          const num = parseInt(value, 10);
+          const num = parseInt(finalValue, 10);
           return { ...good, NumberGood: isNaN(num) ? 0 : num };
         }
-        return { ...good, [field]: value };
+        return { ...good, [field]: finalValue };
       })
     }));
   };
 
-
-
-  if (loading) {
+ if (loading) {
     return (
       <ThemedView style={[styles.container, { backgroundColor }]}>
         <AppHeader title="ویرایش کمک ها" subtitle="در حال بارگذاری..." />
@@ -291,8 +306,6 @@ export default function EditNeedyPage() {
                 ))}
               </View>
             )}
-
-
 
 <View style={styles.childrenButtonsContainer}>
   <TouchableOpacity

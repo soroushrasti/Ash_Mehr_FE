@@ -430,7 +430,13 @@ const calculateChartWidth = (labels: string[]) => {
                 <Text style={{transform: [{rotate: '-90deg'}], marginRight: 10}}>تعداد مددجو</Text>
                 <View>
                   <BarChart
-                    data={chartData.childrenNumberStats}
+                     data={{
+                        ...chartData.childrenNumberStats,
+                        labels: [...chartData.childrenNumberStats.labels]
+                          .map(label => Number(label))
+                          .sort((a, b) => a - b)
+                          .map(num => num.toString())
+                      }}
                     width={calculateChartWidth(chartData.childrenNumberStats.labels)}
                     height={240}
                     yAxisLabel=""

@@ -235,10 +235,13 @@ export default function SignInScreen() {
                 label="شماره تلفن"
                 placeholder="09xxxxxxxxx"
                 value={phone}
-                onChangeText={(text) => {
-                  // فقط اعداد و حداکثر ۱۱ رقم
-                  const cleanText = text.replace(/[^0-9۰-۹]/g, '').slice(0, 11);
-                  setPhone(cleanText);
+                onChangeText={(text) => {const normalizedText = text
+                     .replace(/[۰-۹]/g, (d) => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d)) // فارسی
+                     .replace(/[٠-٩]/g, (d) => '٠١٢٣٤٥٦٧٨٩'.indexOf(d)) // عربی
+                     .replace(/[^0-9]/g, '') // حذف غیر اعداد
+                     .slice(0, 11); // محدود به ۱۱ رقم
+
+                   setPhone(normalizedText);
                 }}
                 keyboardType="phone-pad"
                 leftIcon={<ThemedText>📱</ThemedText>}
@@ -309,8 +312,13 @@ export default function SignInScreen() {
                 value={phone}
                 onChangeText={(text) => {
                   // فقط اعداد و حداکثر ۱۱ رقم
-                  const cleanText = text.replace(/[^0-9۰-۹]/g, '').slice(0, 11);
-                  setPhone(cleanText);
+                  const normalizedText = text
+                       .replace(/[۰-۹]/g, (d) => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d)) // فارسی
+                       .replace(/[٠-٩]/g, (d) => '٠١٢٣٤٥٦٧٨٩'.indexOf(d)) // عربی
+                       .replace(/[^0-9]/g, '') // حذف غیر اعداد
+                       .slice(0, 11); // محدود به ۱۱ رقم
+
+                     setPhone(normalizedText);
                 }}
                 keyboardType="phone-pad"
                 leftIcon={<ThemedText>📱</ThemedText>}

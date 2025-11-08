@@ -93,7 +93,24 @@ export default function AdminUserRegister() {
 
   // Clear validation errors when user starts typing
   const handleFieldChange = (field: keyof AdminCreate, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+      let finalValue = value;
+
+          // اگر فیلد عددی است و کاربر عدد فارسی وارد کرده
+          if (field === 'Phone' || field === 'NationalID') {
+              // تبدیل اعداد فارسی به انگلیسی
+              finalValue = value
+                  .replace(/۰/g, '0')
+                  .replace(/۱/g, '1')
+                  .replace(/۲/g, '2')
+                  .replace(/۳/g, '3')
+                  .replace(/۴/g, '4')
+                  .replace(/۵/g, '5')
+                  .replace(/۶/g, '6')
+                  .replace(/۷/g, '7')
+                  .replace(/۸/g, '8')
+                  .replace(/۹/g, '9');
+          }
+    setFormData(prev => ({ ...prev, [field]: finalValue }));
 
     // Clear field-specific error when user starts typing
     if (fieldErrors[field]) {
@@ -210,8 +227,6 @@ export default function AdminUserRegister() {
               error={fieldErrors.NationalID}
             />
 
-
-
             <InputField
               label="رمز عبور *"
               value={formData.Password}
@@ -221,7 +236,6 @@ export default function AdminUserRegister() {
               error={fieldErrors.Password}
               required
             />
-
 
             <ThemedText style={styles.sectionTitle}>آدرس</ThemedText>
 

@@ -199,15 +199,30 @@ const handleSaveChildren = async () => {
     };
 
     const handleChildFieldChange = (index: number, field: string, value: string) => {
+        let finalValue = value;
+
+            // اگر فیلد عددی است و کاربر عدد فارسی وارد کرده
+            if (field === 'Age' || field === 'NationalID') {
+                // تبدیل اعداد فارسی به انگلیسی
+                finalValue = value
+                    .replace(/۰/g, '0')
+                    .replace(/۱/g, '1')
+                    .replace(/۲/g, '2')
+                    .replace(/۳/g, '3')
+                    .replace(/۴/g, '4')
+                    .replace(/۵/g, '5')
+                    .replace(/۶/g, '6')
+                    .replace(/۷/g, '7')
+                    .replace(/۸/g, '8')
+                    .replace(/۹/g, '9');
+            }
         setFormData(prev => ({
             ...prev,
             children_of_registre: prev.children_of_registre.map((child, i) =>
-                i === index ? { ...child, [field]: value } : child
+                i === index ? { ...child, [field]: finalValue } : child
             )
         }));
     };
-
-
   const handleDeleteChild = async (index) => {
     try {
       // حذف از دیتابیس (اگر فرزند قبلاً ذخیره شده)
@@ -296,7 +311,24 @@ const handleSaveChildren = async () => {
   };
 
   const handleFieldChange = (field: keyof ExtendedNeedyEditForm, value: string | number | undefined) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    let finalValue = value;
+
+        // اگر فیلد عددی است و کاربر عدد فارسی وارد کرده
+        if (field === 'Phone' || field === 'NationalID') {
+            // تبدیل اعداد فارسی به انگلیسی
+            finalValue = value
+                .replace(/۰/g, '0')
+                .replace(/۱/g, '1')
+                .replace(/۲/g, '2')
+                .replace(/۳/g, '3')
+                .replace(/۴/g, '4')
+                .replace(/۵/g, '5')
+                .replace(/۶/g, '6')
+                .replace(/۷/g, '7')
+                .replace(/۸/g, '8')
+                .replace(/۹/g, '9');
+        }
+    setFormData(prev => ({ ...prev, [field]: finalValue }));
 
     // Clear field-specific error when user starts typing
     if (fieldErrors[field]) {
@@ -402,8 +434,6 @@ const handleSaveChildren = async () => {
               error={fieldErrors.NationalID}
               maxLength={10}
             />
-
-
 
             <InputField
               label="تاریخ تولد"

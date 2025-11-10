@@ -32,7 +32,7 @@ const RegisterCharts = () => {
       setLoading(true);
       setError(null);
       const response = await apiService.getRegisterStats();
-
+      console.log(response);
       if (!response?.data?.adminStats || !response?.data?.provinceStats || !response?.data?.educationLevelStats || !response?.data?.typeGoodStats || !response?.data?.childrenNumberStats) {
         setError('داده‌ها به درستی دریافت نشدند');
         return;
@@ -114,8 +114,21 @@ const RegisterCharts = () => {
 
 const calculateChartWidth = (labels: string[]) => {
   const baseWidth = 350;
-  const minBarSpacing = 70;
+
+  // Calculate the maximum label length
+  const maxLabelLength = Math.max(...labels.map(label => label.toString().length));
+
+  // Adjust bar spacing based on label length
+  // Base spacing is 70, add 8 pixels for each character beyond 4 characters
+  const minBarSpacing = Math.max(70, 70 + (maxLabelLength - 4) * 8);
+
   return Math.max(baseWidth, labels.length * minBarSpacing);
+};
+
+const calculateLabelWidth = (labels: string[]) => {
+  const maxLabelLength = Math.max(...labels.map(label => label.toString().length));
+  // Base width is 70, add 6 pixels for each character beyond 4 characters
+  return Math.max(70, Math.min(120, 70 + (maxLabelLength - 4) * 6));
 };
 
 
@@ -357,8 +370,8 @@ const processAnyData = (statsData) => {
                {/* لیبل‌های دستی زیر هر ستون */}
                <View style={styles.customLabels}>
                  {chartData.adminStats.labels.map((label, index) => (
-                   <View key={index} style={styles.labelContainer}>
-                     <Text style={styles.chartText} numberOfLines={1}>
+                   <View key={index} style={[styles.labelContainer, { width: calculateLabelWidth(chartData.adminStats.labels) }]}>
+                     <Text style={styles.chartText} numberOfLines={2}>
                        {label}
                      </Text>
                    </View>
@@ -374,45 +387,49 @@ const processAnyData = (statsData) => {
         )}
 
         {/* نمودار استان‌ها */}
-        {isValidChartData(chartData.provinceStats) && (
-          <ChartCard title="تعداد مددجوها به ازای هر استان" colorSet={chartColors[1]} icon="📍">
-            <ScrollView horizontal showsHorizontalScrollIndicator={true}>
-              <View style={{flexDirection: 'row', alignItems: 'center'}}>
-                <Text style={{transform: [{rotate: '-90deg'}], marginRight: 10}}>تعداد مددجو</Text>
-                <View>
-                  <BarChart
-                    data={chartData.provinceStats}
-                    width={calculateChartWidth(processAnyData(chartData.provinceStats).labels)}
-                    height={240}
-                    yAxisLabel=""
-                    yAxisSuffix=""
-                    chartConfig={createChartConfig(chartColors[1])}
-                    verticalLabelRotation={-45}
-                    fromZero={true}
-                    style={styles.chart}
-                    showValuesOnTopOfBars={true}
-                    withInnerLines={true}
-                    withVerticalLabels={false}
-                    withHorizontalLabels={true}
-                  />
+        {isValidChartData(chartData.provinceStats) && (() => {
+          const processedData = processAnyData(chartData.provinceStats);
 
-               {/* لیبل‌های دستی زیر هر ستون */}
-               <View style={styles.customLabels}>
-                 {processAnyData(chartData.provinceStats).labels.map((label, index) => (
-                   <View key={index} style={styles.labelContainer}>
-                     <Text style={styles.chartText} numberOfLines={1}>
-                       {label}
-                     </Text>
-                   </View>
-                 ))}
+          return (
+            <ChartCard title="تعداد مددجوها به ازای هر استان" colorSet={chartColors[1]} icon="📍">
+              <ScrollView horizontal showsHorizontalScrollIndicator={true}>
+                <View style={{flexDirection: 'row', alignItems: 'center'}}>
+                  <Text style={{transform: [{rotate: '-90deg'}], marginRight: 10}}>تعداد مددجو</Text>
+                  <View>
+                    <BarChart
+                      data={processedData}
+                      width={calculateChartWidth(processedData.labels)}
+                      height={240}
+                      yAxisLabel=""
+                      yAxisSuffix=""
+                      chartConfig={createChartConfig(chartColors[1])}
+                      verticalLabelRotation={-45}
+                      fromZero={true}
+                      style={styles.chart}
+                      showValuesOnTopOfBars={true}
+                      withInnerLines={true}
+                      withVerticalLabels={false}
+                      withHorizontalLabels={true}
+                    />
+
+                 {/* لیبل‌های دستی زیر هر ستون */}
+                 <View style={styles.customLabels}>
+                   {processedData.labels.map((label, index) => (
+                     <View key={index} style={[styles.labelContainer, { width: calculateLabelWidth(processedData.labels) }]}>
+                       <Text style={styles.chartText} numberOfLines={2}>
+                         {label}
+                       </Text>
+                     </View>
+                   ))}
+                 </View>
+
+                 <Text style={styles.chartTitleBottom}>استان</Text>
                </View>
-
-               <Text style={styles.chartTitleBottom}>استان</Text>
-             </View>
-              </View>
-            </ScrollView>
-          </ChartCard>
-        )}
+                </View>
+              </ScrollView>
+            </ChartCard>
+          );
+        })()}
 
         {/* نمودار سطح تحصیلات */}
         {isValidChartData(chartData.educationLevelStats) && (
@@ -444,8 +461,8 @@ const processAnyData = (statsData) => {
                {/* لیبل‌های دستی زیر هر ستون */}
                <View style={styles.customLabels}>
                  {chartData.educationLevelStats.labels.map((label, index) => (
-                   <View key={index} style={styles.labelContainer}>
-                     <Text style={styles.chartText} numberOfLines={1}>
+                   <View key={index} style={[styles.labelContainer, { width: calculateLabelWidth(chartData.educationLevelStats.labels) }]}>
+                     <Text style={styles.chartText} numberOfLines={2}>
                        {label}
                      </Text>
                    </View>
@@ -460,66 +477,38 @@ const processAnyData = (statsData) => {
         )}
 
         {/* نمودار تعداد فرزندان */}
-        {isValidChartData(chartData.childrenNumberStats) && (
-          <ChartCard title="تعداد مددجوها به ازای تعداد فرزندان" colorSet={chartColors[3]} icon="👶">
-            <ScrollView horizontal showsHorizontalScrollIndicator={true}>
-            <View style={{flexDirection: 'row', alignItems: 'center'}}>
-                <Text style={{transform: [{rotate: '-90deg'}], marginRight: 10}}>تعداد مددجو</Text>
-                <View>
-                  <BarChart
-                     data={{
-                        ...chartData.childrenNumberStats,
-                        labels: [...chartData.childrenNumberStats.labels]
-                          .map(label => Number(label))
-                          .sort((a, b) => a - b)
-                          .map(num => num.toString())
-                      }}
-                    width={calculateChartWidth(chartData.childrenNumberStats.labels)}
-                    height={240}
-                    yAxisLabel=""
-                    yAxisSuffix=""
-                    chartConfig={createChartConfig(chartColors[3])}
-                    verticalLabelRotation={-45}
-                    fromZero={true}
-                    style={styles.chart}
-                    showValuesOnTopOfBars={true}
-                    withInnerLines={true}
-                    withVerticalLabels={false}
-                    withHorizontalLabels={true}
-                  />
+        {isValidChartData(chartData.childrenNumberStats) && (() => {
+          // Create array of label-value pairs
+          const pairs = chartData.childrenNumberStats.labels.map((label, index) => ({
+            label: label,
+            value: chartData.childrenNumberStats.datasets[0].data[index]
+          }));
 
-               {/* لیبل‌های دستی زیر هر ستون */}
-               <View style={styles.customLabels}>
-                 {chartData.childrenNumberStats.labels.map((label, index) => (
-                   <View key={index} style={styles.labelContainer}>
-                     <Text style={styles.chartText} numberOfLines={1}>
-                       {label}
-                     </Text>
-                   </View>
-                 ))}
-               </View>
+          // Sort by numeric label value
+          pairs.sort((a, b) => Number(a.label) - Number(b.label));
 
-               <Text style={styles.chartTitleBottom}>تعداد فرزند</Text>
-             </View>
-              </View>
-            </ScrollView>
-          </ChartCard>
-        )}
+          // Extract sorted labels and data
+          const sortedLabels = pairs.map(p => p.label);
+          const sortedData = pairs.map(p => p.value);
 
-        {/* نمودار نوع کمک */}
-        {isValidChartData(chartData.typeGoodStats) && (
-          <ChartCard title="تعداد مددجوها به ازای نوع کمک" colorSet={chartColors[4]} icon="🎁">
-            <ScrollView horizontal showsHorizontalScrollIndicator={true}>
+          return (
+            <ChartCard title="تعداد مددجوها به ازای تعداد فرزندان" colorSet={chartColors[3]} icon="👶">
+              <ScrollView horizontal showsHorizontalScrollIndicator={true}>
               <View style={{flexDirection: 'row', alignItems: 'center'}}>
                   <Text style={{transform: [{rotate: '-90deg'}], marginRight: 10}}>تعداد مددجو</Text>
                   <View>
                     <BarChart
-                      data={chartData.typeGoodStats}
-                      width={calculateChartWidth(processAnyData(chartData.typeGoodStats).labels)}
+                       data={{
+                          labels: sortedLabels,
+                          datasets: [{
+                            data: sortedData
+                          }]
+                        }}
+                      width={calculateChartWidth(sortedLabels)}
                       height={240}
                       yAxisLabel=""
                       yAxisSuffix=""
-                      chartConfig={createChartConfig(chartColors[4])}
+                      chartConfig={createChartConfig(chartColors[3])}
                       verticalLabelRotation={-45}
                       fromZero={true}
                       style={styles.chart}
@@ -529,23 +518,69 @@ const processAnyData = (statsData) => {
                       withHorizontalLabels={true}
                     />
 
-               {/* لیبل‌های دستی زیر هر ستون */}
-               <View style={styles.customLabels}>
-                 {processAnyData(chartData.typeGoodStats).labels.map((label, index)  => (
-                   <View key={index} style={styles.labelContainer}>
-                     <Text style={styles.chartText} numberOfLines={1}>
-                       {label}
-                     </Text>
-                   </View>
-                 ))}
-               </View>
+                 {/* لیبل‌های دستی زیر هر ستون */}
+                 <View style={styles.customLabels}>
+                   {sortedLabels.map((label, index) => (
+                     <View key={index} style={styles.labelContainer}>
+                       <Text style={styles.chartText} numberOfLines={1}>
+                         {label}
+                       </Text>
+                     </View>
+                   ))}
+                 </View>
 
-               <Text style={styles.chartTitleBottom}>نوع کمک</Text>
-             </View>
+                 <Text style={styles.chartTitleBottom}>تعداد فرزند</Text>
+               </View>
                 </View>
-            </ScrollView>
-          </ChartCard>
-        )}
+              </ScrollView>
+            </ChartCard>
+          );
+        })()}
+
+        {/* نمودار نوع کمک */}
+        {isValidChartData(chartData.typeGoodStats) && (() => {
+          const processedData = processAnyData(chartData.typeGoodStats);
+
+          return (
+            <ChartCard title="تعداد مددجوها به ازای نوع کمک" colorSet={chartColors[4]} icon="🎁">
+              <ScrollView horizontal showsHorizontalScrollIndicator={true}>
+                <View style={{flexDirection: 'row', alignItems: 'center'}}>
+                    <Text style={{transform: [{rotate: '-90deg'}], marginRight: 10}}>تعداد مددجو</Text>
+                    <View>
+                      <BarChart
+                        data={processedData}
+                        width={calculateChartWidth(processedData.labels)}
+                        height={240}
+                        yAxisLabel=""
+                        yAxisSuffix=""
+                        chartConfig={createChartConfig(chartColors[4])}
+                        verticalLabelRotation={-45}
+                        fromZero={true}
+                        style={styles.chart}
+                        showValuesOnTopOfBars={true}
+                        withInnerLines={true}
+                        withVerticalLabels={false}
+                        withHorizontalLabels={true}
+                      />
+
+                 {/* لیبل‌های دستی زیر هر ستون */}
+                 <View style={styles.customLabels}>
+                   {processedData.labels.map((label, index)  => (
+                     <View key={index} style={[styles.labelContainer, { width: calculateLabelWidth(processedData.labels) }]}>
+                       <Text style={styles.chartText} numberOfLines={2}>
+                         {label}
+                       </Text>
+                     </View>
+                   ))}
+                 </View>
+
+                 <Text style={styles.chartTitleBottom}>نوع کمک</Text>
+               </View>
+                  </View>
+              </ScrollView>
+            </ChartCard>
+          );
+        })()}
       </ScrollView>
     </ThemedView>
   );
@@ -630,22 +665,24 @@ const styles = StyleSheet.create({
   },
   customLabels: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    justifyContent: 'space-evenly',
     alignItems: 'center',
-    paddingHorizontal: 10,
+    paddingHorizontal: 35,
     marginTop: 5,
   },
   labelContainer: {
-    flex: 1,
+    minWidth: 70,
+    maxWidth: 120,
     alignItems: 'center',
     justifyContent: 'center',
+    paddingHorizontal: 2,
   },
   chartText: {
     fontFamily: 'Vazir',
     fontSize: 10,
     textAlign: 'center',
     writingDirection: 'rtl',
-    maxWidth: 60,
+    flexWrap: 'wrap',
   },
   chartTitleBottom: {
     fontFamily: 'Vazir',

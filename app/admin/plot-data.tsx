@@ -118,6 +118,43 @@ const calculateChartWidth = (labels: string[]) => {
   return Math.max(baseWidth, labels.length * minBarSpacing);
 };
 
+
+const processAnyData = (statsData) => {
+  const groupedData = {};
+
+  // گروه‌بندی داده‌ها بر اساس استان
+  statsData.labels.forEach((label, index) => {
+    if (!groupedData[label]) {
+      groupedData[label] = {
+        values: []
+      };
+    }
+
+    // جمع‌آوری تمام مقادیر مربوط به این استان
+    statsData.datasets.forEach(dataset => {
+      if (dataset.data[index] !== undefined) {
+        groupedData[label].values.push(dataset.data[index]);
+      }
+    });
+  });
+
+  // محاسبه مجموع برای هر استان
+  const uniqueLabels = Object.keys(groupedData);
+  const summedData = uniqueLabels.map(label =>
+    groupedData[label].values.reduce((sum, val) => sum + val, 0)
+  );
+
+  return {
+    labels: uniqueLabels,
+    datasets: [
+      {
+        data: summedData,
+        color: statsData.datasets[0]?.color || chartColors[1]
+      }
+    ]
+  };
+};
+
   // تابع برای بررسی اعتبار داده‌های نمودار
   const isValidChartData = (chartData: any): boolean => {
       if (!chartData || !chartData.labels || !chartData.datasets) return false;
@@ -345,7 +382,7 @@ const calculateChartWidth = (labels: string[]) => {
                 <View>
                   <BarChart
                     data={chartData.provinceStats}
-                    width={calculateChartWidth(chartData.provinceStats.labels)}
+                    width={calculateChartWidth(processAnyData(chartData.provinceStats).labels)}
                     height={240}
                     yAxisLabel=""
                     yAxisSuffix=""
@@ -361,7 +398,7 @@ const calculateChartWidth = (labels: string[]) => {
 
                {/* لیبل‌های دستی زیر هر ستون */}
                <View style={styles.customLabels}>
-                 {chartData.provinceStats.labels.map((label, index) => (
+                 {processAnyData(chartData.provinceStats).labels.map((label, index) => (
                    <View key={index} style={styles.labelContainer}>
                      <Text style={styles.chartText} numberOfLines={1}>
                        {label}
@@ -386,9 +423,9 @@ const calculateChartWidth = (labels: string[]) => {
             <View>
               <BarChart
                 data={{
-                              ...chartData.educationLevelStats,
+                      ...chartData.educationLevelStats,
 
-                            }}
+                    }}
                 width={calculateChartWidth(chartData.educationLevelStats.labels)}
                 height={240}
                 yAxisLabel=""
@@ -478,7 +515,7 @@ const calculateChartWidth = (labels: string[]) => {
                   <View>
                     <BarChart
                       data={chartData.typeGoodStats}
-                      width={calculateChartWidth(chartData.typeGoodStats.labels)}
+                      width={calculateChartWidth(processAnyData(chartData.typeGoodStats).labels)}
                       height={240}
                       yAxisLabel=""
                       yAxisSuffix=""
@@ -494,7 +531,7 @@ const calculateChartWidth = (labels: string[]) => {
 
                {/* لیبل‌های دستی زیر هر ستون */}
                <View style={styles.customLabels}>
-                 {chartData.typeGoodStats.labels.map((label, index) => (
+                 {processAnyData(chartData.typeGoodStats).labels.map((label, index)  => (
                    <View key={index} style={styles.labelContainer}>
                      <Text style={styles.chartText} numberOfLines={1}>
                        {label}

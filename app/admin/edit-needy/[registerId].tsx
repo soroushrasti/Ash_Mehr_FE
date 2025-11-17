@@ -54,7 +54,7 @@ export default function EditNeedyPage() {
     IncomeForm: '',
     Latitude: '',
     Longitude: '',
-    is_disconnected:'',
+    is_disconnected:false,
     children_of_registre: [],
   });
 
@@ -110,7 +110,7 @@ export default function EditNeedyPage() {
           IncomeForm: data.income?.toString() || '',
           Latitude: data.Latitude?.toString() || '',
           Longitude: data.Longitude?.toString() || '',
-          is_disconnected: data.is_disconnected || '',
+          is_disconnected: data.is_disconnected || false,
           children_of_registre: data.children,
         });
       } else {
@@ -457,11 +457,45 @@ const handleSaveChildren = async () => {
 
             <ThemedText style={styles.sectionTitle}>اطلاعات آدرس</ThemedText>
 
-            <InputField
-              label="  استان *"
-              value={formData.Province || ''}
-              onChangeText={(text) => handleFieldChange('Province', text)}
-              placeholder="نام استان"
+              <RTLPicker
+                   items={[
+                    { label: "انتخاب کنید", value: "" },
+                    { label: "آذربایجان شرقی", value: "آذربایجان شرقی" },
+                    { label: "آذربایجان غربی", value: "آذربایجان غربی" },
+                    { label: "اردبیل", value: "اردبیل" },
+                    { label: "اصفهان", value: "اصفهان" },
+                    { label: "البرز", value: "البرز" },
+                    { label: "ایلام", value: "ایلام" },
+                    { label: "بوشهر", value: "بوشهر" },
+                    { label: "تهران", value: "تهران" },
+                    { label: "چهار محال و بختیاری", value: "چهار محال و بختیاری" },
+                    { label: "خراسان جنوبی", value: "خراسان جنوبی" },
+                    { label: "خراسان رضوی", value: "خراسان رضوی" },
+                    { label: "خراسان شمالی", value: "خراسان شمالی" },
+                    { label: "خوزستان", value: "خوزستان" },
+                    { label: "زنجان", value: "زنجان" },
+                    { label: "سمنان", value: "سمنان" },
+                    { label: "سیستان و بلوچستان", value: "سیستان و بلوچستان" },
+                    { label: "فارس", value: "فارس" },
+                    { label: "قزوین", value: "قزوین" },
+                    { label: "قم", value: "قم" },
+                    { label: "کردستان", value: "کردستان" },
+                    { label: "کرمان", value: "کرمان" },
+                    { label: "کرمانشاه", value: "کرمانشاه" },
+                    { label: "کهگیلویه و بویراحمد", value: "کهگیلویه و بویراحمد" },
+                    { label: "گلستان", value: "گلستان" },
+                    { label: "گیلان", value: "گیلان" },
+                    { label: "لرستان", value: "لرستان" },
+                    { label: "مازندران", value: "مازندران" },
+                    { label: "مرکزی", value: "مرکزی" },
+                    { label: "هرمزگان", value: "هرمزگان" },
+                    { label: "همدان", value: "همدان" },
+                    { label: "یزد", value: "یزد" },
+                ]}
+              selectedValue={formData.Province || ''}
+                onValueChange={(value) => handleFieldChange('Province', value)}
+                placeholder="نام استان"
+                style={styles.pickerContainer}
             />
 
             <InputField
@@ -709,8 +743,8 @@ const handleSaveChildren = async () => {
                            { label: 'بله' ,value: true },
                            { label: 'خیر' ,value: false }
                        ]}
-                    selectedValue={formData.is_disconnected || false}
-                    onValueChange={(value) => handleFieldChange('is_disconnected', value || undefined)}
+                    selectedValue={formData.is_disconnected}
+                    onValueChange={(value) => handleFieldChange('is_disconnected', value)}
                     placeholder="خیر"
                     style={styles.pickerContainer}
              />
